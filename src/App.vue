@@ -4,7 +4,7 @@ import { RouterView } from 'vue-router'
 
 <template>
   <v-app>
-    <v-app-bar :elevation="2" color="primary" dark>
+    <v-app-bar :elevation="2" class="top-bar" color="primary" dark>
       <v-app-bar-title>Radarius</v-app-bar-title>
       <template v-slot:append>
         <v-btn icon="mdi-account-circle"></v-btn>
@@ -18,8 +18,17 @@ import { RouterView } from 'vue-router'
 </template>
 
 <style lang="scss" scoped>
+.top-bar {
+  :deep(.v-toolbar__content) {
+    max-width: 1440px;
+    width: 100%;
+    margin: 0 auto;
+  }
+}
 .app {
-  margin-top: 64px;
+  max-width: 1440px;
+  width: 100%;
+  margin: 64px auto 0 auto;
   padding: 24px;
 }
 </style>
