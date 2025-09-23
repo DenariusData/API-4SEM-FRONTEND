@@ -1,5 +1,17 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import LoginPopup from './modules/login/components/LoginPopup.vue';
+import { ref } from 'vue';
+
+const isPopupVisible = ref(false);
+
+const showLoginPopup = () => {
+  isPopupVisible.value = true;
+};
+
+const hideLoginPopup = () => {
+  isPopupVisible.value = false;
+};
 </script>
 
 <template>
@@ -8,12 +20,13 @@ import { RouterView } from 'vue-router'
       <v-app-bar-title>Radarius</v-app-bar-title>
       <template v-slot:append>
         <v-btn icon="mdi-account-circle"></v-btn>
-        <v-btn icon="mdi-login"></v-btn>
+        <v-btn icon="mdi-login" @click="showLoginPopup"></v-btn>
       </template>
     </v-app-bar>
     <div class="app">
       <RouterView :key="$route.fullPath" />
     </div>
+    <LoginPopup v-if="isPopupVisible" @close="hideLoginPopup" />
   </v-app>
 </template>
 
