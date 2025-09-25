@@ -1,0 +1,50 @@
+@use 'sass:map';
+
+$theme-light: (
+  black: #000000,
+  white: #ffffff,
+
+  red: #ff1e1e,
+  red-light: #ff6666,
+  red-dark: #cc1818,
+
+  yellow: #ffd60a,
+  yellow-light: #ffe54d,
+  yellow-dark: #e6b800,
+
+  green: #00c853,
+  green-light: #4dde7d,
+  green-dark: #00963e,
+
+  gray-100: #f4f4f4,
+  gray-200: #e0e0e0,
+  gray-400: #bdbdbd,
+  gray-600: #7a7a7a,
+  gray-800: #4d4d4d
+);
+
+
+$theme-dark: (
+  black: #121212,
+  white: #ffffff,
+
+  red: #ff1e1e,
+  red-light: #ff4c4c,
+  red-dark: #b31515,
+
+  yellow: #ffd60a,
+  yellow-light: #ffe44d,
+  yellow-dark: #c7a600,
+
+  green: #00c853,
+  green-light: #33d46f,
+  green-dark: #00963e,
+
+  gray-100: #2c2c2c,
+  gray-200: #3d3d3d,
+  gray-400: #7a7a7a,
+  gray-600: #b3b3b3,
+  gray-800: #e0e0e0
+);
+
+
