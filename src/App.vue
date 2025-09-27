@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, RouterView } from 'vue-router'
+import LoginPopup from "./modules/Login/LoginPopup.vue";
+
 
 const menu = ref(false)
+const showLogin = ref(false)
 const router = useRouter()
 
 const goToCriterias = () => {
   menu.value = false
   router.push({ name: 'criterias' })
+}
+
+const openLogin = () => {
+  showLogin.value = true
 }
 </script>
 
@@ -35,7 +42,6 @@ const goToCriterias = () => {
           />
         </template>
 
-        <!-- Opções do menu -->
         <v-list>
           <v-list-item title="Critérios" @click="goToCriterias" />
         </v-list>
@@ -46,14 +52,16 @@ const goToCriterias = () => {
       <!-- Ícones à direita -->
       <div class="actions">
         <v-btn icon="mdi-account-circle" variant="text" color="black"></v-btn>
-        <v-btn icon="mdi-login" variant="text" color="black"></v-btn>
+        <v-btn icon="mdi-login" variant="text" color="black" @click="openLogin"></v-btn>
       </div>
     </v-app-bar>
 
     <div class="app">
-      <!-- Apenas renderiza o conteúdo da rota atual -->
       <RouterView :key="$route.fullPath" />
     </div>
+
+    <!-- Componente de Login -->
+    <LoginPopup v-model="showLogin" />
   </v-app>
 </template>
 
