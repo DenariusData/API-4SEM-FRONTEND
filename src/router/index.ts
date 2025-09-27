@@ -14,6 +14,21 @@ const router = createRouter({
       name: 'criterias',
       component: () => import('@/modules/criterias/CriteriasView.vue'),
     },
+    {
+      path: '/alerts',
+      name: 'alerts',
+      component: () => import('@/modules/alerts/AlertsView.vue'),
+    },
+    {
+      path: '/dashboards',
+      name: 'dashboards',
+      component: () => import('@/modules/dashboards/DashboardsView.vue')
+    },
+     {
+      path: '/indicators',
+      name: 'indicators',
+      component: () => import('@/modules/indicators/IndicatorsView.vue')
+    },
   ],
 })
 

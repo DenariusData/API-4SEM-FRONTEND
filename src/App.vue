@@ -8,9 +8,9 @@ const menu = ref(false)
 const showLogin = ref(false)
 const router = useRouter()
 
-const goToCriterias = () => {
+const goTo = (routeName: string) => {
   menu.value = false
-  router.push({ name: 'criterias' })
+  router.push({ name: routeName })
 }
 
 const openLogin = () => {
@@ -42,8 +42,12 @@ const openLogin = () => {
           />
         </template>
 
-        <v-list>
-          <v-list-item title="Critérios" @click="goToCriterias" />
+                <v-list>
+          <v-list-item title="Home" @click="goTo('home')" />
+          <v-list-item title="Critérios" @click="goTo('criterias')" />
+          <v-list-item title="Alertas" @click="goTo('alerts')" />
+          <v-list-item title="Dashboards" @click="goTo('dashboards')" />
+          <v-list-item title="Indicadores" @click="goTo('indicators')" />
         </v-list>
       </v-menu>
 
