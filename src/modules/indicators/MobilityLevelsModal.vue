@@ -123,13 +123,35 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount } from 'vue'
 
-const isVisible = ref(false)
-const expandedCriteria = ref<Record<number, boolean>>({})
-const levelModalVisible = ref(false)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectedLevel = ref<any>(null)
+interface ExpandedCriteriaState {
+  [criterionIndex: number]: boolean
+}
 
-const levels = [
+interface MobilityLevel {
+  level: number
+  label: string
+}
+
+interface CriterionRange {
+  level: number
+  range: string
+}
+
+interface MobilityCriterion {
+  name: string
+  purpose: string
+  ranges: CriterionRange[]
+  details: string
+  example: string
+  nullValue: string
+}
+
+const isVisible = ref(false)
+const expandedCriteria = ref<ExpandedCriteriaState>({})
+const levelModalVisible = ref(false)
+const selectedLevel = ref<MobilityLevel | null>(null)
+
+const levels: MobilityLevel[] = [
   { level: 1, label: 'Excelente' },
   { level: 2, label: 'Bom' },
   { level: 3, label: 'Intermediário' },
@@ -137,7 +159,7 @@ const levels = [
   { level: 5, label: 'Péssimo' }
 ]
 
-const criteria = [
+const criteria: MobilityCriterion[] = [
   {
     name: '1. Congestionamento',
     purpose: 'Identificar lentidão em uma via. Quanto maior a porcentagem, menor a fluidez dos veículos na via.',
@@ -238,8 +260,7 @@ const toggleCriterion = (index: number) => {
   expandedCriteria.value[index] = !expandedCriteria.value[index]
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const showLevelDetails = (level: any) => {
+const showLevelDetails = (level: MobilityLevel) => {
   selectedLevel.value = level
   levelModalVisible.value = true
 }
@@ -249,17 +270,20 @@ const closeLevelModal = () => {
   selectedLevel.value = null
 }
 
-const getLevelRangeForCongestion = (level: number) => {
+const getLevelRangeForCongestion = (level?: number) => {
+  if (!level) return 'N/A'
   const ranges = ['0% – 19,9%', '20% – 39,9%', '40% – 59,9%', '60% – 79,9%', '80% – 100%']
   return ranges[level - 1] || 'N/A'
 }
 
-const getLevelRangeForVehicles = (level: number) => {
+const getLevelRangeForVehicles = (level?: number) => {
+  if (!level) return 'N/A'
   const ranges = ['0% – 4,9%', '5% – 9,9%', '10% – 14,9%', '15% – 19,9%', '20%+']
   return ranges[level - 1] || 'N/A'
 }
 
-const getLevelRangeForInfractions = (level: number) => {
+const getLevelRangeForInfractions = (level?: number) => {
+  if (!level) return 'N/A'
   const ranges = ['0% – 4,9%', '5% – 9,9%', '10% – 19,9%', '20% – 34,9%', '35%+']
   return ranges[level - 1] || 'N/A'
 }

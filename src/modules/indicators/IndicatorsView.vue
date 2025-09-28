@@ -84,7 +84,6 @@
 
     <MobilityLevelsModal
       ref="mobilityModal"
-      @close="onModalClose"
     />
   </div>
 </template>
@@ -103,9 +102,6 @@ const showMobilityLevels = () => {
   mobilityModal.value?.openModal()
 }
 
-const onModalClose = () => {
-  console.log('Modal fechado')
-}
 </script>
 
 <style lang="scss" scoped>
