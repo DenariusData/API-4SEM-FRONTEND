@@ -56,125 +56,89 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
+import type { Period, CorridorData, LineChartDataPoint } from '@/modules/dashboards/types/dashboardsTypes'
 
 Chart.register(...registerables)
 
-const selectedPeriod = ref('dia-todo')
+const selectedPeriod = ref<string>('dia-todo')
+
 const barChartRef = ref<HTMLCanvasElement | null>(null)
 const lineChartRef = ref<HTMLCanvasElement | null>(null)
+
 let barChartInstance: Chart | null = null
 let lineChartInstance: Chart | null = null
 
-
-const periods = [
+const periods = ref<Period[]>([
   { label: 'Manhã', value: 'manha' },
   { label: 'Tarde', value: 'tarde' },
   { label: 'Noite', value: 'noite' },
   { label: 'Dia Todo', value: 'dia-todo' }
-]
-
-const corridorData = ref([
-  {
-    name: 'R. Bacabal',
-    vehicles: 850,
-    speed: 32
-  },
-  {
-    name: 'Av. Cassiano Ricardo',
-    vehicles: 1200,
-    speed: 28
-  },
-  {
-    name: 'Av. Dr. Nélson d\'Ávila',
-    vehicles: 940,
-    speed: 35
-  }
 ])
 
-const getChartData = (period: string) => {
-  const baseData: { [key: string]: number[] } = {
-    'manha': [650, 900, 720],
-    'tarde': [850, 1200, 940],
-    'noite': [450, 800, 620],
+const corridorData = ref<CorridorData[]>([
+  { name: 'R. Bacabal', vehicles: 850, speed: 32 },
+  { name: 'Av. Cassiano Ricardo', vehicles: 1200, speed: 28 },
+  { name: "Av. Dr. Nélson d'Ávila", vehicles: 940, speed: 35 }
+])
+
+const getChartData = (period: string): number[] => {
+  const baseData: Record<string, number[]> = {
+    manha: [650, 900, 720],
+    tarde: [850, 1200, 940],
+    noite: [450, 800, 620],
     'dia-todo': [850, 1200, 940]
   }
-  
   return baseData[period] || baseData['dia-todo']
 }
 
-const getLineChartData = () => {
-  return [
-    { time: '06:00', value: 200 },
-    { time: '08:00', value: 450 },
-    { time: '10:00', value: 600 },
-    { time: '12:00', value: 350 },
-    { time: '14:00', value: 800 },
-    { time: '16:00', value: 750 },
-    { time: '18:00', value: 900 },
-    { time: '20:00', value: 550 },
-    { time: '22:00', value: 300 },
-    { time: '00:00', value: 150 }
-  ]
-}
+const getLineChartData = (): LineChartDataPoint[] => [
+  { time: '06:00', value: 200 },
+  { time: '08:00', value: 450 },
+  { time: '10:00', value: 600 },
+  { time: '12:00', value: 350 },
+  { time: '14:00', value: 800 },
+  { time: '16:00', value: 750 },
+  { time: '18:00', value: 900 },
+  { time: '20:00', value: 550 },
+  { time: '22:00', value: 300 },
+  { time: '00:00', value: 150 }
+]
 
 const createBarChart = () => {
   if (barChartRef.value) {
-    if (barChartInstance) {
-      barChartInstance.destroy()
-    }
-    
+    if (barChartInstance) barChartInstance.destroy()
+
     const data = getChartData(selectedPeriod.value)
-    
+
     barChartInstance = new Chart(barChartRef.value, {
       type: 'bar',
       data: {
-        labels: ['R. Bacabal', 'Av. Cassiano\nRicardo', 'Av. Dr. Nelson\nd\'Ávila'],
-        datasets: [{
-          label: 'Veículos/hora',
-          data: data,
-          backgroundColor: '#00c853',
-          borderColor: '#00963e',
-          borderWidth: 1,
-          borderRadius: 4
-        }]
+        labels: ['R. Bacabal', 'Av. Cassiano\nRicardo', "Av. Dr. Nelson\nd'Ávila"],
+        datasets: [
+          {
+            label: 'Veículos/hora',
+            data,
+            backgroundColor: '#00c853',
+            borderColor: '#00963e',
+            borderWidth: 1,
+            borderRadius: 4
+          }
+        ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          },
-          title: {
-            display: false
-          }
-        },
+        plugins: { legend: { display: false }, title: { display: false } },
         scales: {
           y: {
             beginAtZero: true,
             max: 1500,
-            ticks: {
-              stepSize: 500,
-              font: {
-                size: 12
-              },
-              color: '#7a7a7a'
-            },
-            grid: {
-              color: '#e0e0e0'
-            }
+            ticks: { stepSize: 500, font: { size: 12 }, color: '#7a7a7a' },
+            grid: { color: '#e0e0e0' }
           },
           x: {
-            ticks: {
-              font: {
-                size: 11
-              },
-              maxRotation: 0,
-              color: '#7a7a7a'
-            },
-            grid: {
-              display: false
-            }
+            ticks: { font: { size: 11 }, maxRotation: 0, color: '#7a7a7a' },
+            grid: { display: false }
           }
         }
       }
@@ -184,61 +148,42 @@ const createBarChart = () => {
 
 const createLineChart = () => {
   if (lineChartRef.value) {
-    if (lineChartInstance) {
-      lineChartInstance.destroy()
-    }
-    
+    if (lineChartInstance) lineChartInstance.destroy()
+
     const lineData = getLineChartData()
-    
+
     lineChartInstance = new Chart(lineChartRef.value, {
       type: 'line',
       data: {
         labels: lineData.map(item => item.time),
-        datasets: [{
-          label: 'Fluxo de Veículos',
-          data: lineData.map(item => item.value),
-          borderColor: '#4d4d4d',
-          backgroundColor: 'transparent',
-          borderWidth: 2,
-          tension: 0.4,
-          pointBackgroundColor: '#4d4d4d',
-          pointBorderColor: '#4d4d4d',
-          pointRadius: 4
-        }]
+        datasets: [
+          {
+            label: 'Fluxo de Veículos',
+            data: lineData.map(item => item.value),
+            borderColor: '#4d4d4d',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            tension: 0.4,
+            pointBackgroundColor: '#4d4d4d',
+            pointBorderColor: '#4d4d4d',
+            pointRadius: 4
+          }
+        ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          }
-        },
+        plugins: { legend: { display: false } },
         scales: {
           y: {
             beginAtZero: true,
             max: 1000,
-            ticks: {
-              stepSize: 500,
-              font: {
-                size: 12
-              },
-              color: '#7a7a7a'
-            },
-            grid: {
-              color: '#e0e0e0'
-            }
+            ticks: { stepSize: 500, font: { size: 12 }, color: '#7a7a7a' },
+            grid: { color: '#e0e0e0' }
           },
           x: {
-            ticks: {
-              font: {
-                size: 11
-              },
-              color: '#7a7a7a'
-            },
-            grid: {
-              display: false
-            }
+            ticks: { font: { size: 11 }, color: '#7a7a7a' },
+            grid: { display: false }
           }
         }
       }
@@ -248,11 +193,10 @@ const createLineChart = () => {
 
 watch(selectedPeriod, () => {
   const data = getChartData(selectedPeriod.value)
-  corridorData.value = corridorData.value.map((corridor, index) => ({
+  corridorData.value = corridorData.value.map((corridor: any, i: number) => ({
     ...corridor,
-    vehicles: data[index]
+    vehicles: data[i]
   }))
-  
   createBarChart()
 })
 
