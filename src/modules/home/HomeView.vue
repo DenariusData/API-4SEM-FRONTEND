@@ -1,36 +1,56 @@
-<script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-
-const test = ref([])
-
-// Ref para o mapa
-const mapContainer = ref<HTMLDivElement | null>(null)
-
-onMounted(() => {
-  if (mapContainer.value) {
-    const map = L.map(mapContainer.value).setView([-23.1896, -45.8842], 13)
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map)
-  }
-})
-</script>
-
 <template>
-  <div class="home">
-    <div ref="mapContainer" class="map"></div>
-  </div>
+  <div id="map" style="height: 100vh; width: 100%"></div>
 </template>
 
-<style scoped>
-.map {
+<script setup>
+import { onMounted } from "vue";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+onMounted(() => {
+  // Inicializa o mapa centralizado em São José dos Campos
+  const map = L.map("map").setView([-23.2, -45.9], 11);
+
+  // Camada base do OpenStreetMap
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors'
+  }).addTo(map);
+
+  // Carregar GeoJSON unificado (município + zonas)
+  fetch("/sjc.geojson")
+    .then(res => res.json())
+    .then(data => {
+      L.geoJSON(data, {
+        style: feature => ({
+          color: "#333",
+          weight: feature.properties.layer === "municipio" ? 2 : 1,
+          fillColor: feature.properties.color || "#3388ff",
+          fillOpacity: feature.properties.layer === "municipio" ? 0.2 : 0.6
+        }),
+        onEachFeature: (feature, layer) => {
+          const props = feature.properties;
+
+          // Popup do limite municipal
+          if (props.layer === "municipio") {
+            layer.bindPopup(`<b>${props.name}</b><br>${props.description}`);
+          }
+
+          // Popup das zonas
+          if (props.layer === "zona") {
+            layer.bindPopup(
+              `<b>Zona ${props.regiao}</b><br>População: ${props.populacao || "N/D"}`
+            );
+          }
+        }
+      }).addTo(map);
+    });
+});
+</script>
+
+<style>
+#map {
+  height: 100vh;
   width: 100%;
-  height: 400px;
-  margin-top: 24px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
 }
 </style>
