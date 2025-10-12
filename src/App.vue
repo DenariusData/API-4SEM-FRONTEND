@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter, RouterView } from 'vue-router'
-import LoginPopup from './modules/Login/LoginPopup.vue'
+import { RouterView } from 'vue-router'
+import LoginPopup from './modules/login/LoginPopup.vue'
+import AutoCompleteMenu from './shared/AutoCompleteMenu.vue'
 
 const menu = ref(false)
 const showLogin = ref(false)
-const router = useRouter()
-
-const goTo = (routeName: string) => {
-  menu.value = false
-  router.push({ name: routeName })
-}
 
 const openLogin = () => {
   showLogin.value = true
@@ -24,29 +19,7 @@ const openLogin = () => {
         <img src="../radariustxt.svg" alt="Logo" class="logo" />
       </div>
 
-      <v-menu v-model="menu" offset-y transition="fade-transition">
-        <template v-slot:activator="{ props }">
-          <v-text-field
-            v-bind="props"
-            readonly
-            hide-details
-            variant="outlined"
-            density="compact"
-            placeholder="Menu"
-            prepend-inner-icon="mdi-magnify"
-            class="search-bar"
-            @click="menu = true"
-          />
-        </template>
-
-        <v-list>
-          <v-list-item title="Home" @click="goTo('home')" />
-          <v-list-item title="Critérios" @click="goTo('criterias')" />
-          <v-list-item title="Alertas" @click="goTo('alerts')" />
-          <v-list-item title="Dashboards" @click="goTo('dashboards')" />
-          <v-list-item title="Indicadores" @click="goTo('indicators')" />
-        </v-list>
-      </v-menu>
+      <AutoCompleteMenu v-model="menu" />
 
       <v-spacer></v-spacer>
 
@@ -88,10 +61,6 @@ const openLogin = () => {
   width: auto;
 }
 
-.search-bar {
-  max-width: 300px;
-}
-
 .actions {
   display: flex;
   align-items: center;
@@ -99,9 +68,11 @@ const openLogin = () => {
 }
 
 .app {
+  position: relative;
+  height: calc(100vh - 65px);
   max-width: 1440px;
   width: 100%;
   margin: 64px auto 0 auto;
-  padding: 24px;
+  padding: 24px 0px;
 }
 </style>
