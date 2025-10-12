@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount, watch, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { SelectedLevel } from '@/modules/indicators/enums'
 
 interface Props {
@@ -20,13 +20,11 @@ const emit = defineEmits<{
 
 const openModal = () => {
   isVisible.value = true
-  document.body.style.overflow = 'hidden'
   emit('update:visible', true)
 }
 
 const closeModal = () => {
   isVisible.value = false
-  document.body.style.overflow = 'auto'
   emit('close')
   emit('update:visible', false)
 }
@@ -60,24 +58,22 @@ const levelColor = computed(() => {
   }
 })
 
-onBeforeUnmount(() => {
-  document.body.style.overflow = 'auto'
-})
-
 defineExpose({
   openModal,
 })
 </script>
 
 <template>
-  <div v-if="isVisible" class="modal-overlay" @click="closeModal">
-    <div class="modal-container" @click.stop>
-      <div class="modal-header" :style="{ background: levelColor }">
+  <v-dialog v-model="isVisible" max-width="500px" persistent>
+    <v-card>
+      <v-card-title class="modal-header" :style="{ background: levelColor }">
         <h2>Nível {{ props.selectedLevel.value }}</h2>
-        <button class="close-btn" @click="closeModal" aria-label="Fechar modal">×</button>
-      </div>
+        <v-btn icon variant="text" @click="closeModal" class="close-btn" aria-label="Fechar modal">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
 
-      <div class="modal-content">
+      <v-card-text class="modal-content">
         <div class="level-modal-content">
           <h4>O que significa este nível?</h4>
           <p>
@@ -89,75 +85,29 @@ defineExpose({
             monitoradas.
           </p>
         </div>
-      </div>
-    </div>
-  </div>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style lang="scss" scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  padding: 20px;
-  backdrop-filter: blur(4px);
-}
-
-.modal-container {
-  background: white;
-  border-radius: 20px;
-  max-width: 500px;
-  max-height: 90vh;
-  width: 100%;
-  overflow-y: auto;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
-  animation: modalAppear 0.3s ease-out;
-}
-
 .modal-header {
-  padding: 32px;
-  border-bottom: 1px solid #e0e0e0;
+  color: white !important;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: white;
-  border-radius: 20px 20px 0 0;
+  padding: 24px 32px;
 
   h2 {
     margin: 0;
     font-size: 1.6rem;
     font-weight: 600;
+    color: white;
   }
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 12px;
-  border-radius: 50%;
-  transition: all 0.2s;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  line-height: 1;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
-  }
+  color: white !important;
 }
 
 .modal-content {

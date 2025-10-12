@@ -21,7 +21,6 @@ import IndicatorsList from '@/modules/indicators/components/IndicatorsList.vue'
   display: flex;
   flex-direction: column;
   gap: 32px;
-  padding: 24px;
   margin: 0 auto;
 }
 
@@ -49,7 +48,6 @@ import IndicatorsList from '@/modules/indicators/components/IndicatorsList.vue'
 
 @media (max-width: 768px) {
   .indicators-view {
-    padding: 16px;
     gap: 24px;
   }
 
