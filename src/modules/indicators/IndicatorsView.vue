@@ -1,3 +1,41 @@
+<script setup lang="ts">
+import MobilityLevelsModal from '@/modules/indicators/components/MobilityLevelsModal.vue'
+import indicatorsServices from '@/modules/indicators/services/indicatorsServices'
+import type { Indicator } from '@/modules/indicators/types/indicatorsTypes'
+import { ref, onMounted } from 'vue'
+
+interface ModalRef {
+  openModal: () => void
+}
+
+const mobilityModal = ref<ModalRef | null>(null)
+const indicators = ref<Indicator[]>([])
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+
+const showMobilityLevels = () => {
+  mobilityModal.value?.openModal()
+}
+
+const fetchIndicators = async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+    const response = await indicatorsServices.get()
+    indicators.value = response.data.items
+  } catch (err) {
+    error.value = 'Erro ao carregar indicadores'
+    console.error('Erro ao buscar indicadores:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchIndicators()
+})
+</script>
+
 <template>
   <div class="indicators-view">
     <div class="page-header">
@@ -37,72 +75,45 @@
     </div>
 
     <div class="indicators-grid">
-      <div class="indicator-card" @click="showMobilityLevels">
-        <div class="card-content">
-          <h3>1. Congestionamento</h3>
-          <p>Identifica lentidão em uma via. Quanto maior a porcentagem, menor a fluidez dos veículos.</p>
-          <div class="card-example">
-            <strong>Exemplo:</strong> Av. Paraibuna, limite: 70 km/h; velocidade: 45 km/h → 35,7% → Nível 2
-          </div>
-          <span class="view-btn">Ver Detalhes</span>
-        </div>
+      <div v-if="isLoading" class="loading-message">Carregando indicadores...</div>
+
+      <div v-else-if="error" class="error-message">
+        {{ error }}
       </div>
 
-      <div class="indicator-card" @click="showMobilityLevels">
+      <div
+        v-else
+        v-for="(indicator, index) in indicators"
+        :key="indicator.id"
+        class="indicator-card"
+        @click="showMobilityLevels"
+      >
         <div class="card-content">
-          <h3>2. Densidade de Veículos</h3>
-          <p>Monitoramento da ocupação de espaço por câmeras. Maior densidade = menor fluidez.</p>
+          <h3>{{ index + 1 }}. {{ indicator.name }}</h3>
+          <p>{{ indicator.description }}</p>
           <div class="card-example">
-            <strong>Exemplo:</strong> Via de 2 faixas, 8 carros, 2 caminhões, 1 van → 66% → Nível 4
-          </div>
-          <span class="view-btn">Ver Detalhes</span>
-        </div>
-      </div>
-
-      <div class="indicator-card" @click="showMobilityLevels">
-        <div class="card-content">
-          <h3>3. Veículos de Grande Porte</h3>
-          <p>Análise da circulação de caminhões, vans e camionetes nas vias.</p>
-          <div class="card-example">
-            <strong>Exemplo:</strong> Av. Florestan Fernandes - Caminhões: 10%, Vans: 6% → 16% → Nível 4
-          </div>
-          <span class="view-btn">Ver Detalhes</span>
-        </div>
-      </div>
-
-      <div class="indicator-card" @click="showMobilityLevels">
-        <div class="card-content">
-          <h3>4. Infrações de Velocidade</h3>
-          <p>Monitoramento de excesso de velocidade para prevenção de acidentes.</p>
-          <div class="card-example">
-            <strong>Exemplo:</strong> Av. Dr. Nelson D'Ávila – 38% de infrações nas últimas 24h → Nível 5
+            <strong>Exemplo:</strong>
+            <span v-if="indicator.name === 'Congestionamento'">
+              Av. Paraibuna, limite: 70 km/h; velocidade: 45 km/h → 35,7% → Nível 2
+            </span>
+            <span v-else-if="indicator.name === 'Densidade de Veículos'">
+              Via de 2 faixas, 8 carros, 2 caminhões, 1 van → 66% → Nível 4
+            </span>
+            <span v-else-if="indicator.name === 'Veículos de Grande Porte'">
+              Av. Florestan Fernandes - Caminhões: 10%, Vans: 6% → 16% → Nível 4
+            </span>
+            <span v-else-if="indicator.name === 'Infrações de Velocidade'">
+              Av. Dr. Nelson D'Ávila – 38% de infrações nas últimas 24h → Nível 5
+            </span>
           </div>
           <span class="view-btn">Ver Detalhes</span>
         </div>
       </div>
     </div>
 
-    <MobilityLevelsModal
-      ref="mobilityModal"
-    />
+    <MobilityLevelsModal ref="mobilityModal" />
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import MobilityLevelsModal from './MobilityLevelsModal.vue'
-
-interface ModalRef {
-  openModal: () => void
-}
-
-const mobilityModal = ref<ModalRef | null>(null)
-
-const showMobilityLevels = () => {
-  mobilityModal.value?.openModal()
-}
-
-</script>
 
 <style lang="scss" scoped>
 .indicators-view {
@@ -110,9 +121,7 @@ const showMobilityLevels = () => {
   flex-direction: column;
   gap: 32px;
   padding: 24px;
-  max-width: 1200px;
   margin: 0 auto;
-  min-height: 100vh;
 }
 
 .page-header {
@@ -326,5 +335,27 @@ const showMobilityLevels = () => {
   .indicator-card {
     padding: 20px;
   }
+}
+
+.loading-message,
+.error-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.loading-message {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f7fa 100%);
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.error-message {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }
 </style>
