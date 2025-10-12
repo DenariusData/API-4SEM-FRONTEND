@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, RouterView } from 'vue-router'
-import LoginPopup from "./modules/Login/LoginPopup.vue";
-
+import LoginPopup from './modules/Login/LoginPopup.vue'
 
 const menu = ref(false)
 const showLogin = ref(false)
@@ -21,12 +20,10 @@ const openLogin = () => {
 <template>
   <v-app>
     <v-app-bar :elevation="0" class="top-bar" color="white">
-      <!-- Logo -->
       <div class="logo-container">
-        <img src="../public/radariustxt.svg" alt="Logo" class="logo" />
+        <img src="../radariustxt.svg" alt="Logo" class="logo" />
       </div>
 
-      <!-- Barra de pesquisa / menu -->
       <v-menu v-model="menu" offset-y transition="fade-transition">
         <template v-slot:activator="{ props }">
           <v-text-field
@@ -42,7 +39,7 @@ const openLogin = () => {
           />
         </template>
 
-                <v-list>
+        <v-list>
           <v-list-item title="Home" @click="goTo('home')" />
           <v-list-item title="Critérios" @click="goTo('criterias')" />
           <v-list-item title="Alertas" @click="goTo('alerts')" />
@@ -53,7 +50,6 @@ const openLogin = () => {
 
       <v-spacer></v-spacer>
 
-      <!-- Ícones à direita -->
       <div class="actions">
         <v-btn icon="mdi-account-circle" variant="text" color="black"></v-btn>
         <v-btn icon="mdi-login" variant="text" color="black" @click="openLogin"></v-btn>
@@ -64,7 +60,6 @@ const openLogin = () => {
       <RouterView :key="$route.fullPath" />
     </div>
 
-    <!-- Componente de Login -->
     <LoginPopup v-model="showLogin" />
   </v-app>
 </template>
@@ -72,6 +67,7 @@ const openLogin = () => {
 <style lang="scss" scoped>
 .top-bar {
   border-bottom: 1px solid #e0e0e0;
+
   :deep(.v-toolbar__content) {
     max-width: 1440px;
     width: 100%;
@@ -88,7 +84,7 @@ const openLogin = () => {
 }
 
 .logo {
-  height: 60px;
+  height: 48px;
   width: auto;
 }
 
