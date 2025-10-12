@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import MobilityLevelsModal from '@/modules/indicators/components/MobilityLevelsModal.vue'
+import LevelsDisplay from '@/modules/indicators/components/LevelsDisplay.vue'
+import MobilityLevelsModal from '@/modules/indicators/components/modals/MobilityLevelsModal.vue'
 import indicatorsServices from '@/modules/indicators/services/indicatorsServices'
 import type { Indicator } from '@/modules/indicators/types/indicatorsTypes'
 import { ref, onMounted } from 'vue'
@@ -12,10 +13,6 @@ const mobilityModal = ref<ModalRef | null>(null)
 const indicators = ref<Indicator[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
-
-const showMobilityLevels = () => {
-  mobilityModal.value?.openModal()
-}
 
 const fetchIndicators = async () => {
   try {
@@ -31,6 +28,10 @@ const fetchIndicators = async () => {
   }
 }
 
+const showMobilityLevels = () => {
+  mobilityModal.value?.openModal()
+}
+
 onMounted(() => {
   fetchIndicators()
 })
@@ -43,36 +44,7 @@ onMounted(() => {
       <p>Visualize e compreenda os critérios e níveis de mobilidade urbana</p>
     </div>
 
-    <div class="quick-stats">
-      <h2>Níveis de Classificação</h2>
-      <div class="stats-grid">
-        <div class="stat-card level-1" @click="showMobilityLevels">
-          <div class="stat-number">1</div>
-          <div class="stat-label">Excelente</div>
-          <div class="stat-desc">0% - 19,9%</div>
-        </div>
-        <div class="stat-card level-2" @click="showMobilityLevels">
-          <div class="stat-number">2</div>
-          <div class="stat-label">Bom</div>
-          <div class="stat-desc">20% - 39,9%</div>
-        </div>
-        <div class="stat-card level-3" @click="showMobilityLevels">
-          <div class="stat-number">3</div>
-          <div class="stat-label">Intermediário</div>
-          <div class="stat-desc">40% - 59,9%</div>
-        </div>
-        <div class="stat-card level-4" @click="showMobilityLevels">
-          <div class="stat-number">4</div>
-          <div class="stat-label">Ruim</div>
-          <div class="stat-desc">60% - 79,9%</div>
-        </div>
-        <div class="stat-card level-5" @click="showMobilityLevels">
-          <div class="stat-number">5</div>
-          <div class="stat-label">Péssimo</div>
-          <div class="stat-desc">80% - 100%</div>
-        </div>
-      </div>
-    </div>
+    <LevelsDisplay />
 
     <div class="indicators-grid">
       <div v-if="isLoading" class="loading-message">Carregando indicadores...</div>
@@ -144,91 +116,6 @@ onMounted(() => {
     color: #6b7280;
     margin: 0;
   }
-}
-
-.quick-stats {
-  background: white;
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-
-  h2 {
-    text-align: center;
-    color: #1f2937;
-    margin-bottom: 24px;
-    font-size: 1.8rem;
-    font-weight: 600;
-  }
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 20px;
-  padding: 28px;
-  text-align: center;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  border: 2px solid transparent;
-
-  &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-  }
-}
-
-.stat-number {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: white;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px auto;
-}
-
-.stat-label {
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #374151;
-  font-size: 1.1rem;
-}
-
-.stat-desc {
-  font-size: 0.95rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.stat-card.level-1 .stat-number {
-  background: linear-gradient(135deg, #10b981, #059669);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
-}
-.stat-card.level-2 .stat-number {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
-}
-.stat-card.level-3 .stat-number {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
-}
-.stat-card.level-4 .stat-number {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
-}
-.stat-card.level-5 .stat-number {
-  background: linear-gradient(135deg, #991b1b, #7f1d1d);
-  box-shadow: 0 6px 16px rgba(153, 27, 27, 0.3);
 }
 
 .indicators-grid {
