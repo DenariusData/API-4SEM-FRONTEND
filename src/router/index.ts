@@ -15,6 +15,12 @@ const router = createRouter({
       component: () => import('@/modules/alerts/AlertsView.vue'),
     },
     {
+      path: '/alerts/:id',
+      name: 'alert-details',
+      component: () => import('@/modules/alerts/AlertDetailsView.vue'),
+      props: true,
+    },
+    {
       path: '/dashboards',
       name: 'dashboards',
       component: () => import('@/modules/dashboards/DashboardsView.vue'),

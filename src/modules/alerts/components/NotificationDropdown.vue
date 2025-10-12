@@ -60,9 +60,13 @@ const formatTime = (timestamp: string): string => {
   return `${diffDays}d`
 }
 
-const clearNotifications = () => {
-  alerts.value = []
+const goToAlertDetails = (alert: Alert) => {
   isOpen.value = false
+  router.push({ name: 'alert-details', params: { id: alert.alert_id } })
+}
+
+const isFinalized = (alert: Alert) => {
+  return alert.finalized === true
 }
 
 const goToAlertsPage = () => {
@@ -116,10 +120,24 @@ defineExpose({
         </div>
 
         <div v-else class="notification-dropdown__list">
-          <div v-for="alert in alerts" :key="alert.id" class="notification-dropdown__item">
+          <div
+            v-for="alert in alerts"
+            :key="alert.id"
+            class="notification-dropdown__item notification-dropdown__item--clickable"
+            @click="goToAlertDetails(alert)"
+            tabindex="0"
+            role="button"
+          >
             <div class="notification-dropdown__item-header">
               <span class="notification-dropdown__indicator">{{ alert.indicator }}</span>
               <span class="notification-dropdown__time">{{ formatTime(alert.timestamp) }}</span>
+              <v-icon
+                size="18"
+                :color="isFinalized(alert) ? 'success' : 'primary'"
+                class="notification-dropdown__status-icon"
+              >
+                {{ isFinalized(alert) ? 'mdi-check-circle' : 'mdi-eye' }}
+              </v-icon>
             </div>
 
             <div class="notification-dropdown__levels">
@@ -153,9 +171,6 @@ defineExpose({
       </v-card-text>
 
       <v-card-actions v-if="alerts.length > 0" class="notification-dropdown__actions">
-        <v-btn variant="text" size="small" @click="clearNotifications" class="notification-dropdown__clear-btn">
-          Limpar todas
-        </v-btn>
         <v-spacer></v-spacer>
         <v-btn variant="text" size="small" color="primary" @click="goToAlertsPage"> Ver todas </v-btn>
       </v-card-actions>
@@ -228,6 +243,19 @@ defineExpose({
     &:last-child {
       border-bottom: none;
     }
+
+    &--clickable {
+      cursor: pointer;
+      outline: none;
+
+      &:focus {
+        background-color: #f0f7ff;
+      }
+
+      &:active {
+        background-color: #e0e7ef;
+      }
+    }
   }
 
   &__item-header {
@@ -246,6 +274,11 @@ defineExpose({
   &__time {
     font-size: 0.8rem;
     color: #6b7280;
+  }
+
+  &__status-icon {
+    margin-left: 8px;
+    vertical-align: middle;
   }
 
   &__levels {
@@ -279,10 +312,6 @@ defineExpose({
     border-top: 1px solid #e0e0e0;
     background: #f8f9fa;
     padding: 12px 16px;
-  }
-
-  &__clear-btn {
-    color: #6b7280;
   }
 }
 </style>
