@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { RouterView } from 'vue-router'
 import LoginPopup from './modules/login/LoginPopup.vue'
 import AutoCompleteMenu from './shared/AutoCompleteMenu.vue'
+import NotificationDropdown from './modules/alerts/components/NotificationDropdown.vue'
 
 const menu = ref(false)
 const showLogin = ref(false)
@@ -24,7 +25,7 @@ const openLogin = () => {
       <v-spacer></v-spacer>
 
       <div class="actions">
-        <v-btn icon="mdi-account-circle" variant="text" color="black"></v-btn>
+        <NotificationDropdown />
         <v-btn icon="mdi-login" variant="text" color="black" @click="openLogin"></v-btn>
       </div>
     </v-app-bar>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import type { SelectedLevel } from '@/modules/indicators/enums'
+import type { SelectedLevel } from '@/shared/enums'
 
 interface Props {
   selectedLevel: SelectedLevel

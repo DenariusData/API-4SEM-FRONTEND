@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import LevelDescriptionModal from '@/modules/indicators/components/modals/LevelDescriptionModal.vue'
 import { ref } from 'vue'
-import { LEVELS_ENUM, type LevelKey, type SelectedLevel } from '@/modules/indicators/enums'
+import { LEVELS_ENUM, type LevelKey, type SelectedLevel } from '@/shared/enums'
 
 const isLevelModalOpened = ref(false)
 const selectedLevel = ref<SelectedLevel>({
