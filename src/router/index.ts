@@ -10,11 +10,6 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/criterias',
-      name: 'criterias',
-      component: () => import('@/modules/criterias/CriteriasView.vue'),
-    },
-    {
       path: '/alerts',
       name: 'alerts',
       component: () => import('@/modules/alerts/AlertsView.vue'),
@@ -22,12 +17,12 @@ const router = createRouter({
     {
       path: '/dashboards',
       name: 'dashboards',
-      component: () => import('@/modules/dashboards/DashboardsView.vue')
+      component: () => import('@/modules/dashboards/DashboardsView.vue'),
     },
-     {
+    {
       path: '/indicators',
       name: 'indicators',
-      component: () => import('@/modules/indicators/IndicatorsView.vue')
+      component: () => import('@/modules/indicators/IndicatorsView.vue'),
     },
   ],
 })

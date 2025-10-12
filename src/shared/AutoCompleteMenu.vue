@@ -23,7 +23,6 @@ const selectedItem = ref<string | null>(null)
 
 const menuItems: MenuItem[] = [
   { title: 'Home', value: 'home', route: 'home' },
-  { title: 'Critérios', value: 'criterias', route: 'criterias' },
   { title: 'Alertas', value: 'alerts', route: 'alerts' },
   { title: 'Dashboards', value: 'dashboards', route: 'dashboards' },
   { title: 'Indicadores', value: 'indicators', route: 'indicators' },

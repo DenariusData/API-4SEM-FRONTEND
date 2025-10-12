@@ -1,4 +1,3 @@
-import criteriasRoutes from '@/modules/criterias/mock/routes/criteriasRoutes'
 import indicatorsRoutes from '@/modules/indicators/mock/routes/indicatorsRoutes'
 import sjcGeojsonJson from '@/modules/home/mock/routes/sjcGeoJsonRoutes'
 import { createServer, Server, Request } from 'miragejs'
@@ -6,7 +5,7 @@ import type { MockFlagReturn } from '@/utils/mockUtils'
 
 export function makeServer(): Server | undefined {
   if (import.meta.env.MODE === 'development' && !(window as any).server) {
-    const routes: MockFlagReturn[] = [...criteriasRoutes, ...indicatorsRoutes, ...sjcGeojsonJson]
+    const routes: MockFlagReturn[] = [...indicatorsRoutes, ...sjcGeojsonJson]
 
     ;(window as any).server = createServer({
       models: {},
