@@ -7,7 +7,8 @@
         "id": 3549904,
         "name": "São José dos Campos",
         "description": "São José dos Campos",
-        "layer": "municipio"
+        "layer": "municipio",
+        "color": "#8F8D8D"
       },
       "geometry": {
         "type": "Polygon",
@@ -737,7 +738,7 @@
         "populacao": 72115,
         "area": null,
         "layer": "zona",
-        "color": "#e41a1c"
+        "color": "#cc1818"
       },
       "geometry": {
         "type": "Polygon",
@@ -1270,7 +1271,7 @@
         "populacao": 46803,
         "area": null,
         "layer": "zona",
-        "color": "#ffff33"
+        "color": "#ffd60a"
       },
       "geometry": {
         "type": "Polygon",
@@ -2703,7 +2704,7 @@
         "populacao": 59800,
         "area": null,
         "layer": "zona",
-        "color": "#377eb8"
+        "color": "#060270"
       },
       "geometry": {
         "type": "Polygon",
@@ -11320,7 +11321,7 @@
         "populacao": 415880,
         "area": null,
         "layer": "zona",
-        "color": "#ff7f00"
+        "color": "#FF8D01"
       },
       "geometry": {
         "type": "Polygon",
@@ -12889,7 +12890,7 @@
         "populacao": 233536,
         "area": null,
         "layer": "zona",
-        "color": "#4daf4a"
+        "color": "#00c853"
       },
       "geometry": {
         "type": "Polygon",
@@ -14626,7 +14627,7 @@
         "populacao": 160990,
         "area": null,
         "layer": "zona",
-        "color": "#984ea3"
+        "color": "#A100FE"
       },
       "geometry": {
         "type": "Polygon",
