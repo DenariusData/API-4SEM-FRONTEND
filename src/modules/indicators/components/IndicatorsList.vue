@@ -2,7 +2,7 @@
 import MobilityLevelsModal from '@/modules/indicators/components/modals/MobilityLevelsModal.vue'
 import indicatorsServices from '@/modules/indicators/services/indicatorsServices'
 import type { Indicator } from '@/modules/indicators/types/indicatorsTypes'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 
 interface ModalRef {
   openModal: () => void
@@ -15,8 +15,8 @@ const error = ref<string | null>(null)
 const selectedIndicator = ref<Indicator | null>(null)
 
 const fetchIndicators = async () => {
+  isLoading.value = true
   try {
-    isLoading.value = true
     error.value = null
     const response = await indicatorsServices.get()
     indicators.value = response.data
@@ -30,7 +30,9 @@ const fetchIndicators = async () => {
 
 const showMobilityLevels = (indicator: Indicator) => {
   selectedIndicator.value = indicator
-  mobilityModal.value?.openModal()
+  nextTick(() => {
+    mobilityModal.value?.openModal()
+  })
 }
 
 onMounted(() => {
@@ -46,13 +48,7 @@ onMounted(() => {
       {{ error }}
     </div>
 
-    <div
-      v-else
-      v-for="(indicator, index) in indicators"
-      :key="indicator.id"
-      class="indicators-list__card"
-      @click="showMobilityLevels(indicator)"
-    >
+    <div v-else v-for="(indicator, index) in indicators" :key="indicator.id" class="indicators-list__card">
       <div class="indicators-list__content">
         <h3 class="indicators-list__title">{{ index + 1 }}. {{ indicator.name }}</h3>
         <div class="indicators-list__details">
@@ -60,11 +56,11 @@ onMounted(() => {
           <div class="indicators-list__example"><strong>Exemplo:</strong> {{ indicator.example }}</div>
           <div class="indicators-list__math"><strong>Fórmula:</strong> {{ indicator.mathExpression }}</div>
         </div>
-        <span class="indicators-list__btn">Ver Detalhes</span>
+        <button class="indicators-list__btn" @click="showMobilityLevels(indicator)">Ver Detalhes</button>
       </div>
     </div>
 
-    <MobilityLevelsModal ref="mobilityModal" :selected-indicator="selectedIndicator" />
+    <MobilityLevelsModal v-if="selectedIndicator" ref="mobilityModal" :selected-indicator="selectedIndicator" />
   </div>
 </template>
 
@@ -89,7 +85,6 @@ onMounted(() => {
     overflow: hidden;
 
     &:hover {
-      transform: translateY(-8px);
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
       border-color: #00c853;
     }
