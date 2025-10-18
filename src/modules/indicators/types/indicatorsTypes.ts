@@ -4,21 +4,11 @@ export interface CriterionRange {
 }
 
 export interface Indicator {
-  id: number
-  name: string
+  createdAt: string
+  createdByName: string
   description: string
-  category: string
-  unit: string
-  minValue: number
-  maxValue: number
   example: string
-  purpose: string
-  ranges: CriterionRange[]
-  details: string
-  nullValue: string
-}
-
-export interface IndicatorResponse {
-  items: Indicator[]
-  total: number
+  id: number
+  mathExpression: string
+  name: string
 }
