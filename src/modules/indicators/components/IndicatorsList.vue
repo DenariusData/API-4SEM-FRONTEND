@@ -19,7 +19,7 @@ const fetchIndicators = async () => {
     isLoading.value = true
     error.value = null
     const response = await indicatorsServices.get()
-    indicators.value = response.data.items
+    indicators.value = response.data
   } catch (err) {
     error.value = 'Erro ao carregar indicadores'
     console.error('Erro ao buscar indicadores:', err)
@@ -55,8 +55,11 @@ onMounted(() => {
     >
       <div class="indicators-list__content">
         <h3 class="indicators-list__title">{{ index + 1 }}. {{ indicator.name }}</h3>
-        <p class="indicators-list__description">{{ indicator.description }}</p>
-        <div class="indicators-list__example"><strong>Exemplo:</strong> {{ indicator.example }}</div>
+        <div class="indicators-list__details">
+          <p class="indicators-list__description">{{ indicator.description }}</p>
+          <div class="indicators-list__example"><strong>Exemplo:</strong> {{ indicator.example }}</div>
+          <div class="indicators-list__math"><strong>Fórmula:</strong> {{ indicator.mathExpression }}</div>
+        </div>
         <span class="indicators-list__btn">Ver Detalhes</span>
       </div>
     </div>
@@ -70,6 +73,10 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 28px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 
   &__card {
     background: white;
@@ -96,30 +103,51 @@ onMounted(() => {
     }
   }
 
+  &__content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+    height: 100%;
+  }
+
   &__title {
     font-size: 1.5rem;
     color: #1f2937;
-    margin: 0 0 16px 0;
     font-weight: 600;
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    flex-grow: 1;
   }
 
   &__description {
     color: #6b7280;
-    margin: 0 0 20px 0;
     line-height: 1.6;
     font-size: 1.05rem;
   }
 
-  &__example {
+  &__example,
+  &__math {
     background: linear-gradient(135deg, #f0f9ff 0%, #e0f7fa 100%);
     border: 1px solid #bfdbfe;
     border-radius: 16px;
     padding: 16px;
-    margin: 20px 0;
     font-size: 0.95rem;
     color: #1e40af;
     line-height: 1.6;
     box-shadow: 0 2px 8px rgba(30, 64, 175, 0.1);
+  }
+
+  &__math {
+    background: linear-gradient(135deg, #f4f4f4 0%, #e0e0e0 100%);
+    border: 1px solid #bdbdbd;
+    color: #4d4d4d;
+    box-shadow: 0 2px 8px rgba(77, 77, 77, 0.1);
   }
 
   &__btn {
@@ -160,10 +188,6 @@ onMounted(() => {
     background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
     color: #dc2626;
     border: 1px solid #fecaca;
-  }
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
   }
 }
 </style>
