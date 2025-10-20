@@ -6,7 +6,6 @@ interface MockParams {
 }
 
 const alertsRoutes = [
-  // Lista dos últimos 10 alertas
   mockFlag(
     {
       method: 'get',
@@ -124,7 +123,6 @@ const alertsRoutes = [
     'on',
   ),
 
-  // Detalhes de um alerta específico
   mockFlag(
     {
       method: 'get',
@@ -214,7 +212,6 @@ const alertsRoutes = [
     'on',
   ),
 
-  // Lista de problemas
   mockFlag(
     {
       method: 'get',
@@ -238,7 +235,6 @@ const alertsRoutes = [
     'on',
   ),
 
-  // Protocolos por problema
   mockFlag(
     {
       method: 'get',
@@ -343,7 +339,6 @@ const alertsRoutes = [
     'on',
   ),
 
-  // Lista de agentes
   mockFlag(
     {
       method: 'get',
@@ -367,7 +362,6 @@ const alertsRoutes = [
     'on',
   ),
 
-  // Finalizar alerta
   mockFlag(
     {
       method: 'post',
