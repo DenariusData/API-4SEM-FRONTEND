@@ -157,7 +157,12 @@ function clearSelection() {
       <div class="filters">
         <div class="filter-group">
           <label>Data/hora inicial:</label>
-          <input type="datetime-local" v-model="startDateTime" lang="pt-BR" placeholder="Selecione data e hora" />
+          <v-date-input
+            v-model="startDateTime"
+            label="Data/hora inicial"
+            placeholder="Selecione data e hora"
+          ></v-date-input>
+          <input type="datetime-local" v-model="startDateTime" lang="pt_BR" placeholder="Selecione data e hora" />
         </div>
 
         <div class="filter-group">
@@ -167,15 +172,9 @@ function clearSelection() {
       </div>
 
       <div class="status">
-        <span v-if="selectedZones.length === 0 && filteredZones.length === 0">
-          Nenhuma zona selecionada
-        </span>
-        <span v-else-if="selectedZones.length > 0">
-          Zonas (pré-seleção): {{ selectedZones.join(', ') }}
-        </span>
-        <span v-else>
-          Zonas aplicadas: {{ filteredZones.join(', ') }}
-        </span>
+        <span v-if="selectedZones.length === 0 && filteredZones.length === 0"> Nenhuma zona selecionada </span>
+        <span v-else-if="selectedZones.length > 0"> Zonas (pré-seleção): {{ selectedZones.join(', ') }} </span>
+        <span v-else> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
       </div>
 
       <div class="buttons">
@@ -191,9 +190,7 @@ function clearSelection() {
       </div>
     </div>
 
-    <div class="instructions">
-      ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la antes de aplicar o filtro.
-    </div>
+    <div class="instructions">ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la antes de aplicar o filtro.</div>
 
     <div ref="mapContainer" class="map"></div>
   </div>
