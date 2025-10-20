@@ -156,18 +156,19 @@ function clearSelection() {
     <div class="filter-bar">
       <div class="filters">
         <div class="filter-group">
-          <label>Data/hora inicial:</label>
           <v-date-input
             v-model="startDateTime"
             label="Data/hora inicial"
             placeholder="Selecione data e hora"
           ></v-date-input>
-          <input type="datetime-local" v-model="startDateTime" lang="pt_BR" placeholder="Selecione data e hora" />
         </div>
 
         <div class="filter-group">
-          <label>Data/hora final:</label>
-          <input type="datetime-local" v-model="endDateTime" lang="pt-BR" placeholder="Selecione data e hora" />
+          <v-date-input
+            v-model="endDateTime"
+            label="Data/hora final"
+            placeholder="Selecione data e hora"
+          ></v-date-input>
         </div>
       </div>
 
@@ -221,16 +222,15 @@ function clearSelection() {
         display: flex;
         flex-direction: column;
         font-size: 0.85rem;
+        width: 220px;
 
         label {
           font-weight: 500;
           margin-bottom: 0.2rem;
         }
 
-        input[type='datetime-local'] {
-          padding: 0.25rem 0.4rem;
-          border-radius: 6px;
-          border: 1px solid #ccc;
+        :deep(.v-date-input) {
+          width: 100%;
         }
       }
     }
