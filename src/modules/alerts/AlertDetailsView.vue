@@ -212,19 +212,21 @@
               </v-list>
             </div>
 
-            <v-alert v-else type="warning" variant="tonal">
-              <div class="alert-details__no-protocol">
-                <v-icon size="24" class="mr-3">mdi-alert-circle</v-icon>
-                <div>
-                  <strong>Protocolo não encontrado</strong>
-                  <p class="mt-1">O protocolo para este problema ainda não foi criado.</p>
-                  <v-btn color="success" variant="text" class="mt-2 pa-0" @click="contactManager">
-                    <v-icon start>mdi-whatsapp</v-icon>
-                    Contatar Gestor
-                  </v-btn>
-                </div>
+            <div v-else class="alert-details__no-protocol-container">
+              <div class="alert-details__no-protocol-icon">
+                <v-icon size="48" color="warning">mdi-file-document-alert-outline</v-icon>
               </div>
-            </v-alert>
+              <div class="alert-details__no-protocol-content">
+                <h4 class="alert-details__no-protocol-title">Protocolo não encontrado</h4>
+                <p class="alert-details__no-protocol-text">
+                  O protocolo para este problema ainda não foi criado. Entre em contato com o gestor para solicitar a criação.
+                </p>
+                <v-btn color="success" variant="flat" class="mt-3" @click="contactManager">
+                  <v-icon start>mdi-whatsapp</v-icon>
+                  Contatar Gestor pelo WhatsApp
+                </v-btn>
+              </div>
+            </div>
           </v-card-text>
         </v-card>
 
@@ -328,7 +330,11 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import alertServices from '@/modules/alerts/services/alertServices'
-import type { AlertDetails, Problem, Protocol, Agent } from '@/modules/alerts/types/alertsTypes'
+import problemsService from '@/modules/alerts/services/problemsServices'
+import usersService from '@/modules/alerts/services/userServices'
+import type { AlertDetails } from '@/modules/alerts/types/alertsTypes'
+import type { Problem, Protocol } from '@/modules/alerts/types/alertsTypes'
+import type { Agent } from '@/modules/alerts/types/alertsTypes'
 import { LEVELS_ENUM } from '@/shared/enums'
 
 interface Props {
@@ -436,7 +442,7 @@ const fetchAlertDetails = async () => {
 
 const fetchProblems = async () => {
   try {
-    const response = await alertServices.getProblems()
+    const response = await problemsService.getAll()
     problems.value = response.data.items
   } catch (err) {
     console.error('Erro ao buscar problemas:', err)
@@ -445,7 +451,7 @@ const fetchProblems = async () => {
 
 const fetchAgents = async () => {
   try {
-    const response = await alertServices.getAgents()
+    const response = await usersService.getAgents()
     agents.value = response.data.items
   } catch (err) {
     console.error('Erro ao buscar agentes:', err)
@@ -463,7 +469,7 @@ const onProblemSelected = async (problemId: number) => {
 
   try {
     isLoadingProtocol.value = true
-    const response = await alertServices.getProtocol(problemId)
+    const response = await problemsService.getProtocol(problemId)
     protocol.value = response.data
   } catch (err) {
     console.error('Erro ao buscar protocolo:', err)
@@ -735,9 +741,44 @@ onUnmounted(() => {
     }
   }
 
-  &__no-protocol {
+  &__no-protocol-container {
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 24px;
+  }
+
+  &__no-protocol-icon {
+    margin-bottom: 20px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  &__no-protocol-content {
+    max-width: 500px;
+  }
+
+  &__no-protocol-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 12px;
+  }
+
+  &__no-protocol-text {
+    font-size: 0.95rem;
+    color: #6b7280;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
   }
 
   &__actions {
