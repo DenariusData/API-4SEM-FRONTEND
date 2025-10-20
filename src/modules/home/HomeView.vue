@@ -135,12 +135,6 @@ function applyFilter() {
   filteredZones.value = [...selectedZones.value]
   selectedZones.value = []
 
-  console.log('📊 Filtro aplicado:', {
-    zones: filteredZones.value,
-    startDateTime: startDateTime.value,
-    endDateTime: endDateTime.value,
-  })
-
   drawMap(filtered)
   activeAnimations.forEach(clearInterval)
   activeAnimations.clear()
