@@ -13,7 +13,7 @@ export function makeServer(): Server | undefined {
 
       routes() {
         this.urlPrefix = 'http://localhost:8080'
-        this.namespace = 'api'
+        this.namespace = ''
         this.timing = 400
 
         routes.forEach((route) => {

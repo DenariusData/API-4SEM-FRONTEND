@@ -1,102 +1,22 @@
-<template>
-  <v-dialog v-model="isVisible" max-width="850px" persistent scrollable>
-    <v-card class="modal-card">
-      <v-card-title class="mobility-levels-modal__header">
-        <h2 class="mobility-levels-modal__title">{{ modalTitle }}</h2>
-        <v-btn icon variant="text" @click="closeModal" class="mobility-levels-modal__close-btn">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
-
-      <v-card-text class="mobility-levels-modal__content">
-        <div v-if="selectedIndicator" class="mobility-levels-modal__indicator">
-          <div class="mobility-levels-modal__sections">
-            <v-alert
-              type="info"
-              variant="tonal"
-              class="mobility-levels-modal__purpose mb-6"
-              border="start"
-              border-color="success"
-            >
-              <strong>Finalidade:</strong> {{ selectedIndicator.purpose }}
-            </v-alert>
-
-            <v-card class="mobility-levels-modal__ranges-table mb-6">
-              <v-table>
-                <thead>
-                  <tr>
-                    <th>Nível</th>
-                    <th>Faixa</th>
-                    <th>Classificação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="range in selectedIndicator.ranges" :key="range.level" :class="`level-${range.level}`">
-                    <td>{{ range.level }}</td>
-                    <td>{{ range.range }}</td>
-                    <td>{{ getLevelLabel(range.level) }}</td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </v-card>
-
-            <v-alert
-              v-if="selectedIndicator.example"
-              type="warning"
-              variant="tonal"
-              class="mobility-levels-modal__example mb-4"
-              border="start"
-              border-color="warning"
-            >
-              <strong>Exemplo:</strong> {{ selectedIndicator.example }}
-            </v-alert>
-
-            <v-alert
-              v-if="selectedIndicator.nullValue"
-              type="error"
-              variant="tonal"
-              class="mobility-levels-modal__null-value mb-4"
-              border="start"
-              border-color="error"
-            >
-              <strong>Valor NULL:</strong> {{ selectedIndicator.nullValue }}
-            </v-alert>
-
-            <v-alert
-              v-if="selectedIndicator.details"
-              type="info"
-              variant="tonal"
-              class="mobility-levels-modal__details"
-              border="start"
-              border-color="info"
-            >
-              <strong>Detalhamento:</strong>
-              <p v-html="selectedIndicator.details.replace(/\n/g, '<br>')" class="mt-2 mb-0"></p>
-            </v-alert>
-          </div>
-        </div>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
-</template>
-
 <script setup lang="ts">
+import levelsServices from '@/modules/levels/service/levelsServices'
 import { ref, computed } from 'vue'
 import type { Indicator } from '@/modules/indicators/types/indicatorsTypes'
+import type { Level } from '@/modules/levels/types/levelsTypes'
 
 interface Props {
-  selectedIndicator?: Indicator | null
+  selectedIndicator: Indicator
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  selectedIndicator: null,
-})
+const props = defineProps<Props>()
 
 interface MobilityLevel {
   level: number
   label: string
 }
 
+const levelList = ref<Level[] | null>(null)
+const isLoading = ref(false)
 const isVisible = ref(false)
 
 const levels: MobilityLevel[] = [
@@ -109,8 +29,9 @@ const levels: MobilityLevel[] = [
 
 const emit = defineEmits(['close'])
 
-const openModal = () => {
+const openModal = async () => {
   isVisible.value = true
+  await fetchIndicatorLevel()
 }
 
 const closeModal = () => {
@@ -118,24 +39,86 @@ const closeModal = () => {
   emit('close')
 }
 
+const fetchIndicatorLevel = async () => {
+  isLoading.value = true
+  try {
+    const response = await levelsServices.getByIndicatorId(props.selectedIndicator.id.toString())
+    levelList.value = Array.isArray(response.data) ? response.data : [response.data]
+  } catch (err) {
+    console.error('Erro ao buscar níveis:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const getLevelLabel = (level: number) => {
   const found = levels.find((l) => l.level === level)
   return found ? found.label : ''
 }
 
+const getLevelColor = (level: number) => {
+  const colors: Record<number, string> = {
+    1: '#059669',
+    2: '#16a34a',
+    3: '#d97706',
+    4: '#dc2626',
+    5: '#7f1d1d',
+  }
+  return colors[level] || 'grey'
+}
+
 const selectedIndicator = computed(() => props.selectedIndicator)
 
 const modalTitle = computed(() => {
-  if (selectedIndicator.value) {
-    return `Critério: ${selectedIndicator.value.name}`
-  }
-  return 'Critérios e Níveis de Mobilidade'
+  return `Níveis do indicador: ${selectedIndicator.value.name}`
 })
 
 defineExpose({
   openModal,
 })
 </script>
+
+<template>
+  <v-dialog v-model="isVisible" max-width="850px" persistent scrollable>
+    <v-card class="modal-card">
+      <v-card-title class="mobility-levels-modal__header">
+        <h2 class="mobility-levels-modal__title">{{ modalTitle }}</h2>
+        <v-btn icon variant="text" @click="closeModal" class="mobility-levels-modal__close-btn">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
+
+      <v-card-text class="mobility-levels-modal__content">
+        <v-card v-if="!isLoading && levelList && !!levelList.length" class="mobility-levels-modal__card">
+          <v-list class="mobility-levels-modal__levels-list">
+            <v-list-item
+              v-for="levelItem in levelList"
+              :key="levelItem.id"
+              :class="`level-item level-${levelItem.level}`"
+            >
+              <template v-slot:prepend>
+                <v-avatar :color="getLevelColor(levelItem.level)" size="40">
+                  {{ levelItem.level }}
+                </v-avatar>
+              </template>
+
+              <v-list-item-title class="font-weight-bold">
+                Nível {{ levelItem.level }} - {{ getLevelLabel(levelItem.level) }}
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card>
+
+        <div v-else-if="isLoading" class="text-center py-4">
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          <p class="mt-2">Carregando níveis...</p>
+        </div>
+
+        <v-alert v-else type="info" variant="outlined"> Nenhum nível encontrado para este indicador. </v-alert>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+</template>
 
 <style lang="scss" scoped>
 .mobility-levels-modal {
@@ -164,55 +147,48 @@ defineExpose({
     overflow-y: auto;
   }
 
-  &__sections {
-    padding: 8px;
+  &__card {
+    box-shadow: none;
   }
 
-  &__ranges-table {
-    :deep(.v-table__wrapper) {
-      border-radius: 12px;
-      overflow: hidden;
-    }
+  &__levels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
 
-    :deep(.v-table) {
-      thead th {
-        background: #374151 !important;
-        color: white !important;
-        font-weight: 600;
+    .level-item {
+      border-radius: 12px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: scale(0.99);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
 
-      tbody {
-        tr {
-          &.level-1 {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            font-weight: 500;
-          }
+      &.level-1 {
+        background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%);
+        border-left: 4px solid #059669;
+      }
 
-          &.level-2 {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: white;
-            font-weight: 500;
-          }
+      &.level-2 {
+        background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
+        border-left: 4px solid #16a34a;
+      }
 
-          &.level-3 {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-            font-weight: 500;
-          }
+      &.level-3 {
+        background: linear-gradient(135deg, #fffbeb 0%, #fed7aa 100%);
+        border-left: 4px solid #d97706;
+      }
 
-          &.level-4 {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-            font-weight: 500;
-          }
+      &.level-4 {
+        background: linear-gradient(135deg, #fef2f2 0%, #fca5a5 100%);
+        border-left: 4px solid #dc2626;
+      }
 
-          &.level-5 {
-            background: linear-gradient(135deg, #991b1b, #7f1d1d);
-            color: white;
-            font-weight: 500;
-          }
-        }
+      &.level-5 {
+        background: linear-gradient(135deg, #fef2f2 0%, #f87171 100%);
+        border-left: 4px solid #7f1d1d;
       }
     }
   }
