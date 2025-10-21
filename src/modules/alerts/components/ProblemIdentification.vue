@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { Problem, Protocol } from '@/modules/alerts/types/alertsTypes'
-import problemsService from '@/modules/alerts/services/problemsServices'
+import protocolsServices from '@/modules/protocols/services/protocolsServices'
 
 interface Props {
   problems: Problem[]
@@ -146,7 +146,7 @@ const onProblemSelected = async (problemId: number) => {
 
   try {
     isLoadingProtocol.value = true
-    const response = await problemsService.getProtocol(problemId)
+    const response = await protocolsServices.getProtocol(problemId)
     protocol.value = response.data
   } catch (err) {
     console.error('Error fetching protocol:', err)

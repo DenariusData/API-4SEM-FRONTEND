@@ -2,7 +2,7 @@
   <v-card class="initial-guidelines__card">
     <v-card-title class="initial-guidelines__card-title">
       <v-icon class="mr-2">mdi-clipboard-text</v-icon>
-      Orientações Inicias
+      Orientações Iniciais
     </v-card-title>
     <v-card-text>
       <v-alert type="info" variant="tonal" class="mb-0">
