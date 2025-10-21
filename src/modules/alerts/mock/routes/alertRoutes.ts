@@ -220,8 +220,6 @@ const alertsRoutes = [
       method: 'post',
       url: '/alerts/:id/finalize',
       result: (params: MockParams, body: unknown) => {
-        console.log('Finalizando alerta:', params.id, body)
-
         return APIFailureWrapper({
           content: {
             success: true,

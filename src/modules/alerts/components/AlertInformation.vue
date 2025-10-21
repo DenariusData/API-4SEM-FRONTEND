@@ -61,7 +61,7 @@
         </div>
       </div>
 
-      <div v-if="userRole === 'manager'" class="alert-info__manager-info">
+      <div class="alert-info__manager-info">
         <div class="alert-info__row">
           <div class="alert-info__item">
             <span class="alert-info__label">Zona:</span>
@@ -73,7 +73,7 @@
           </div>
         </div>
 
-        <div v-if="alertDetails.affected_radars?.length > 0" class="alert-info__affected-radars">
+        <div v-if="alertDetails?.affected_radars?.length > 0" class="alert-info__affected-radars">
           <span class="alert-info__label">Radares:Afetados</span>
           <div class="alert-info__radar-chips">
             <v-chip

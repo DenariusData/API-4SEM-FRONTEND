@@ -1,5 +1,3 @@
-// ADICIONE estes tipos ao seu arquivo existente
-
 export interface Alert {
   id: number
   alert_id: number
