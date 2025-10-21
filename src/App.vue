@@ -1,15 +1,20 @@
 <script setup lang="ts">
+import AutoCompleteMenu from './shared/AutoCompleteMenu.vue'
+import LoginPopup from './modules/login/LoginPopup.vue'
+import NotificationDropdown from './modules/alerts/components/NotificationDropdown.vue'
+import sharedServices from '@/shared/services/sharedServices.ts'
 import { ref } from 'vue'
 import { RouterView } from 'vue-router'
-import LoginPopup from './modules/login/LoginPopup.vue'
-import AutoCompleteMenu from './shared/AutoCompleteMenu.vue'
-import NotificationDropdown from './modules/alerts/components/NotificationDropdown.vue'
 
 const menu = ref(false)
 const showLogin = ref(false)
+const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
 
 const openLogin = () => {
   showLogin.value = true
+}
+const updateDatabase = async () => {
+  await sharedServices.updateDatabase()
 }
 </script>
 
@@ -25,6 +30,7 @@ const openLogin = () => {
       <v-spacer></v-spacer>
 
       <div class="actions">
+        <v-btn v-if="showRoutineButton" icon="mdi-refresh" variant="text" color="black" @click="updateDatabase"></v-btn>
         <NotificationDropdown />
         <v-btn icon="mdi-login" variant="text" color="black" @click="openLogin"></v-btn>
       </div>
