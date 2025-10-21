@@ -2,15 +2,15 @@
   <v-card class="initial-guidelines__card">
     <v-card-title class="initial-guidelines__card-title">
       <v-icon class="mr-2">mdi-clipboard-text</v-icon>
-      Initial Guidelines
+      Orientações Inicias
     </v-card-title>
     <v-card-text>
       <v-alert type="info" variant="tonal" class="mb-0">
         <div class="initial-guidelines__orientation">
           <v-icon size="24" class="mr-3">mdi-map-marker-radius</v-icon>
           <div>
-            <strong>Recommendation:</strong> Go to radar <strong>{{ radarId }}</strong> located at
-            <strong>{{ location }}</strong> and identify the problem on site.
+            <strong>Recomendação:</strong> Dirija-se ao radar <strong>{{ radarId }}</strong> localizado em
+            <strong>{{ location }}</strong> e identifique o problema no local.
           </div>
         </div>
       </v-alert>

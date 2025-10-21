@@ -2,7 +2,7 @@
   <v-card class="problem-identification__card">
     <v-card-title class="problem-identification__card-title">
       <v-icon class="mr-2">mdi-alert-box</v-icon>
-      Problem Identification
+      Identificação do Problema
     </v-card-title>
     <v-card-text>
       <v-select
@@ -23,14 +23,12 @@
 
       <div v-if="problems.length === 0" class="problem-identification__no-problems">
         <v-icon color="warning" size="32">mdi-alert</v-icon>
-        <p class="mt-2">No registered problems found.</p>
+        <p class="mt-2">Nenhum problema registrado encontrado.</p>
         <v-btn color="success" variant="tonal" class="mt-3" @click="$emit('contact-manager')">
           <v-icon start>mdi-whatsapp</v-icon>
-          Contact Manager via WhatsApp
+          Contatar Gestor pelo WhatsApp
         </v-btn>
-        <p class="text-caption mt-2">
-          Contact the manager to request the creation of the appropriate problem and protocol.
-        </p>
+        <p class="text-caption mt-2">Contate o gestor para solicitar a criação do problema e protocolo apropriados.</p>
       </div>
     </v-card-text>
   </v-card>
@@ -38,12 +36,12 @@
   <v-card v-if="selectedProblemId" class="problem-identification__card mt-4">
     <v-card-title class="problem-identification__card-title">
       <v-icon class="mr-2">mdi-format-list-checkbox</v-icon>
-      Resolution Protocol
+      Protocolo de Resolução
     </v-card-title>
     <v-card-text>
       <div v-if="isLoadingProtocol" class="problem-identification__protocol-loading">
         <v-progress-circular indeterminate size="32" color="primary"></v-progress-circular>
-        <p>Loading protocol...</p>
+        <p>Carregando protocolo...</p>
       </div>
 
       <div v-else-if="protocol" class="problem-identification__protocol">
@@ -69,13 +67,14 @@
           <v-icon size="48" color="warning">mdi-file-document-alert-outline</v-icon>
         </div>
         <div class="problem-identification__no-protocol-content">
-          <h4 class="problem-identification__no-protocol-title">Protocol not found</h4>
+          <h4 class="problem-identification__no-protocol-title">Protocolo não encontrado</h4>
           <p class="problem-identification__no-protocol-text">
-            The protocol for this problem has not been created yet. Contact the manager to request its creation.
+            O protocolo para este problema ainda não foi criado. Entre em contato com o gestor para solicitar sua
+            criação.
           </p>
           <v-btn color="success" variant="flat" class="mt-3" @click="$emit('contact-manager')">
             <v-icon start>mdi-whatsapp</v-icon>
-            Contact Manager via WhatsApp
+            Contatar Gestor pelo WhatsApp
           </v-btn>
         </div>
       </div>
@@ -85,15 +84,15 @@
   <v-card v-if="protocol" class="problem-identification__card mt-4">
     <v-card-title class="problem-identification__card-title">
       <v-icon class="mr-2">mdi-note-text</v-icon>
-      Resolution Notes
+      Anotações de Resolução
     </v-card-title>
     <v-card-text>
       <v-textarea
         v-model="resolutionNotes"
-        label="Describe how the problem was resolved"
+        label="Descreva como o problema foi resolvido"
         variant="outlined"
         rows="4"
-        placeholder="E.g.: Accident cleared, road reopened at 14:30. No injuries."
+        placeholder="Ex.: Acidente removido, estrada reaberta às 14:30. Sem feridos."
         @update:model-value="$emit('update:resolution-notes', $event)"
       ></v-textarea>
     </v-card-text>

@@ -2,13 +2,13 @@
   <v-card class="alert-info__card">
     <v-card-title class="alert-info__card-title">
       <v-icon class="mr-2">mdi-information</v-icon>
-      Alert Information
+      Informações do Alerta
     </v-card-title>
 
     <v-card-text class="alert-info__content">
       <div class="alert-info__row">
         <div class="alert-info__item">
-          <span class="alert-info__label">Indicator:</span>
+          <span class="alert-info__label">Indicador:</span>
           <span class="alert-info__value alert-info__value--bold">{{ alertDetails.indicator }}</span>
         </div>
         <div class="alert-info__item">
@@ -24,7 +24,7 @@
 
       <div class="alert-info__row">
         <div class="alert-info__item alert-info__item--full">
-          <span class="alert-info__label">Level Change:</span>
+          <span class="alert-info__label">Mudança de Nível:</span>
           <div class="alert-info__level-change">
             <v-chip :color="getLevelColor(alertDetails.previousLevel)" variant="tonal" class="alert-info__level-chip">
               {{ getLevelLabel(alertDetails.previousLevel) }}
@@ -41,14 +41,14 @@
         <div class="alert-info__item">
           <span class="alert-info__label">
             <v-icon size="18" class="mr-1">mdi-map-marker</v-icon>
-            Location:
+            Local:
           </span>
           <span class="alert-info__value">{{ alertDetails.location }}</span>
         </div>
         <div class="alert-info__item">
           <span class="alert-info__label">
             <v-icon size="18" class="mr-1">mdi-clock</v-icon>
-            Time:
+            Horário:
           </span>
           <span class="alert-info__value">{{ formatTimestamp(alertDetails.timestamp) }}</span>
         </div>
@@ -56,7 +56,7 @@
 
       <div class="alert-info__row">
         <div class="alert-info__item">
-          <span class="alert-info__label">Time Elapsed:</span>
+          <span class="alert-info__label">Tempo Decorrido:</span>
           <span class="alert-info__value alert-info__value--accent">{{ timeElapsed }}</span>
         </div>
       </div>
@@ -64,7 +64,7 @@
       <div v-if="userRole === 'manager'" class="alert-info__manager-info">
         <div class="alert-info__row">
           <div class="alert-info__item">
-            <span class="alert-info__label">Zone:</span>
+            <span class="alert-info__label">Zona:</span>
             <span class="alert-info__value">{{ alertDetails.zone }}</span>
           </div>
           <div class="alert-info__item">
@@ -74,7 +74,7 @@
         </div>
 
         <div v-if="alertDetails.affected_radars?.length > 0" class="alert-info__affected-radars">
-          <span class="alert-info__label">Affected Radars:</span>
+          <span class="alert-info__label">Radares:Afetados</span>
           <div class="alert-info__radar-chips">
             <v-chip
               v-for="radar in alertDetails.affected_radars"
@@ -92,7 +92,7 @@
       </div>
 
       <div v-if="alertDetails.description" class="alert-info__description">
-        <span class="alert-info__label">Description:</span>
+        <span class="alert-info__label">Descrição:</span>
         <p class="alert-info__description-text">{{ alertDetails.description }}</p>
       </div>
     </v-card-text>
@@ -146,14 +146,14 @@ const timeElapsed = computed(() => {
   const diffMs = now.getTime() - alertTime.getTime()
   const diffMins = Math.floor(diffMs / 60000)
 
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins} minutes ago`
+  if (diffMins < 1) return 'Agora mesmo'
+  if (diffMins < 60) return `${diffMins} minutos atrás`
 
   const diffHours = Math.floor(diffMins / 60)
-  if (diffHours < 24) return `${diffHours} hours ago`
+  if (diffHours < 24) return `${diffHours} horas atrás`
 
   const diffDays = Math.floor(diffHours / 24)
-  return `${diffDays} days ago`
+  return `${diffDays} dias atrás`
 })
 </script>
 
