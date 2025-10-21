@@ -43,7 +43,8 @@ const openLogin = () => {
   border-bottom: 1px solid #e0e0e0;
 
   :deep(.v-toolbar__content) {
-    max-width: 1440px;
+    max-width: 1472px;
+    padding: 0 16px;
     width: 100%;
     margin: 0 auto;
     display: flex;
@@ -71,9 +72,9 @@ const openLogin = () => {
 .app {
   position: relative;
   height: calc(100vh - 65px);
-  max-width: 1440px;
+  max-width: 1472px;
   width: 100%;
   margin: 64px auto 0 auto;
-  padding: 24px 0px;
+  padding: 24px 16px;
 }
 </style>

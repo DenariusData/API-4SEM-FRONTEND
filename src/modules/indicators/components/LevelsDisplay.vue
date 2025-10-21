@@ -25,23 +25,18 @@ const showLevelDescription = (level: LevelKey) => {
     <div class="levels-display__grid">
       <div class="levels-display__card level-1" @click="showLevelDescription(1 as LevelKey)">
         <div class="levels-display__number">1</div>
-        <div class="levels-display__label">Excelente</div>
       </div>
       <div class="levels-display__card level-2" @click="showLevelDescription(2 as LevelKey)">
         <div class="levels-display__number">2</div>
-        <div class="levels-display__label">Bom</div>
       </div>
       <div class="levels-display__card level-3" @click="showLevelDescription(3 as LevelKey)">
         <div class="levels-display__number">3</div>
-        <div class="levels-display__label">Intermediário</div>
       </div>
       <div class="levels-display__card level-4" @click="showLevelDescription(4 as LevelKey)">
         <div class="levels-display__number">4</div>
-        <div class="levels-display__label">Ruim</div>
       </div>
       <div class="levels-display__card level-5" @click="showLevelDescription(5 as LevelKey)">
         <div class="levels-display__number">5</div>
-        <div class="levels-display__label">Péssimo</div>
       </div>
     </div>
   </div>
@@ -131,14 +126,7 @@ const showLevelDescription = (level: LevelKey) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 16px auto;
-  }
-
-  &__label {
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #374151;
-    font-size: 1.1rem;
+    margin: 0 auto;
   }
 }
 </style>
