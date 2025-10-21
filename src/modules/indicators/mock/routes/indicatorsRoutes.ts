@@ -119,7 +119,7 @@ Quantidade de infrações da via = (veículos únicos infracionários das últim
         ]
 
         return APIFailureWrapper({
-          content: { items: response, total: response.length },
+          content: response,
           errorMessage: 'Erro ao listar indicadores',
         })
       },
