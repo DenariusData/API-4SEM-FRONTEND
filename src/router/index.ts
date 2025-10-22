@@ -30,6 +30,11 @@ const router = createRouter({
       name: 'indicators',
       component: () => import('@/modules/indicators/IndicatorsView.vue'),
     },
+     {
+      path: '/protocols',
+      name: 'protocols',
+      component: () => import('@/modules/protocols/ProtocolsView.vue'),
+    },
   ],
 })
 
