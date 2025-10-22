@@ -26,6 +26,7 @@ const menuItems: MenuItem[] = [
   { title: 'Alertas', value: 'alerts', route: 'alerts' },
   { title: 'Dashboards', value: 'dashboards', route: 'dashboards' },
   { title: 'Indicadores', value: 'indicators', route: 'indicators' },
+  { title: 'Protocolos', value: 'protocols', route: 'protocols' },
 ]
 
 const menu = computed({
