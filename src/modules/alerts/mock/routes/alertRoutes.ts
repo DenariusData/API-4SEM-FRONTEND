@@ -1,5 +1,10 @@
 import { APIFailureWrapper, mockFlag } from '@/utils/mockUtils.ts'
 
+interface MockParams {
+  id?: string
+  problemId?: string
+}
+
 const alertsRoutes = [
   mockFlag(
     {
@@ -112,6 +117,116 @@ const alertsRoutes = [
         return APIFailureWrapper({
           content: { items: response, total: response.length },
           errorMessage: 'Erro ao listar últimos 10 alertas',
+        })
+      },
+    },
+    'on',
+  ),
+
+  mockFlag(
+    {
+      method: 'get',
+      url: '/alerts/:id/details',
+      result: (params: MockParams) => {
+        const alertId = Number(params.id)
+
+        const mockAlerts: Record<
+          number,
+          {
+            id: number
+            alert_id: number
+            indicator: string
+            currentLevel: number
+            previousLevel: number
+            location: string
+            timestamp: string
+            finalized: boolean
+            radar_id: string
+            zone: string
+            description: string
+            affected_radars: string[]
+          }
+        > = {
+          101: {
+            id: 1,
+            alert_id: 101,
+            indicator: 'Congestionamento',
+            currentLevel: 4,
+            previousLevel: 2,
+            location: 'Av. Paraibuna, 1234',
+            timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+            finalized: false,
+            radar_id: 'RADAR-001',
+            zone: 'Zona Leste',
+            description: 'Congestionamento detectado com aumento significativo no fluxo de veículos',
+            affected_radars: ['RADAR-001', 'RADAR-002', 'RADAR-003'],
+          },
+          102: {
+            id: 2,
+            alert_id: 102,
+            indicator: 'Densidade de Veículos',
+            currentLevel: 3,
+            previousLevel: 1,
+            location: "R. Dr. Nelson D'Ávila, 567",
+            timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+            finalized: false,
+            radar_id: 'RADAR-005',
+            zone: 'Zona Central',
+            description: 'Aumento na densidade de veículos acima do esperado para o horário',
+            affected_radars: ['RADAR-005', 'RADAR-006'],
+          },
+          103: {
+            id: 3,
+            alert_id: 103,
+            indicator: 'Infrações de Velocidade',
+            currentLevel: 5,
+            previousLevel: 3,
+            location: 'Av. Florestan Fernandes, 890',
+            timestamp: new Date(Date.now() - 18 * 60 * 1000).toISOString(),
+            finalized: true,
+            radar_id: 'RADAR-010',
+            zone: 'Zona Sul',
+            description: 'Múltiplas infrações de velocidade detectadas',
+            affected_radars: ['RADAR-010'],
+          },
+        }
+
+        const response = mockAlerts[alertId] || {
+          id: alertId,
+          alert_id: alertId,
+          indicator: 'Alerta Genérico',
+          currentLevel: 3,
+          previousLevel: 2,
+          location: 'Localização não especificada',
+          timestamp: new Date().toISOString(),
+          finalized: false,
+          radar_id: 'RADAR-000',
+          zone: 'Zona Desconhecida',
+          description: 'Detalhes do alerta não disponíveis',
+          affected_radars: ['RADAR-000'],
+        }
+
+        return APIFailureWrapper({
+          content: response,
+          errorMessage: 'Erro ao buscar detalhes do alerta',
+        })
+      },
+    },
+    'on',
+  ),
+
+  mockFlag(
+    {
+      method: 'post',
+      url: '/alerts/:id/finalize',
+      result: (params: MockParams, body: unknown) => {
+        return APIFailureWrapper({
+          content: {
+            success: true,
+            message: 'Alerta finalizado com sucesso',
+            alert_id: params.id,
+          },
+          errorMessage: 'Erro ao finalizar alerta',
         })
       },
     },
