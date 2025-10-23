@@ -1,5 +1,5 @@
-<script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+<script lang="ts" setup> 
+import { ref, onMounted, computed, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import sjcGeojson from '@/utils/sjcGeojson.json'
@@ -7,12 +7,81 @@ import sjcGeojson from '@/utils/sjcGeojson.json'
 const mapContainer = ref<HTMLDivElement | null>(null)
 const map = ref<L.Map | null>(null)
 const geoJsonLayer = ref<L.GeoJSON<any> | null>(null)
-const selectedZones = ref<string[]>([])
-const filteredZones = ref<string[]>([])
-const startDateTime = ref<string>('')
-const endDateTime = ref<string>('')
+
+/* =========================
+   VARIÁVEIS DE ZONAS
+   ========================= */
+const selectedZones = ref<string[]>([])       // ⬅️ pré-seleção (duplo clique)
+const zonasSelecionadasLista = selectedZones  // alias reativo
+const filteredZones = ref<string[]>([])       // ⬅️ zonas aplicadas (as “salvas”)
+
+/* =========================
+   VARIÁVEIS DO PERÍODO (INPUTS)
+   ========================= */
+// Recebem o valor do <v-date-input> (string | Date | null)
+const startDateTime = ref<string | Date | null>(null)
+const endDateTime   = ref<string | Date | null>(null)
+
+/* =========================
+   VARIÁVEIS FINAIS DO FILTRO (USO NA LÓGICA)
+   ========================= */
+// Só recebem valor se EXISTE data inicial; se não houver, ficam null
+const filtroDataHoraInicial = ref<string | null>(null)  // ⬅️ valor “salvo”
+const filtroDataHoraFinal   = ref<string | null>(null)  // ⬅️ valor “salvo”
+
+// Mantém as variáveis finais sincronizadas (normaliza Date -> string ISO)
+// Regra: se houver INÍCIO e FIM vazio, usa AGORA como FIM.
+watch([startDateTime, endDateTime], ([ini, fim]) => {
+  const normalize = (v: unknown): string | null => {
+    if (v == null || v === '') return null
+    if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString()
+    if (typeof v === 'string' && v.trim() !== '') return v
+    return null
+  }
+
+  const nIni = normalize(ini)
+  let nFim = normalize(fim)
+
+  if (nIni) {
+    if (!nFim) nFim = new Date().toISOString() // fim padrão = agora
+    filtroDataHoraInicial.value = nIni
+    filtroDataHoraFinal.value   = nFim
+  } else {
+    filtroDataHoraInicial.value = null
+    filtroDataHoraFinal.value   = null
+  }
+})
 
 const activeAnimations = new Map<string, any>()
+
+// (mantido para usos internos; calcula {id,nome} da PRÉ-seleção)
+const zonasSelecionadasDetalhes = computed(() => {
+  const selectedSet = new Set(selectedZones.value)
+  const seen = new Set<string>()
+  const tmp: Array<{ id: string | number | null; nome: string }> = []
+
+  const features = (sjcGeojson as any).features as any[]
+  for (const f of features) {
+    const p = f?.properties || {}
+    if (p?.layer === 'zona' && selectedSet.has(p.regiao) && !seen.has(p.regiao)) {
+      const id =
+        f?.id ??
+        p?.id ??
+        p?.codigo ??
+        p?.cod ??
+        p?.idZona ??
+        p?.ID ??
+        null
+      tmp.push({ id, nome: p.regiao })
+      seen.add(p.regiao)
+    }
+  }
+
+  const byName = new Map(tmp.map(t => [t.nome, t]))
+  return selectedZones.value
+    .map(nome => byName.get(nome))
+    .filter(Boolean) as Array<{ id: string | number | null; nome: string }>
+})
 
 onMounted(() => {
   if (!mapContainer.value) return
@@ -24,7 +93,7 @@ onMounted(() => {
     attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors',
   }).addTo(map.value)
 
-  drawMap(sjcGeojson.features)
+  drawMap((sjcGeojson as any).features)
 })
 
 function drawMap(features: any[]) {
@@ -94,7 +163,7 @@ function toggleZone(region: string, layer: L.Layer) {
     selectedZones.value.push(region)
     startAnimation(region, layer)
   }
-  drawMap(sjcGeojson.features)
+  drawMap((sjcGeojson as any).features)
 }
 
 function startAnimation(region: string, layer: L.Layer) {
@@ -124,15 +193,15 @@ function stopAnimation(region: string) {
 }
 
 function applyFilter() {
-  let filtered = sjcGeojson.features
+  let filtered = (sjcGeojson as any).features
   if (selectedZones.value.length > 0) {
-    filtered = sjcGeojson.features.filter((f: any) => {
+    filtered = (sjcGeojson as any).features.filter((f: any) => {
       if (f.properties?.layer === 'municipio') return true
       return selectedZones.value.includes(f.properties?.regiao)
     })
   }
 
-  filteredZones.value = [...selectedZones.value]
+  filteredZones.value = [...selectedZones.value] // ⬅️ aqui “salva” as zonas aplicadas
   selectedZones.value = []
 
   drawMap(filtered)
@@ -143,11 +212,11 @@ function applyFilter() {
 function clearSelection() {
   selectedZones.value = []
   filteredZones.value = []
-  startDateTime.value = ''
-  endDateTime.value = ''
+  startDateTime.value = '' // pode ser '' ou null
+  endDateTime.value   = ''
   activeAnimations.forEach(clearInterval)
   activeAnimations.clear()
-  drawMap(sjcGeojson.features)
+  drawMap((sjcGeojson as any).features)
 }
 </script>
 
@@ -194,6 +263,7 @@ function clearSelection() {
     <div class="instructions">ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la antes de aplicar o filtro.</div>
 
     <div ref="mapContainer" class="map"></div>
+    <!-- Quadrado de debug removido -->
   </div>
 </template>
 
