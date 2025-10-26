@@ -9,11 +9,11 @@ import type {
   FormProtocolo,
   ModalType,
   TabType
-} from '@/modules/protocols/types/ProtocolsTypes';
+} from '@/modules/protocols/types/protocolsTypes';
 import {
   initialFormCausa,
   initialFormProtocolo
-} from '@/modules/protocols/types/ProtocolsTypes';
+} from '@/modules/protocols/types/protocolsTypes';
 import {
   mockCausasRaiz,
   mockProtocolos,
