@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import type { CausaRaiz, Protocolo } from '@/modules/protocols/types/protocolsTypes';
+import type { CausaRaiz, Protocolo } from '@/modules/protocols/types/ProtocolsTypes'
 
 interface Props {
-  rootCauses: CausaRaiz[];
-  protocols: Protocolo[];
+  rootCauses: CausaRaiz[]
+  protocols: Protocolo[]
 }
 
 interface Emits {
-  (e: 'open-modal', causa: CausaRaiz | null): void;
-  (e: 'toggle', id: number): void;
-  (e: 'delete', id: number): void;
+  (e: 'open-modal', causa: CausaRaiz | null): void
+  (e: 'toggle', id: number): void
+  (e: 'delete', id: number): void
 }
 
-defineProps<Props>();
-const emit = defineEmits<Emits>();
+defineProps<Props>()
+const emit = defineEmits<Emits>()
 </script>
 
 <template>
@@ -32,9 +32,7 @@ const emit = defineEmits<Emits>();
     <div v-if="rootCauses.length === 0" class="empty-state">
       <span class="empty-icon">⚠</span>
       <p>Nenhuma causa raiz cadastrada</p>
-      <button @click="emit('open-modal', null)" class="btn-link">
-        Criar primeira causa raiz
-      </button>
+      <button @click="emit('open-modal', null)" class="btn-link">Criar primeira causa raiz</button>
     </div>
 
     <div v-else class="items-list">
@@ -57,12 +55,8 @@ const emit = defineEmits<Emits>();
             >
               {{ causa.ativo ? 'Desativar' : 'Ativar' }}
             </button>
-            <button @click="emit('open-modal', causa)" class="btn-icon-only" title="Editar">
-              ✎
-            </button>
-            <button @click="emit('delete', causa.id)" class="btn-icon-only btn-danger" title="Excluir">
-              🗑
-            </button>
+            <button @click="emit('open-modal', causa)" class="btn-icon-only" title="Editar">✎</button>
+            <button @click="emit('delete', causa.id)" class="btn-icon-only btn-danger" title="Excluir">🗑</button>
           </div>
         </div>
       </div>

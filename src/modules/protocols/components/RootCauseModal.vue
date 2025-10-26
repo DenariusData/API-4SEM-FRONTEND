@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import type { Criterio, FormCausa } from '@/modules/protocols/types/protocolsTypes';
+import type { Criterio, FormCausa } from '@/modules/protocols/types/ProtocolsTypes'
 
 interface Props {
-  show: boolean;
-  formData: FormCausa;
-  criteria: Criterio[];
-  isEditing: boolean;
+  show: boolean
+  formData: FormCausa
+  criteria: Criterio[]
+  isEditing: boolean
 }
 
 interface Emits {
-  (e: 'close'): void;
-  (e: 'save'): void;
-  (e: 'update:formData', value: FormCausa): void;
+  (e: 'close'): void
+  (e: 'save'): void
+  (e: 'update:formData', value: FormCausa): void
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
 
 const updateField = (field: keyof FormCausa, value: unknown) => {
-  emit('update:formData', { ...props.formData, [field]: value } as FormCausa);
-};
+  emit('update:formData', { ...props.formData, [field]: value } as FormCausa)
+}
 </script>
 
 <template>
@@ -71,9 +71,7 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
           <button @click="emit('save')" class="btn btn-primary">
             {{ isEditing ? 'Atualizar' : 'Criar' }} Causa Raiz
           </button>
-          <button @click="emit('close')" class="btn btn-secondary">
-            Cancelar
-          </button>
+          <button @click="emit('close')" class="btn btn-secondary">Cancelar</button>
         </div>
       </div>
     </div>
@@ -163,7 +161,7 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
     margin-bottom: 8px;
   }
 
-  input[type="text"],
+  input[type='text'],
   select {
     width: 100%;
     padding: 10px 12px;
@@ -198,7 +196,7 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
       gap: 8px;
       cursor: pointer;
 
-      input[type="checkbox"] {
+      input[type='checkbox'] {
         width: auto;
         cursor: pointer;
       }

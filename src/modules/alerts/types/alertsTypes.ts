@@ -1,6 +1,6 @@
 export interface Alert {
   id: number
-  alert_id: number
+  alertId: number
   indicator: string
   previousLevel: number
   newLevel: number
@@ -9,10 +9,7 @@ export interface Alert {
   finalized: boolean
 }
 
-export interface LastTenAlertsResponse {
-  items: Alert[]
-  total: number
-}
+export interface LastTenAlertsResponse extends Array<Alert> {}
 
 export interface AlertDetails {
   id: number
