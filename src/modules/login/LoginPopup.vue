@@ -1,36 +1,21 @@
 <template>
-  <v-dialog
-    transition="dialog-top-transition"
-    width="420"
-    v-model="model"
-    class="login-dialog"
-  >
+  <v-dialog transition="dialog-top-transition" width="420" v-model="model" class="login-dialog">
     <template v-slot:default>
       <v-card class="login-card elevation-24">
-        <v-btn
-          icon="mdi-close"
-          variant="text"
-          size="small"
-          class="close-btn"
-          @click="closePopup"
-        ></v-btn>
+        <v-btn icon="mdi-close" variant="text" size="small" class="close-btn" @click="closePopup"></v-btn>
         <v-card-text class="text-center pa-6">
-
-          <!-- Logo no topo do pop-up -->
           <div class="login-logo mb-4">
             <img src="/radariustxt.svg" alt="Logo" />
           </div>
 
-          <!-- Título -->
           <h2 class="login-title mb-6">Login</h2>
 
-          <!-- Formulário -->
           <v-form @submit.prevent="handleLogin" class="login-form">
             <div class="input-group mb-4">
               <label class="input-label">Email</label>
               <v-text-field
                 v-model="email"
-                placeholder="Enter your email"
+                placeholder="Digite seu email"
                 type="email"
                 variant="outlined"
                 density="comfortable"
@@ -41,10 +26,10 @@
             </div>
 
             <div class="input-group mb-6">
-              <label class="input-label">Password</label>
+              <label class="input-label">Senha</label>
               <v-text-field
                 v-model="password"
-                placeholder="Enter your password"
+                placeholder="Digite sua senha"
                 type="password"
                 variant="outlined"
                 density="comfortable"
@@ -55,31 +40,14 @@
             </div>
 
             <div class="form-footer mb-5 d-flex justify-space-between">
-              <span v-if="showError" class="error-message">
-                Incorrect email or password
-              </span>
-              <a href="#" class="forgot-link">Forgot password?</a>
+              <span v-if="showError" class="error-message"> Email ou senha incorretos </span>
+              <a href="#" class="forgot-link">Esqueceu a senha?</a>
             </div>
 
             <div class="button-group d-flex flex-column gap-4">
-              <v-btn
-                type="submit"
-                class="login-btn"
-                size="x-large"
-                block
-              >
-                Login
-              </v-btn>
+              <v-btn type="submit" class="login-btn" size="x-large" block> Login </v-btn>
 
-              <v-btn
-                variant="outlined"
-                size="x-large"
-                block
-                class="signup-btn"
-                @click="closePopup"
-              >
-                Sign up
-              </v-btn>
+              <v-btn variant="outlined" size="x-large" block class="signup-btn" @click="closePopup"> Cadastrar </v-btn>
             </div>
           </v-form>
         </v-card-text>
@@ -101,7 +69,10 @@ const email = ref('')
 const password = ref('')
 const showError = ref(false)
 
-watch(() => props.modelValue, (val) => (model.value = val))
+watch(
+  () => props.modelValue,
+  (val) => (model.value = val),
+)
 watch(model, (val) => emit('update:modelValue', val))
 
 const closePopup = () => {
@@ -113,8 +84,6 @@ const closePopup = () => {
 
 const handleLogin = () => {
   if (password.value === 'Denarius') {
-    console.log('Email:', email.value)
-    console.log('Login realizado com sucesso!')
     showError.value = false
     closePopup()
   } else {
@@ -123,7 +92,7 @@ const handleLogin = () => {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .login-dialog {
   backdrop-filter: blur(4px);
 }
@@ -166,19 +135,19 @@ const handleLogin = () => {
   font-weight: 500;
 }
 .forgot-link {
-  color: #2196F3;
+  color: #2196f3;
   font-size: 13px;
   text-decoration: none;
 }
 .login-btn {
-  background: #4CAF50 !important;
+  background: #4caf50 !important;
   color: white !important;
   border-radius: 25px !important;
 }
 .signup-btn {
-  color: #2196F3 !important;
+  color: #2196f3 !important;
   border-radius: 25px !important;
-  border: 1px solid #2196F3 !important;
+  border: 1px solid #2196f3 !important;
 }
 .close-btn {
   position: absolute;

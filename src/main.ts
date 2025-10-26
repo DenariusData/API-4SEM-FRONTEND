@@ -1,4 +1,4 @@
-import '@/assets/main.scss'
+import '/assets/main.scss'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -7,7 +7,10 @@ import { createPinia } from 'pinia'
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
+import { VDateInput } from 'vuetify/labs/VDateInput'
 import * as directives from 'vuetify/directives'
+import { pt } from 'vuetify/locale'
+
 // Icons
 import '@mdi/font/css/materialdesignicons.css'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
@@ -21,7 +24,14 @@ import router from '@/router'
 const app = createApp(App)
 
 const vuetify = createVuetify({
-  components,
+  components: {
+    ...components,
+    VDateInput,
+  },
+  locale: {
+    locale: 'pt',
+    messages: { pt },
+  },
   directives,
   icons: {
     defaultSet: 'mdi',
