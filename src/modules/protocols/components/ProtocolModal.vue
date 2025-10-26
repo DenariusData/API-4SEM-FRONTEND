@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import type { CausaRaiz, FormProtocolo } from '@/modules/protocols/types/protocolsTypes';
+import type { CausaRaiz, FormProtocolo } from '@/modules/protocols/types/ProtocolsTypes'
 
 interface Props {
-  show: boolean;
-  formData: FormProtocolo;
-  causas: CausaRaiz[];
-  isEditing: boolean;
+  show: boolean
+  formData: FormProtocolo
+  causas: CausaRaiz[]
+  isEditing: boolean
 }
 
 interface Emits {
-  (e: 'close'): void;
-  (e: 'save'): void;
-  (e: 'update:formData', value: FormProtocolo): void;
-  (e: 'add-passo'): void;
-  (e: 'remove-passo', index: number): void;
+  (e: 'close'): void
+  (e: 'save'): void
+  (e: 'update:formData', value: FormProtocolo): void
+  (e: 'add-passo'): void
+  (e: 'remove-passo', index: number): void
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
 
 const updateField = (field: keyof FormProtocolo, value: unknown) => {
-  emit('update:formData', { ...props.formData, [field]: value } as FormProtocolo);
-};
+  emit('update:formData', { ...props.formData, [field]: value } as FormProtocolo)
+}
 
 const updatePasso = (index: number, value: string) => {
-  const newPassos = [...props.formData.passos];
-  newPassos[index] = value;
-  updateField('passos', newPassos);
-};
+  const newPassos = [...props.formData.passos]
+  newPassos[index] = value
+  updateField('passos', newPassos)
+}
 </script>
 
 <template>
@@ -56,7 +56,7 @@ const updatePasso = (index: number, value: string) => {
             @change="updateField('causaRaizId', ($event.target as HTMLSelectElement).value)"
           >
             <option value="">Selecione uma causa raiz</option>
-            <option v-for="c in causas.filter(c => c.ativo)" :key="c.id" :value="c.id">
+            <option v-for="c in causas.filter((c) => c.ativo)" :key="c.id" :value="c.id">
               {{ c.nome }} ({{ c.criterioNome }})
             </option>
           </select>
@@ -66,9 +66,7 @@ const updatePasso = (index: number, value: string) => {
         <div class="form-group">
           <div class="form-group-header">
             <label>Passos do Protocolo *</label>
-            <button @click="emit('add-passo')" class="btn-link small">
-              + Adicionar Passo
-            </button>
+            <button @click="emit('add-passo')" class="btn-link small">+ Adicionar Passo</button>
           </div>
           <div class="passos-list">
             <div v-for="(passo, index) in formData.passos" :key="index" class="passo-item">
@@ -96,9 +94,7 @@ const updatePasso = (index: number, value: string) => {
           <button @click="emit('save')" class="btn btn-primary">
             {{ isEditing ? 'Atualizar' : 'Criar' }} Protocolo
           </button>
-          <button @click="emit('close')" class="btn btn-secondary">
-            Cancelar
-          </button>
+          <button @click="emit('close')" class="btn btn-secondary">Cancelar</button>
         </div>
       </div>
     </div>
@@ -188,7 +184,7 @@ const updatePasso = (index: number, value: string) => {
     margin-bottom: 8px;
   }
 
-  input[type="text"],
+  input[type='text'],
   select,
   textarea {
     width: 100%;
