@@ -1,0 +1,406 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+import type {
+  CausaRaiz,
+  Protocolo,
+  Criterio,
+  Alert,
+  FormCausa,
+  FormProtocolo,
+  ModalType,
+  TabType
+} from '@/modules/protocols/types/ProtocolsTypes';
+import {
+  initialFormCausa,
+  initialFormProtocolo
+} from '@/modules/protocols/types/ProtocolsTypes';
+import {
+  mockCausasRaiz,
+  mockProtocolos,
+  mockCriterios
+} from '@/modules/protocols/mock/routes/protocolRoutes';
+
+import AlertMessage from '@/modules/protocols/components/AlertMessage.vue';
+import RootCausesTab from '@/modules/protocols/components/RootCausesTab.vue';
+import ProtocolsTab from '@/modules/protocols/components/ProtocolsTab.vue';
+import RootCauseModal from '@/modules/protocols/components/RootCauseModal.vue';
+import ProtocolModal from '@/modules/protocols/components/ProtocolModal.vue';
+
+const activeTab = ref<TabType>('causas');
+const showModal = ref(false);
+const modalType = ref<ModalType>('causa');
+const editingItem = ref<CausaRaiz | Protocolo | null>(null);
+const showAlert = ref<Alert | null>(null);
+
+const causasRaiz = ref<CausaRaiz[]>(JSON.parse(JSON.stringify(mockCausasRaiz)));
+const protocolos = ref<Protocolo[]>(JSON.parse(JSON.stringify(mockProtocolos)));
+const criterios = ref<Criterio[]>(JSON.parse(JSON.stringify(mockCriterios)));
+
+const formCausa = ref<FormCausa>({ ...initialFormCausa });
+const formProtocolo = ref<FormProtocolo>({ ...initialFormProtocolo });
+
+const openModalCausa = (item: CausaRaiz | null = null) => {
+  modalType.value = 'causa';
+  editingItem.value = item;
+  formCausa.value = item ? {
+    nome: item.nome,
+    criterioId: item.criterioId,
+    ativo: item.ativo
+  } : { ...initialFormCausa };
+  showModal.value = true;
+};
+
+const openModalProtocolo = (item: Protocolo | null = null) => {
+  modalType.value = 'protocolo';
+  editingItem.value = item;
+  formProtocolo.value = item ? {
+    titulo: item.titulo,
+    causaRaizId: item.causaRaizId,
+    passos: [...item.passos]
+  } : { ...initialFormProtocolo };
+  showModal.value = true;
+};
+
+const closeModal = () => {
+  showModal.value = false;
+  editingItem.value = null;
+  formCausa.value = { ...initialFormCausa };
+  formProtocolo.value = { ...initialFormProtocolo };
+};
+
+const showAlertMessage = (type: Alert['type'], message: string) => {
+  showAlert.value = { type, message };
+  setTimeout(() => (showAlert.value = null), 4000);
+};
+
+const handleSaveCausa = () => {
+  if (!formCausa.value.nome || !formCausa.value.criterioId) {
+    showAlertMessage('error', 'Preencha todos os campos obrigatórios');
+    return;
+  }
+
+  const criterio = criterios.value.find(c => c.id === parseInt(String(formCausa.value.criterioId)));
+  if (!criterio) {
+    showAlertMessage('error', 'Critério não encontrado');
+    return;
+  }
+
+  if (editingItem.value) {
+    causasRaiz.value = causasRaiz.value.map(c =>
+      c.id === (editingItem.value as CausaRaiz).id
+        ? {
+            ...c,
+            nome: formCausa.value.nome,
+            criterioId: parseInt(String(formCausa.value.criterioId)),
+            criterioNome: criterio.nome,
+            ativo: formCausa.value.ativo,
+            atualizadoEm: new Date().toISOString().split('T')[0]
+          }
+        : c
+    );
+    showAlertMessage('success', 'Causa raiz atualizada com sucesso');
+  } else {
+    const novaCausa: CausaRaiz = {
+      id: Math.max(...causasRaiz.value.map(c => c.id), 0) + 1,
+      nome: formCausa.value.nome,
+      criterioId: parseInt(String(formCausa.value.criterioId)),
+      criterioNome: criterio.nome,
+      ativo: formCausa.value.ativo,
+      protocolosIds: [],
+      criadoEm: new Date().toISOString().split('T')[0],
+      atualizadoEm: new Date().toISOString().split('T')[0]
+    };
+    causasRaiz.value.push(novaCausa);
+    showAlertMessage('success', 'Causa raiz criada com sucesso');
+  }
+
+  closeModal();
+};
+
+const handleDeleteCausa = (id: number) => {
+  const protocolosAssociados = protocolos.value.filter(p => p.causaRaizId === id);
+
+  if (protocolosAssociados.length > 0) {
+    showAlertMessage('error', `Não é possível excluir. Esta causa possui ${protocolosAssociados.length} protocolo(s) associado(s). Desative a causa ou remova os protocolos primeiro.`);
+    return;
+  }
+
+  causasRaiz.value = causasRaiz.value.filter(c => c.id !== id);
+  showAlertMessage('success', 'Causa raiz excluída com sucesso');
+};
+
+const handleToggleCausa = (id: number) => {
+  causasRaiz.value = causasRaiz.value.map(c =>
+    c.id === id ? { ...c, ativo: !c.ativo, atualizadoEm: new Date().toISOString().split('T')[0] } : c
+  );
+  const causa = causasRaiz.value.find(c => c.id === id);
+  showAlertMessage('info', `Causa raiz ${causa?.ativo ? 'ativada' : 'desativada'} com sucesso`);
+};
+
+const handleSaveProtocolo = () => {
+  if (!formProtocolo.value.titulo || !formProtocolo.value.causaRaizId || formProtocolo.value.passos.filter(p => p.trim()).length === 0) {
+    showAlertMessage('error', 'Preencha todos os campos obrigatórios e adicione pelo menos um passo');
+    return;
+  }
+
+  const passosLimpos = formProtocolo.value.passos.filter(p => p.trim());
+
+  if (editingItem.value) {
+    protocolos.value = protocolos.value.map(p =>
+      p.id === (editingItem.value as Protocolo).id
+        ? {
+            ...p,
+            titulo: formProtocolo.value.titulo,
+            causaRaizId: parseInt(String(formProtocolo.value.causaRaizId)),
+            passos: passosLimpos,
+            atualizadoEm: new Date().toISOString().split('T')[0]
+          }
+        : p
+    );
+    showAlertMessage('success', 'Protocolo atualizado com sucesso');
+  } else {
+    const novoProtocolo: Protocolo = {
+      id: Math.max(...protocolos.value.map(p => p.id), 0) + 1,
+      titulo: formProtocolo.value.titulo,
+      causaRaizId: parseInt(String(formProtocolo.value.causaRaizId)),
+      passos: passosLimpos,
+      criadoEm: new Date().toISOString().split('T')[0],
+      atualizadoEm: new Date().toISOString().split('T')[0]
+    };
+    protocolos.value.push(novoProtocolo);
+
+    causasRaiz.value = causasRaiz.value.map(c =>
+      c.id === parseInt(String(formProtocolo.value.causaRaizId))
+        ? { ...c, protocolosIds: [...c.protocolosIds, novoProtocolo.id] }
+        : c
+    );
+
+    showAlertMessage('success', 'Protocolo criado com sucesso');
+  }
+
+  closeModal();
+};
+
+const handleDeleteProtocolo = (id: number) => {
+  const protocolo = protocolos.value.find(p => p.id === id);
+  if (!protocolo) return;
+
+  const causa = causasRaiz.value.find(c => c.id === protocolo.causaRaizId);
+  if (!causa) return;
+
+  if (causa.protocolosIds.length === 1) {
+    showAlertMessage('warning', 'Este é o último protocolo da causa raiz. A causa será desativada se você prosseguir. Confirme desativando a causa primeiro.');
+    return;
+  }
+
+  protocolos.value = protocolos.value.filter(p => p.id !== id);
+  causasRaiz.value = causasRaiz.value.map(c =>
+    c.id === protocolo.causaRaizId
+      ? { ...c, protocolosIds: c.protocolosIds.filter(pid => pid !== id) }
+      : c
+  );
+  showAlertMessage('success', 'Protocolo excluído com sucesso');
+};
+
+const addStep = () => {
+  formProtocolo.value.passos.push('');
+};
+
+const removeStep = (index: number) => {
+  formProtocolo.value.passos = formProtocolo.value.passos.filter((_, i) => i !== index);
+};
+</script>
+
+<template>
+  <div class="protocols-view">
+    <div class="page-header">
+      <h1>Gerenciamento de Protocolos</h1>
+      <p>Gerencie causas raiz e seus protocolos de resolução</p>
+    </div>
+
+    <AlertMessage
+      :alert="showAlert"
+      @close="showAlert = null"
+    />
+
+    <div class="tabs-container">
+      <div class="tabs-header">
+        <button
+          @click="activeTab = 'causas'"
+          :class="['tab-button', { active: activeTab === 'causas' }]"
+        >
+          Causas Raiz
+          <span class="tab-count">{{ causasRaiz.length }}</span>
+        </button>
+        <button
+          @click="activeTab = 'protocolos'"
+          :class="['tab-button', { active: activeTab === 'protocolos' }]"
+        >
+          Protocolos
+          <span class="tab-count">{{ protocolos.length }}</span>
+        </button>
+      </div>
+
+      <div class="tabs-content">
+        <RootCausesTab
+          v-if="activeTab === 'causas'"
+          :root-causes="causasRaiz"
+          :protocols="protocolos"
+          @open-modal="openModalCausa"
+          @toggle="handleToggleCausa"
+          @delete="handleDeleteCausa"
+        />
+
+        <ProtocolsTab
+          v-if="activeTab === 'protocolos'"
+          :protocols="protocolos"
+          :root-causes="causasRaiz"
+          @open-modal="openModalProtocolo"
+          @delete="handleDeleteProtocolo"
+          @change-tab="activeTab = 'causas'"
+        />
+      </div>
+    </div>
+
+    <RootCauseModal
+      :show="showModal && modalType === 'causa'"
+      :form-data="formCausa"
+      :criteria="criterios"
+      :is-editing="!!editingItem"
+      @close="closeModal"
+      @save="handleSaveCausa"
+      @update:form-data="formCausa = $event"
+    />
+
+    <ProtocolModal
+      :show="showModal && modalType === 'protocolo'"
+      :form-data="formProtocolo"
+      :causas="causasRaiz"
+      :is-editing="!!editingItem"
+      @close="closeModal"
+      @save="handleSaveProtocolo"
+      @update:formData="formProtocolo = $event"
+      @add-passo="addStep"
+      @remove-passo="removeStep"
+    />
+  </div>
+</template>
+
+<style lang="scss" scoped>
+.protocols-view {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 20px;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 20px;
+
+  h1 {
+    font-size: 2.5rem;
+    color: #4d4d4d;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #222121 0%, #5a5b5a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: #6b7280;
+    margin: 0;
+  }
+}
+
+.tabs-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.tabs-header {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 16px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:hover {
+    color: #374151;
+    background: #f3f4f6;
+  }
+
+  &.active {
+    color: #00963e;
+    border-bottom-color: #00963e;
+    background: white;
+  }
+
+  .tab-count {
+    background: #e5e7eb;
+    color: #6b7280;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  &.active .tab-count {
+    background: #dcfce7;
+    color: #00963e;
+  }
+}
+
+.tabs-content {
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .protocols-view {
+    padding: 12px;
+    gap: 24px;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs-header {
+    flex-direction: column;
+  }
+
+  .tab-button {
+    border-bottom: 1px solid #e5e7eb;
+    border-right: none;
+
+    &.active {
+      border-bottom-color: #00963e;
+      border-left: 3px solid #00963e;
+    }
+  }
+}
+</style>
