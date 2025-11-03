@@ -6,7 +6,7 @@ import sjcGeojson from '@/utils/sjcGeojson.json'
 
 const mapContainer = ref<HTMLDivElement | null>(null)
 const map = ref<L.Map | null>(null)
-const geoJsonLayer = ref<L.GeoJSON<any> | null>(null)
+const geoJsonLayer = ref<L.GeoJSON | null>(null)
 const selectedZones = ref<string[]>([])
 const filteredZones = ref<string[]>([])
 const startDateTime = ref<string>('')
@@ -22,7 +22,7 @@ onMounted(() => {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors',
-  }).addTo(map.value)
+  }).addTo(map.value as L.Map)
 
   drawMap(sjcGeojson.features)
 })
@@ -31,7 +31,7 @@ function drawMap(features: any[]) {
   if (!map.value) return
 
   if (geoJsonLayer.value) {
-    map.value.removeLayer(geoJsonLayer.value)
+    map.value.removeLayer(geoJsonLayer.value as any)
   }
 
   geoJsonLayer.value = L.geoJSON(features, {
@@ -82,10 +82,10 @@ function drawMap(features: any[]) {
         layer.bindPopup(`<b>${props.name}</b><br>${props.description || ''}`)
       }
     },
-  }).addTo(map.value)
+  }).addTo(map.value as L.Map)
 }
 
-function toggleZone(region: string, layer: L.Layer) {
+function toggleZone(region: string, layer: any) {
   const index = selectedZones.value.indexOf(region)
   if (index >= 0) {
     selectedZones.value.splice(index, 1)

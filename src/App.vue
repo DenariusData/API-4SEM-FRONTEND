@@ -22,7 +22,7 @@ const updateDatabase = async () => {
   <v-app>
     <v-app-bar :elevation="0" class="top-bar" color="white">
       <div class="logo-container">
-        <img src="../radariustxt.svg" alt="Logo" class="logo" />
+        <img src="../public/radariustxt.svg" alt="Logo" class="logo" />
       </div>
 
       <AutoCompleteMenu v-model="menu" />
