@@ -42,6 +42,16 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
         </div>
 
         <div class="form-group">
+          <label>Descrição</label>
+          <textarea
+            :value="formData.description"
+            @input="updateField('description', ($event.target as HTMLTextAreaElement).value)"
+            placeholder="Descreva os detalhes desta causa raiz..."
+            rows="3"
+          />
+        </div>
+
+        <div class="form-group">
           <label>Critério (Indicador) *</label>
           <select
             :value="formData.criterioId"
@@ -162,6 +172,7 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
   }
 
   input[type='text'],
+  textarea,
   select {
     width: 100%;
     padding: 10px 12px;
@@ -180,6 +191,11 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
     &::placeholder {
       color: #9ca3af;
     }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 80px;
   }
 
   small {

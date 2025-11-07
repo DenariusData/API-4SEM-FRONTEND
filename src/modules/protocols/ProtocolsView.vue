@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import type {
   CausaRaiz,
   Protocolo,
@@ -12,13 +12,16 @@ import type {
 } from '@/modules/protocols/types/ProtocolsTypes';
 import {
   initialFormCausa,
-  initialFormProtocolo
+  initialFormProtocolo,
+  mapRootCauseToFrontend,
+  mapProtocolToFrontend,
+  mapCausaToBackend,
+  mapProtocoloToBackend
 } from '@/modules/protocols/types/ProtocolsTypes';
 import {
-  mockCausasRaiz,
-  mockProtocolos,
   mockCriterios
 } from '@/modules/protocols/mock/routes/protocolRoutes';
+import protocolsService from '@/modules/protocols/services/protocolsServices';
 
 import AlertMessage from '@/modules/protocols/components/AlertMessage.vue';
 import RootCausesTab from '@/modules/protocols/components/RootCausesTab.vue';
@@ -31,19 +34,63 @@ const showModal = ref(false);
 const modalType = ref<ModalType>('causa');
 const editingItem = ref<CausaRaiz | Protocolo | null>(null);
 const showAlert = ref<Alert | null>(null);
+const isLoading = ref(false);
 
-const causasRaiz = ref<CausaRaiz[]>(JSON.parse(JSON.stringify(mockCausasRaiz)));
-const protocolos = ref<Protocolo[]>(JSON.parse(JSON.stringify(mockProtocolos)));
+const causasRaiz = ref<CausaRaiz[]>([]);
+const protocolos = ref<Protocolo[]>([]);
 const criterios = ref<Criterio[]>(JSON.parse(JSON.stringify(mockCriterios)));
 
 const formCausa = ref<FormCausa>({ ...initialFormCausa });
 const formProtocolo = ref<FormProtocolo>({ ...initialFormProtocolo });
+
+const loadRootCauses = async () => {
+  try {
+    isLoading.value = true;
+    const response = await protocolsService.getAllRootCauses();
+    causasRaiz.value = response.data.map(rc => 
+      mapRootCauseToFrontend(
+        rc, 
+        1,
+        'Padrão',
+        true,
+        []
+      )
+    );
+  } catch (error) {
+    console.error('Erro ao carregar causas raiz:', error);
+    showAlertMessage('error', 'Erro ao carregar causas raiz do servidor');
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const loadProtocols = async () => {
+  try {
+    isLoading.value = true;
+    const response = await protocolsService.getAllProtocols();
+    protocolos.value = response.data.map(p => {
+      const passos = p.description ? p.description.split(' | ') : [p.description];
+      return mapProtocolToFrontend(p, 1, passos);
+    });
+  } catch (error) {
+    console.error('Erro ao carregar protocolos:', error);
+    showAlertMessage('error', 'Erro ao carregar protocolos do servidor');
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadRootCauses();
+  loadProtocols();
+});
 
 const openModalCausa = (item: CausaRaiz | null = null) => {
   modalType.value = 'causa';
   editingItem.value = item;
   formCausa.value = item ? {
     nome: item.nome,
+    description: item.description || '',
     criterioId: item.criterioId,
     ativo: item.ativo
   } : { ...initialFormCausa };
@@ -55,6 +102,7 @@ const openModalProtocolo = (item: Protocolo | null = null) => {
   editingItem.value = item;
   formProtocolo.value = item ? {
     titulo: item.titulo,
+    description: item.description || '',
     causaRaizId: item.causaRaizId,
     passos: [...item.passos]
   } : { ...initialFormProtocolo };
@@ -73,7 +121,7 @@ const showAlertMessage = (type: Alert['type'], message: string) => {
   setTimeout(() => (showAlert.value = null), 4000);
 };
 
-const handleSaveCausa = () => {
+const handleSaveCausa = async () => {
   if (!formCausa.value.nome || !formCausa.value.criterioId) {
     showAlertMessage('error', 'Preencha todos os campos obrigatórios');
     return;
@@ -85,39 +133,51 @@ const handleSaveCausa = () => {
     return;
   }
 
-  if (editingItem.value) {
-    causasRaiz.value = causasRaiz.value.map(c =>
-      c.id === (editingItem.value as CausaRaiz).id
-        ? {
-            ...c,
-            nome: formCausa.value.nome,
-            criterioId: parseInt(String(formCausa.value.criterioId)),
-            criterioNome: criterio.nome,
-            ativo: formCausa.value.ativo,
-            atualizadoEm: new Date().toISOString().split('T')[0]
-          }
-        : c
-    );
-    showAlertMessage('success', 'Causa raiz atualizada com sucesso');
-  } else {
-    const novaCausa: CausaRaiz = {
-      id: Math.max(...causasRaiz.value.map(c => c.id), 0) + 1,
-      nome: formCausa.value.nome,
-      criterioId: parseInt(String(formCausa.value.criterioId)),
-      criterioNome: criterio.nome,
-      ativo: formCausa.value.ativo,
-      protocolosIds: [],
-      criadoEm: new Date().toISOString().split('T')[0],
-      atualizadoEm: new Date().toISOString().split('T')[0]
-    };
-    causasRaiz.value.push(novaCausa);
-    showAlertMessage('success', 'Causa raiz criada com sucesso');
-  }
+  try {
+    isLoading.value = true;
+    
+    // TODO: Get actual user ID from auth context
+    const createdBy = 1;
+    const backendData = mapCausaToBackend(formCausa.value, createdBy);
 
-  closeModal();
+    if (editingItem.value) {
+      const response = await protocolsService.updateRootCause((editingItem.value as CausaRaiz).id, backendData);
+      const updatedCausa = mapRootCauseToFrontend(
+        response.data,
+        parseInt(String(formCausa.value.criterioId)),
+        criterio.nome,
+        formCausa.value.ativo,
+        (editingItem.value as CausaRaiz).protocolosIds
+      );
+      
+      causasRaiz.value = causasRaiz.value.map(c =>
+        c.id === updatedCausa.id ? updatedCausa : c
+      );
+      showAlertMessage('success', 'Causa raiz atualizada com sucesso');
+    } else {
+      const response = await protocolsService.createRootCause(backendData);
+      const novaCausa = mapRootCauseToFrontend(
+        response.data,
+        parseInt(String(formCausa.value.criterioId)),
+        criterio.nome,
+        formCausa.value.ativo,
+        []
+      );
+      
+      causasRaiz.value.push(novaCausa);
+      showAlertMessage('success', 'Causa raiz criada com sucesso');
+    }
+
+    closeModal();
+  } catch (error) {
+    console.error('Erro ao salvar causa raiz:', error);
+    showAlertMessage('error', 'Erro ao salvar causa raiz. Tente novamente.');
+  } finally {
+    isLoading.value = false;
+  }
 };
 
-const handleDeleteCausa = (id: number) => {
+const handleDeleteCausa = async (id: number) => {
   const protocolosAssociados = protocolos.value.filter(p => p.causaRaizId === id);
 
   if (protocolosAssociados.length > 0) {
@@ -125,8 +185,17 @@ const handleDeleteCausa = (id: number) => {
     return;
   }
 
-  causasRaiz.value = causasRaiz.value.filter(c => c.id !== id);
-  showAlertMessage('success', 'Causa raiz excluída com sucesso');
+  try {
+    isLoading.value = true;
+    await protocolsService.deleteRootCause(id);
+    causasRaiz.value = causasRaiz.value.filter(c => c.id !== id);
+    showAlertMessage('success', 'Causa raiz excluída com sucesso');
+  } catch (error) {
+    console.error('Erro ao excluir causa raiz:', error);
+    showAlertMessage('error', 'Erro ao excluir causa raiz. Tente novamente.');
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const handleToggleCausa = (id: number) => {
@@ -137,7 +206,7 @@ const handleToggleCausa = (id: number) => {
   showAlertMessage('info', `Causa raiz ${causa?.ativo ? 'ativada' : 'desativada'} com sucesso`);
 };
 
-const handleSaveProtocolo = () => {
+const handleSaveProtocolo = async () => {
   if (!formProtocolo.value.titulo || !formProtocolo.value.causaRaizId || formProtocolo.value.passos.filter(p => p.trim()).length === 0) {
     showAlertMessage('error', 'Preencha todos os campos obrigatórios e adicione pelo menos um passo');
     return;
@@ -145,43 +214,54 @@ const handleSaveProtocolo = () => {
 
   const passosLimpos = formProtocolo.value.passos.filter(p => p.trim());
 
-  if (editingItem.value) {
-    protocolos.value = protocolos.value.map(p =>
-      p.id === (editingItem.value as Protocolo).id
-        ? {
-            ...p,
-            titulo: formProtocolo.value.titulo,
-            causaRaizId: parseInt(String(formProtocolo.value.causaRaizId)),
-            passos: passosLimpos,
-            atualizadoEm: new Date().toISOString().split('T')[0]
-          }
-        : p
-    );
-    showAlertMessage('success', 'Protocolo atualizado com sucesso');
-  } else {
-    const novoProtocolo: Protocolo = {
-      id: Math.max(...protocolos.value.map(p => p.id), 0) + 1,
-      titulo: formProtocolo.value.titulo,
-      causaRaizId: parseInt(String(formProtocolo.value.causaRaizId)),
-      passos: passosLimpos,
-      criadoEm: new Date().toISOString().split('T')[0],
-      atualizadoEm: new Date().toISOString().split('T')[0]
-    };
-    protocolos.value.push(novoProtocolo);
+  try {
+    isLoading.value = true;
+    
+    // TODO: Get actual user ID from auth context
+    const createdBy = 1;
+    const backendData = mapProtocoloToBackend(formProtocolo.value, createdBy);
 
-    causasRaiz.value = causasRaiz.value.map(c =>
-      c.id === parseInt(String(formProtocolo.value.causaRaizId))
-        ? { ...c, protocolosIds: [...c.protocolosIds, novoProtocolo.id] }
-        : c
-    );
+    if (editingItem.value) {
+      const response = await protocolsService.updateProtocol((editingItem.value as Protocolo).id, backendData);
+      const updatedProtocolo = mapProtocolToFrontend(
+        response.data,
+        parseInt(String(formProtocolo.value.causaRaizId)),
+        passosLimpos
+      );
+      
+      protocolos.value = protocolos.value.map(p =>
+        p.id === updatedProtocolo.id ? updatedProtocolo : p
+      );
+      showAlertMessage('success', 'Protocolo atualizado com sucesso');
+    } else {
+      const response = await protocolsService.createProtocol(backendData);
+      const novoProtocolo = mapProtocolToFrontend(
+        response.data,
+        parseInt(String(formProtocolo.value.causaRaizId)),
+        passosLimpos
+      );
+      
+      protocolos.value.push(novoProtocolo);
 
-    showAlertMessage('success', 'Protocolo criado com sucesso');
+      causasRaiz.value = causasRaiz.value.map(c =>
+        c.id === parseInt(String(formProtocolo.value.causaRaizId))
+          ? { ...c, protocolosIds: [...c.protocolosIds, novoProtocolo.id] }
+          : c
+      );
+
+      showAlertMessage('success', 'Protocolo criado com sucesso');
+    }
+
+    closeModal();
+  } catch (error) {
+    console.error('Erro ao salvar protocolo:', error);
+    showAlertMessage('error', 'Erro ao salvar protocolo. Tente novamente.');
+  } finally {
+    isLoading.value = false;
   }
-
-  closeModal();
 };
 
-const handleDeleteProtocolo = (id: number) => {
+const handleDeleteProtocolo = async (id: number) => {
   const protocolo = protocolos.value.find(p => p.id === id);
   if (!protocolo) return;
 
@@ -193,13 +273,23 @@ const handleDeleteProtocolo = (id: number) => {
     return;
   }
 
-  protocolos.value = protocolos.value.filter(p => p.id !== id);
-  causasRaiz.value = causasRaiz.value.map(c =>
-    c.id === protocolo.causaRaizId
-      ? { ...c, protocolosIds: c.protocolosIds.filter(pid => pid !== id) }
-      : c
-  );
-  showAlertMessage('success', 'Protocolo excluído com sucesso');
+  try {
+    isLoading.value = true;
+    await protocolsService.deleteProtocol(id);
+    
+    protocolos.value = protocolos.value.filter(p => p.id !== id);
+    causasRaiz.value = causasRaiz.value.map(c =>
+      c.id === protocolo.causaRaizId
+        ? { ...c, protocolosIds: c.protocolosIds.filter(pid => pid !== id) }
+        : c
+    );
+    showAlertMessage('success', 'Protocolo excluído com sucesso');
+  } catch (error) {
+    console.error('Erro ao excluir protocolo:', error);
+    showAlertMessage('error', 'Erro ao excluir protocolo. Tente novamente.');
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const addStep = () => {
