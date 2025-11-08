@@ -5,15 +5,28 @@ import NotificationDropdown from './modules/alerts/components/NotificationDropdo
 import sharedServices from '@/shared/services/sharedServices.ts'
 import { ref, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
+import { useRoleStore } from '@/modules/login/store/roleStore'
+import { parseJwt } from '@/utils/jwt'
 
 const menu = ref(false)
 const showLogin = ref(false)
 const isLoggedIn = ref(false)
 const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
+const { addRole } = useRoleStore()
 
 const checkLoginStatus = () => {
   const token = localStorage.getItem('token')
-  isLoggedIn.value = !!token
+  if (token) {
+    const decodedToken = parseJwt(token)
+
+    if (decodedToken?.r) {
+      console.log('User role from token:', decodedToken.r)
+      addRole(decodedToken.r)
+    }
+    isLoggedIn.value = true
+  } else {
+    isLoggedIn.value = false
+  }
 }
 
 const openLogin = () => {

@@ -1,15 +1,12 @@
 <script lang="ts" setup>
 import loginService from '@/modules/login/service/loginServices'
 import { ref, watch } from 'vue'
-import { useRoleStore } from '@/modules/login/store/roleStore'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'login-success'): void
 }>()
-
-const { addRole } = useRoleStore()
 
 const model = ref(props.modelValue)
 const email = ref('')
@@ -34,7 +31,6 @@ const handleLogin = async () => {
     const { data } = await loginService.login(email.value, password.value)
     if (data.token) {
       localStorage.setItem('token', data.token)
-      addRole(data.permission)
       emit('login-success')
     }
     closePopup()
