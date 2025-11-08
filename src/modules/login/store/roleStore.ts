@@ -4,17 +4,13 @@ import { defineStore } from 'pinia'
 export const useRoleStore = defineStore('role', () => {
   const roles = ref<string[]>([])
 
-  function addRole(permission: string) {
-    roles.value.push(permission)
+  function setRoles(newRoles: string[] | null) {
+    roles.value = newRoles || []
   }
 
-  function removeRole(role: string) {
-    roles.value = roles.value.filter((p) => p !== role)
-  }
-
-  function getRole() {
+  function getRoles() {
     return computed(() => roles.value)
   }
 
-  return { roles, addRole, removeRole, getRole }
+  return { roles, setRoles, getRoles }
 })

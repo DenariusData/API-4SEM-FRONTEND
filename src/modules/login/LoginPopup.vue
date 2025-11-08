@@ -28,9 +28,9 @@ const closePopup = () => {
 
 const handleLogin = async () => {
   try {
-    const { data } = await loginService.login(email.value, password.value)
-    if (data.token) {
-      localStorage.setItem('token', data.token)
+    const response = await loginService.login(email.value, password.value)
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token)
       emit('login-success')
     }
     closePopup()

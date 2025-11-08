@@ -1,7 +1,7 @@
 interface DecodedToken {
   sub: string
-  email: string
-  permission: string
+  e: string
+  r: string
   iat: number
   exp: number
 }
