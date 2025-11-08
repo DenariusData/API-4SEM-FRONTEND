@@ -1,11 +1,15 @@
 <script lang="ts" setup>
 import loginService from '@/modules/login/service/loginServices'
 import { ref, watch } from 'vue'
+import { useRoleStore } from '@/modules/login/store/roleStore'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
+  (e: 'login-success'): void
 }>()
+
+const { addRole } = useRoleStore()
 
 const model = ref(props.modelValue)
 const email = ref('')
@@ -27,14 +31,18 @@ const closePopup = () => {
 
 const handleLogin = async () => {
   try {
-    const response = await loginService.login(email.value, password.value)
-    console.log(response)
+    const { data } = await loginService.login(email.value, password.value)
+    if (data.token) {
+      localStorage.setItem('token', data.token)
+      addRole(data.permission)
+      emit('login-success')
+    }
     closePopup()
-  } catch (error) {
-    if (error.status === 401) {
+  } catch (error: any) {
+    if (error?.status === 401) {
       alert('Email ou senha incorretos')
     } else {
-      alert('Erro no login do usuário', error)
+      alert('Erro no login do usuário')
     }
   }
 }

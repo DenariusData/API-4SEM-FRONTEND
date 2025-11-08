@@ -3,19 +3,32 @@ import AutoCompleteMenu from './shared/AutoCompleteMenu.vue'
 import LoginPopup from './modules/login/LoginPopup.vue'
 import NotificationDropdown from './modules/alerts/components/NotificationDropdown.vue'
 import sharedServices from '@/shared/services/sharedServices.ts'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 
 const menu = ref(false)
 const showLogin = ref(false)
+const isLoggedIn = ref(false)
 const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
 
-const openLogin = () => {
-  showLogin.value = true
+const checkLoginStatus = () => {
+  const token = localStorage.getItem('token')
+  isLoggedIn.value = !!token
 }
+
+const openLogin = () => {
+  if (!isLoggedIn.value) {
+    showLogin.value = true
+  }
+}
+
 const updateDatabase = async () => {
   await sharedServices.updateDatabase()
 }
+
+onMounted(() => {
+  checkLoginStatus()
+})
 </script>
 
 <template>
@@ -32,7 +45,8 @@ const updateDatabase = async () => {
       <div class="actions">
         <v-btn v-if="showRoutineButton" icon="mdi-refresh" variant="text" color="black" @click="updateDatabase"></v-btn>
         <NotificationDropdown />
-        <v-btn icon="mdi-login" variant="text" color="black" @click="openLogin"></v-btn>
+        <v-btn v-if="!isLoggedIn" icon="mdi-login" variant="text" color="black" @click="openLogin"></v-btn>
+        <v-btn v-else icon="mdi-account-circle" variant="text" color="black"></v-btn>
       </div>
     </v-app-bar>
 
@@ -40,7 +54,7 @@ const updateDatabase = async () => {
       <RouterView :key="$route.fullPath" />
     </div>
 
-    <LoginPopup v-model="showLogin" />
+    <LoginPopup v-model="showLogin" @login-success="checkLoginStatus" />
   </v-app>
 </template>
 
