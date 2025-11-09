@@ -35,6 +35,11 @@ const router = createRouter({
       name: 'protocols',
       component: () => import('@/modules/protocols/ProtocolsView.vue'),
     },
+    {
+      path: '/persons',
+      name: 'persons',
+      component: () => import('@/modules/persons/pages/PersonsView.vue'),
+    },
   ],
 })
 
