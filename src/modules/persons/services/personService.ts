@@ -8,20 +8,17 @@ export async function getPersons(page: number, size: number) {
 }
 
 export async function getPersonById(id: number) {
-  const response = await api.get<PersonResponse>(`/persons/${id}`);
-  return response.data;
+  return await api.get<PersonResponse>(`/persons/${id}`);
 }
 
 export async function createPerson(data: PersonRequest) {
-  const response = await api.post<PersonResponse>(`/persons`, data);
-  return response.data;
+  return await api.post<PersonResponse>(`/persons`, data);
 }
 
 export async function updatePerson(id: number, data: PersonRequest) {
-  const response = await api.put<PersonResponse>(`/persons/${id}`, data);
-  return response.data;
+  return await api.put<PersonResponse>(`/persons/${id}`, data);
 }
 
 export async function deletePerson(id: number) {
-  await api.delete(`/persons/${id}`);
+ return await api.delete(`/persons/${id}`);
 }
