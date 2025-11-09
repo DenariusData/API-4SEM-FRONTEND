@@ -65,7 +65,6 @@ const handleLogin = async () => {
                 type="email"
                 variant="outlined"
                 density="comfortable"
-                @keyup.enter="handleLogin"
                 hide-details
                 class="custom-input"
               ></v-text-field>
@@ -79,7 +78,6 @@ const handleLogin = async () => {
                 type="password"
                 variant="outlined"
                 density="comfortable"
-                @keyup.enter="handleLogin"
                 hide-details
                 class="custom-input"
               ></v-text-field>

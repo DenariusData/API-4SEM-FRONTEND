@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoleStore } from '@/modules/login/store/roleStore'
 import { parseJwt } from '@/utils/jwt'
 
@@ -13,14 +13,23 @@ const emit = defineEmits<{
 }>()
 
 const menuOpen = ref(false)
+const userData = ref({})
 const { setRoles } = useRoleStore()
 
-const userData = computed(() => {
+watch(menuOpen, () => {
+  if (menuOpen.value) {
+    getUserData()
+  }
+})
+
+const getUserData = () => {
+  console.log('getUserData')
   const token = localStorage.getItem('token')
   if (!token) return null
 
   const decoded = parseJwt(token)
   if (!decoded) return null
+  console.log('decoded', decoded)
 
   const roles = {
     ROLE_AGENTE: 'Agente',
@@ -28,15 +37,15 @@ const userData = computed(() => {
     ROLE_CIVIL: 'Público',
   }
 
-  return {
+  userData.value = {
     email: decoded.e || 'Usuário',
     role: roles[decoded.r as keyof typeof roles] || 'Sem permissão',
   }
-})
+}
 
 const handleLogout = () => {
   localStorage.removeItem('token')
-  setRoles(null)
+  setRoles([])
   menuOpen.value = false
   emit('logout')
 }

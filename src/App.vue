@@ -26,6 +26,7 @@ const checkLoginStatus = () => {
     isLoggedIn.value = true
   } else {
     isLoggedIn.value = false
+    setRoles([])
   }
 }
 
