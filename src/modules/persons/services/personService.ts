@@ -2,10 +2,9 @@ import api from '@/utils/servicesUtils.ts'
 import type { PersonRequest, PersonResponse } from "../protocols/personProtocols";
 
 export async function getPersons(page: number, size: number) {
-  const response = await api.get(`/persons`, {
+  return await api.get('/persons', {
     params: { page, size }
   });
-  return response.data;
 }
 
 export async function getPersonById(id: number) {
