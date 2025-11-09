@@ -1,3 +1,49 @@
+<script lang="ts" setup>
+import loginService from '@/modules/login/service/loginServices'
+import { ref, watch } from 'vue'
+
+const props = defineProps<{ modelValue: boolean }>()
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'login-success'): void
+}>()
+
+const model = ref(props.modelValue)
+const email = ref('')
+const password = ref('')
+const showError = ref(false)
+
+watch(
+  () => props.modelValue,
+  (val) => (model.value = val),
+)
+watch(model, (val) => emit('update:modelValue', val))
+
+const closePopup = () => {
+  showError.value = false
+  email.value = ''
+  password.value = ''
+  model.value = false
+}
+
+const handleLogin = async () => {
+  try {
+    const response = await loginService.login(email.value, password.value)
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token)
+      emit('login-success')
+    }
+    closePopup()
+  } catch (error: any) {
+    if (error?.status === 401) {
+      alert('Email ou senha incorretos')
+    } else {
+      alert('Erro no login do usuário')
+    }
+  }
+}
+</script>
+
 <template>
   <v-dialog transition="dialog-top-transition" width="420" v-model="model" class="login-dialog">
     <template v-slot:default>
@@ -19,7 +65,6 @@
                 type="email"
                 variant="outlined"
                 density="comfortable"
-                @keyup.enter="handleLogin"
                 hide-details
                 class="custom-input"
               ></v-text-field>
@@ -33,7 +78,6 @@
                 type="password"
                 variant="outlined"
                 density="comfortable"
-                @keyup.enter="handleLogin"
                 hide-details
                 class="custom-input"
               ></v-text-field>
@@ -55,42 +99,6 @@
     </template>
   </v-dialog>
 </template>
-
-<script lang="ts" setup>
-import { ref, watch } from 'vue'
-
-const props = defineProps<{ modelValue: boolean }>()
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-}>()
-
-const model = ref(props.modelValue)
-const email = ref('')
-const password = ref('')
-const showError = ref(false)
-
-watch(
-  () => props.modelValue,
-  (val) => (model.value = val),
-)
-watch(model, (val) => emit('update:modelValue', val))
-
-const closePopup = () => {
-  showError.value = false
-  email.value = ''
-  password.value = ''
-  model.value = false
-}
-
-const handleLogin = () => {
-  if (password.value === 'Denarius') {
-    showError.value = false
-    closePopup()
-  } else {
-    showError.value = true
-  }
-}
-</script>
 
 <style lang="scss" scoped>
 .login-dialog {
