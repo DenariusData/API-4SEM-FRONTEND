@@ -51,20 +51,6 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
           />
         </div>
 
-        <div class="form-group">
-          <label>Critério (Indicador) *</label>
-          <select
-            :value="formData.criterioId"
-            @change="updateField('criterioId', ($event.target as HTMLSelectElement).value)"
-          >
-            <option value="">Selecione um critério</option>
-            <option v-for="c in criteria" :key="c.id" :value="c.id">
-              {{ c.nome }}
-            </option>
-          </select>
-          <small>Escolha o indicador que será usado para identificar esta causa</small>
-        </div>
-
         <div class="form-group checkbox-group">
           <label>
             <input
