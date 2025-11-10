@@ -69,7 +69,7 @@ const loadProtocols = async () => {
     isLoading.value = true;
     const response = await protocolsService.getAllProtocols();
     protocolos.value = response.data.map(p => {
-      const passos = p.description ? p.description.split(' | ') : [p.description];
+      const passos = p.description ? p.description.split(' |-| ') : [p.description];
       return mapProtocolToFrontend(p, 1, passos);
     });
   } catch (error) {

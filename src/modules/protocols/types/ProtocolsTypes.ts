@@ -141,6 +141,6 @@ export const mapProtocoloToBackend = (
   createdBy: number
 ): ProtocolRequestDTO => ({
   name: formData.titulo,
-  description: formData.passos.filter(p => p.trim()).join(' | '),
+  description: formData.passos.filter(p => p.trim()).join(' |-| '),
   createdBy
 });
