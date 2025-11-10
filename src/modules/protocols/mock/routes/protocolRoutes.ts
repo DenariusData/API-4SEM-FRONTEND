@@ -246,7 +246,7 @@ const protocolRoutes = [
   mockFlag(
     {
       method: 'get',
-      url: '/criteria',
+      url: '/criterion',
       result: () => {
         return APIFailureWrapper({
           content: mockCriterios,
