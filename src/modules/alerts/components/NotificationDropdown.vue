@@ -4,6 +4,7 @@ import alertServices from '@/modules/alerts/services/alertServices'
 import type { Alert } from '@/modules/alerts/types/alertsTypes'
 import { LEVELS_ENUM } from '@/shared/enums'
 import { useRouter } from 'vue-router'
+import { registerPeriodicTask } from '@/shared/periodicUpdater'
 
 const router = useRouter()
 
@@ -63,19 +64,17 @@ const goToAlertsPage = () => {
   router.push({ name: 'alerts' })
 }
 
-let intervalId: number | null = null
+let unregisterNotificationTask: (() => void) | null = null
 
 onMounted(() => {
   fetchAlerts()
-
-  intervalId = window.setInterval(() => {
-    fetchAlerts()
-  }, 180000)
+  unregisterNotificationTask = registerPeriodicTask(fetchAlerts)
 })
 
 onUnmounted(() => {
-  if (intervalId) {
-    clearInterval(intervalId)
+  if (unregisterNotificationTask) {
+    unregisterNotificationTask()
+    unregisterNotificationTask = null
   }
 })
 

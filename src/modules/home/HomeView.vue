@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css'
 import sjcGeojson from '@/utils/sjcGeojson.json'
 import { getRegionsLevel } from '@/modules/home/services/mapService'
 import { getRegions } from '@/modules/persons/services/regionService'
+import { registerPeriodicTask } from '@/shared/periodicUpdater'
 
 const mapContainer = ref<HTMLDivElement | null>(null)
 const map = ref<L.Map | null>(null)
@@ -17,8 +18,7 @@ const endDateTime = ref<string>('')
 const activeAnimations = new Map<string, any>()
 const regionNameToLevelMap = ref<Map<string, number>>(new Map())
 
-const UPDATE_INTERVAL = 180000
-let updateIntervalId: number | null = null
+let unregisterPeriodicTask: (() => void) | null = null
 
 const levelColorMap: Record<number, string> = {
   1: '#10b981',
@@ -105,24 +105,6 @@ async function fetchRegionData(): Promise<void> {
   }
 }
 
-async function startPeriodicUpdate(): Promise<void> {
-  await fetchRegionData()
-
-  updateIntervalId = window.setInterval(async () => {
-    await fetchRegionData()
-    if (geoJsonLayer.value && map.value) {
-      drawMap(sjcGeojson.features)
-    }
-  }, UPDATE_INTERVAL)
-}
-
-function stopPeriodicUpdate(): void {
-  if (updateIntervalId) {
-    clearInterval(updateIntervalId)
-    updateIntervalId = null
-  }
-}
-
 function drawMap(features: any[]): void {
   if (!map.value) return
 
@@ -174,13 +156,23 @@ onMounted(async () => {
 
   createLegend()
 
-  await startPeriodicUpdate()
+  unregisterPeriodicTask = registerPeriodicTask(async () => {
+    await fetchRegionData()
+    if (map.value && geoJsonLayer.value) {
+      drawMap(sjcGeojson.features)
+    }
+  })
+
+  await fetchRegionData()
 
   drawMap(sjcGeojson.features)
 })
 
 onUnmounted(() => {
-  stopPeriodicUpdate()
+  if (unregisterPeriodicTask) {
+    unregisterPeriodicTask()
+    unregisterPeriodicTask = null
+  }
   activeAnimations.forEach(clearInterval)
   activeAnimations.clear()
 })

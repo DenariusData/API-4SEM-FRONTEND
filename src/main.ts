@@ -20,6 +20,7 @@ import { makeServer } from '../mirage.config.ts'
 
 import App from '@/App.vue'
 import router from '@/router'
+import { startPeriodicUpdates } from '@/shared/periodicUpdater'
 
 const app = createApp(App)
 
@@ -49,3 +50,6 @@ if (import.meta.env.MODE === 'development' && import.meta.env.VITE_MOCK_ENABLED 
 }
 
 app.mount('#app')
+
+// start the centralized periodic updater which will call registered tasks
+startPeriodicUpdates()
