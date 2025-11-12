@@ -51,5 +51,4 @@ if (import.meta.env.MODE === 'development' && import.meta.env.VITE_MOCK_ENABLED 
 
 app.mount('#app')
 
-// start the centralized periodic updater which will call registered tasks
 startPeriodicUpdates()
