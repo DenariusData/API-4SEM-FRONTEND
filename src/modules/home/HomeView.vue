@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import sjcGeojson from '@/utils/sjcGeojson.json'
+import { getRegionsLevel } from '@/modules/home/services/mapService'
+import { getRegions } from '@/modules/persons/services/regionService'
 
 const mapContainer = ref<HTMLDivElement | null>(null)
 const map = ref<L.Map | null>(null)
@@ -13,8 +15,24 @@ const startDateTime = ref<string>('')
 const endDateTime = ref<string>('')
 
 const activeAnimations = new Map<string, any>()
+const regionNameToLevelMap = ref<Map<string, number>>(new Map())
 
-onMounted(() => {
+const levelColorMap: Record<number, string> = {
+  1: '#10b981',
+  2: '#22c55e',
+  3: '#f59e0b',
+  4: '#ef4444',
+  5: '#991b1b',
+}
+
+function getLevelColor(zoneName: string): string {
+  const level = regionNameToLevelMap.value.get(zoneName)
+  if (!level) return '#3388ff'
+
+  return levelColorMap[level] || '#3388ff'
+}
+
+onMounted(async () => {
   if (!mapContainer.value) return
 
   map.value = L.map(mapContainer.value).setView([-23.2, -45.9], 11)
@@ -24,10 +42,36 @@ onMounted(() => {
     attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors',
   }).addTo(map.value as L.Map)
 
+  try {
+    const [regionsResponse, levelsResponse] = await Promise.all([getRegions(), getRegionsLevel()])
+
+    const regionIdToNameMap = new Map<number, string>()
+
+    const regionsList = regionsResponse?.data || regionsResponse || []
+    if (Array.isArray(regionsList)) {
+      regionsList.forEach((region: { id: number; name: string }) => {
+        regionIdToNameMap.set(region.id, region.name)
+      })
+    }
+
+    const levelsList = levelsResponse?.data || levelsResponse || []
+    if (Array.isArray(levelsList)) {
+      levelsList.forEach((item: { region_id: number; level: number }) => {
+        const regionName = regionIdToNameMap.get(item.region_id)
+        if (regionName) {
+          const cleanedName = regionName.replace(/zona\s*/gi, '').trim()
+          regionNameToLevelMap.value.set(cleanedName, item.level)
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Erro ao carregar dados das regiões:', error)
+  }
+
   drawMap(sjcGeojson.features)
 })
 
-function drawMap(features: any[]) {
+function drawMap(features: any[]): void {
   if (!map.value) return
 
   if (geoJsonLayer.value) {
@@ -42,7 +86,7 @@ function drawMap(features: any[]) {
       const filtered = filteredZones.value.includes(region)
 
       let borderColor = '#333'
-      let fillColor = props.color || '#3388ff'
+      let fillColor = props.layer === 'zona' ? getLevelColor(region) : props.color || '#3388ff'
 
       if (selected) {
         borderColor = '#0044ff'

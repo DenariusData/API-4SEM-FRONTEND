@@ -1,6 +1,6 @@
 import alertRoutes from '@/modules/alerts/mock/routes/alertRoutes'
 import indicatorsRoutes from '@/modules/indicators/mock/routes/indicatorsRoutes'
-import sjcGeojsonJson from '@/modules/home/mock/routes/sjcGeoJsonRoutes'
+import sjcGeojsonJson from '@/modules/home/mock/routes/mapRoutes'
 import { createServer, Server, Request } from 'miragejs'
 import type { MockFlagReturn } from '@/utils/mockUtils'
 import userRoutes from '@/modules/users/mock/routes/userRoutes'
