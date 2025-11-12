@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import sjcGeojson from '@/utils/sjcGeojson.json'
@@ -17,6 +17,9 @@ const endDateTime = ref<string>('')
 const activeAnimations = new Map<string, any>()
 const regionNameToLevelMap = ref<Map<string, number>>(new Map())
 
+const UPDATE_INTERVAL = 180000
+let updateIntervalId: number | null = null
+
 const levelColorMap: Record<number, string> = {
   1: '#10b981',
   2: '#22c55e',
@@ -32,7 +35,7 @@ function getLevelColor(zoneName: string): string {
   return levelColorMap[level] || '#3388ff'
 }
 
-onMounted(async () => {
+function initializeMap(): void {
   if (!mapContainer.value) return
 
   map.value = L.map(mapContainer.value).setView([-23.2, -45.9], 11)
@@ -41,7 +44,40 @@ onMounted(async () => {
     maxZoom: 18,
     attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors',
   }).addTo(map.value as L.Map)
+}
 
+function createLegend(): void {
+  if (!map.value) return
+
+  const legend = L.control({ position: 'bottomright' })
+  legend.onAdd = function () {
+    const div = L.DomUtil.create('div', 'legend')
+    L.DomEvent.disableClickPropagation(div)
+
+    const levels = [
+      { level: 1, color: '#10b981', label: 'Nível 1' },
+      { level: 2, color: '#22c55e', label: 'Nível 2' },
+      { level: 3, color: '#f59e0b', label: 'Nível 3' },
+      { level: 4, color: '#ef4444', label: 'Nível 4' },
+      { level: 5, color: '#991b1b', label: 'Nível 5' },
+    ]
+
+    div.innerHTML = '<h4 style="margin: 0 0 10px 0; font-weight: bold; font-size: 14px;">Níveis de Alerta</h4>'
+    levels.forEach((item) => {
+      div.innerHTML += `
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <div style="width: 20px; height: 20px; background-color: ${item.color}; margin-right: 10px; border: 1px solid #333; border-radius: 3px;"></div>
+          <span style="font-size: 12px;">${item.label}</span>
+        </div>
+      `
+    })
+
+    return div
+  }
+  legend.addTo(map.value)
+}
+
+async function fetchRegionData(): Promise<void> {
   try {
     const [regionsResponse, levelsResponse] = await Promise.all([getRegions(), getRegionsLevel()])
 
@@ -67,9 +103,25 @@ onMounted(async () => {
   } catch (error) {
     console.error('Erro ao carregar dados das regiões:', error)
   }
+}
 
-  drawMap(sjcGeojson.features)
-})
+async function startPeriodicUpdate(): Promise<void> {
+  await fetchRegionData()
+
+  updateIntervalId = window.setInterval(async () => {
+    await fetchRegionData()
+    if (geoJsonLayer.value && map.value) {
+      drawMap(sjcGeojson.features)
+    }
+  }, UPDATE_INTERVAL)
+}
+
+function stopPeriodicUpdate(): void {
+  if (updateIntervalId) {
+    clearInterval(updateIntervalId)
+    updateIntervalId = null
+  }
+}
 
 function drawMap(features: any[]): void {
   if (!map.value) return
@@ -108,26 +160,30 @@ function drawMap(features: any[]): void {
 
       if (props.layer === 'zona') {
         layer.bindTooltip(`Zona ${props.regiao}`, { sticky: true })
-        layer.bindPopup(`
-          <b>Zona ${props.regiao}</b><br>
-          Domicílios (origem): ${props.domiciliosOrigem || 'N/D'}<br>
-          Pessoas (origem): ${props.pessoasOrigem || 'N/D'}<br>
-          Moradores/domicílio (origem): ${props.moradoresOrigem || 'N/D'}<br>
-          Domicílios (est. 2025): ${props.domiciliosEst || 'N/D'}<br>
-          Pessoas (est. 2025): ${props.pessoasEst || 'N/D'}<br>
-          Moradores/dom. (est. 2025): ${props.moradoresEst || 'N/D'}
-        `)
-
         layer.on('dblclick', (e) => {
           L.DomEvent.stopPropagation(e)
           toggleZone(props.regiao, layer)
         })
-      } else if (props.layer === 'municipio') {
-        layer.bindPopup(`<b>${props.name}</b><br>${props.description || ''}`)
       }
     },
   }).addTo(map.value as L.Map)
 }
+
+onMounted(async () => {
+  initializeMap()
+
+  createLegend()
+
+  await startPeriodicUpdate()
+
+  drawMap(sjcGeojson.features)
+})
+
+onUnmounted(() => {
+  stopPeriodicUpdate()
+  activeAnimations.forEach(clearInterval)
+  activeAnimations.clear()
+})
 
 function toggleZone(region: string, layer: any) {
   const index = selectedZones.value.indexOf(region)
@@ -340,6 +396,30 @@ function clearSelection() {
   :deep(.leaflet-interactive) {
     outline: none !important;
     cursor: pointer;
+  }
+
+  :deep(.legend) {
+    background: white;
+    padding: 12px 16px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    font-family: Arial, sans-serif;
+  }
+
+  :deep(.legend h4) {
+    margin: 0 0 10px 0 !important;
+    font-weight: bold;
+    font-size: 14px !important;
+  }
+
+  :deep(.legend div) {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  :deep(.legend span) {
+    font-size: 12px !important;
   }
 }
 </style>
