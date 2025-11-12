@@ -66,8 +66,8 @@ const goToAlertsPage = () => {
 
 let unregisterNotificationTask: (() => void) | null = null
 
-onMounted(() => {
-  fetchAlerts()
+onMounted(async () => {
+  await fetchAlerts()
   unregisterNotificationTask = registerPeriodicTask(fetchAlerts)
 })
 
