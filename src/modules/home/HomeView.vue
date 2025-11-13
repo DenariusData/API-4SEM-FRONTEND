@@ -22,10 +22,10 @@ let unregisterPeriodicTask: (() => void) | null = null
 
 const levelColorMap: Record<number, string> = {
   1: '#10b981',
-  2: '#22c55e',
-  3: '#f59e0b',
-  4: '#ef4444',
-  5: '#991b1b',
+  2: '#7af957',
+  3: '#edef56',
+  4: '#f59e0b',
+  5: '#ef4444',
 }
 
 function getLevelColor(zoneName: string): string {
@@ -55,11 +55,11 @@ function createLegend(): void {
     L.DomEvent.disableClickPropagation(div)
 
     const levels = [
-      { level: 1, color: '#10b981', label: 'Nível 1' },
-      { level: 2, color: '#22c55e', label: 'Nível 2' },
-      { level: 3, color: '#f59e0b', label: 'Nível 3' },
-      { level: 4, color: '#ef4444', label: 'Nível 4' },
-      { level: 5, color: '#991b1b', label: 'Nível 5' },
+      { level: 1, color: levelColorMap[1], label: 'Nível 1' },
+      { level: 2, color: levelColorMap[2], label: 'Nível 2' },
+      { level: 3, color: levelColorMap[3], label: 'Nível 3' },
+      { level: 4, color: levelColorMap[4], label: 'Nível 4' },
+      { level: 5, color: levelColorMap[5], label: 'Nível 5' },
     ]
 
     div.innerHTML = '<h4 style="margin: 0 0 10px 0; font-weight: bold; font-size: 14px;">Níveis de Alerta</h4>'
