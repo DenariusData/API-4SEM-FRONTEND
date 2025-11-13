@@ -80,10 +80,7 @@ const loadProtocols = async () => {
   }
 };
 
-onMounted(() => {
-  loadRootCauses();
-  loadProtocols();
-});
+onMounted(() => Promise.all([loadRootCauses(), loadProtocols()]));
 
 const openModalCausa = (item: CausaRaiz | null = null) => {
   modalType.value = 'causa';
@@ -136,7 +133,6 @@ const handleSaveCausa = async () => {
   try {
     isLoading.value = true;
     
-    // TODO: Get actual user ID from auth context
     const createdBy = 1;
     const backendData = mapCausaToBackend(formCausa.value, createdBy);
 

@@ -32,9 +32,6 @@ const protocols = {
   getAllRootCauses: (): Promise<{ data: RootCauseBackendDTO[] }> => 
     api.get('/root-causes'),
   
-  getRootCauseById: (id: number): Promise<{ data: RootCauseBackendDTO }> => 
-    api.get(`/root-causes/${id}`),
-  
   createRootCause: (data: RootCauseRequestDTO): Promise<{ data: RootCauseBackendDTO }> => 
     api.post('/root-causes', data),
   
@@ -43,9 +40,6 @@ const protocols = {
   
   deleteRootCause: (id: number): Promise<void> => 
     api.delete(`/root-causes/${id}`),
-  
-  searchRootCauses: (name: string): Promise<{ data: RootCauseBackendDTO[] }> => 
-    api.get('/root-causes', { params: { name } }),
 
   getAllProtocols: (): Promise<{ data: ProtocolBackendDTO[] }> => 
     api.get('/protocols'),
@@ -61,9 +55,6 @@ const protocols = {
   
   deleteProtocol: (id: number): Promise<void> => 
     api.delete(`/protocols/${id}`),
-  
-  searchProtocols: (name: string): Promise<{ data: ProtocolBackendDTO[] }> => 
-    api.get('/protocols', { params: { name } }),
 }
 
 export default protocols

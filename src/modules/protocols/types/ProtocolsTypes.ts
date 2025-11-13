@@ -1,4 +1,3 @@
-// Backend DTOs
 export interface RootCauseBackendDTO {
   id: number;
   name: string;
@@ -27,7 +26,6 @@ export interface ProtocolRequestDTO {
   createdBy: number;
 }
 
-// Frontend Types
 export interface CausaRaiz {
   id: number;
   nome: string;
@@ -93,10 +91,9 @@ export const initialFormProtocolo: FormProtocolo = {
   passos: ['']
 };
 
-// Mappers - Backend to Frontend
 export const mapRootCauseToFrontend = (
   backendData: RootCauseBackendDTO,
-  criterioId: number = 1, // default criterion
+  criterioId: number = 1,
   criterioNome: string = 'Padrão',
   ativo: boolean = true,
   protocolosIds: number[] = []
@@ -126,7 +123,6 @@ export const mapProtocolToFrontend = (
   atualizadoEm: backendData.createdAt
 });
 
-// Mappers - Frontend to Backend
 export const mapCausaToBackend = (
   formData: FormCausa,
   createdBy: number
