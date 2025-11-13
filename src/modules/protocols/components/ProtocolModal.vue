@@ -50,6 +50,16 @@ const updatePasso = (index: number, value: string) => {
         </div>
 
         <div class="form-group">
+          <label>Descrição</label>
+          <textarea
+            :value="formData.description"
+            @input="updateField('description', ($event.target as HTMLTextAreaElement).value)"
+            placeholder="Descreva o objetivo deste protocolo..."
+            rows="2"
+          />
+        </div>
+
+        <div class="form-group">
           <label>Causa Raiz Associada *</label>
           <select
             :value="formData.causaRaizId"

@@ -42,17 +42,13 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
         </div>
 
         <div class="form-group">
-          <label>Critério (Indicador) *</label>
-          <select
-            :value="formData.criterioId"
-            @change="updateField('criterioId', ($event.target as HTMLSelectElement).value)"
-          >
-            <option value="">Selecione um critério</option>
-            <option v-for="c in criteria" :key="c.id" :value="c.id">
-              {{ c.nome }}
-            </option>
-          </select>
-          <small>Escolha o indicador que será usado para identificar esta causa</small>
+          <label>Descrição</label>
+          <textarea
+            :value="formData.description"
+            @input="updateField('description', ($event.target as HTMLTextAreaElement).value)"
+            placeholder="Descreva os detalhes desta causa raiz..."
+            rows="3"
+          />
         </div>
 
         <div class="form-group checkbox-group">
@@ -162,6 +158,7 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
   }
 
   input[type='text'],
+  textarea,
   select {
     width: 100%;
     padding: 10px 12px;
@@ -180,6 +177,11 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
     &::placeholder {
       color: #9ca3af;
     }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 80px;
   }
 
   small {

@@ -4,7 +4,7 @@ const indicatorsRoutes = [
   mockFlag(
     {
       method: 'get',
-      url: '/criteria',
+      url: '/criterion',
       result: () => {
         const response = [
           {
