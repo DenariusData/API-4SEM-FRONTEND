@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import alertServices from '@/modules/alerts/services/alertServices'
 import type { Alert } from '@/modules/alerts/types/alertsTypes'
 import { LEVELS_ENUM } from '@/shared/enums'
 import { useRouter } from 'vue-router'
+import { registerPeriodicTask } from '@/shared/periodicUpdater'
 
 const router = useRouter()
 
@@ -12,22 +13,26 @@ const alerts = ref<Alert[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
-const alertsCount = computed(() => alerts.value.length)
+const alertsCount = computed(() =>
+  alerts.value.reduce((count, alert) => {
+    return alert.finalized ? count : count + 1
+  }, 0),
+)
 
 const levelColors = {
-  1: 'success',
-  2: 'success',
-  3: 'warning',
-  4: 'error',
-  5: 'error',
+  1: '#4CAF50',
+  2: '#8BC34A',
+  3: '#FFC107',
+  4: '#FF9800',
+  5: '#F44336',
 }
 
 const fetchAlerts = async () => {
   try {
     isLoading.value = true
     error.value = null
-    const response = await alertServices.getLastTen()
-    alerts.value = response.data.items
+    const { data } = await alertServices.getLastTen()
+    alerts.value = data
   } catch (err) {
     error.value = 'Erro ao carregar alertas'
     console.error('Erro ao buscar alertas:', err)
@@ -44,25 +49,10 @@ const getLevelColor = (level: number): string => {
   return levelColors[level as keyof typeof levelColors] || 'grey'
 }
 
-const formatTime = (timestamp: string): string => {
-  const now = new Date()
-  const alertTime = new Date(timestamp)
-  const diffMs = now.getTime() - alertTime.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-
-  if (diffMins < 1) return 'Agora'
-  if (diffMins < 60) return `${diffMins}min`
-
-  const diffHours = Math.floor(diffMins / 60)
-  if (diffHours < 24) return `${diffHours}h`
-
-  const diffDays = Math.floor(diffHours / 24)
-  return `${diffDays}d`
-}
-
 const goToAlertDetails = (alert: Alert) => {
+  if (alert.finalized) return
   isOpen.value = false
-  router.push({ name: 'alert-details', params: { id: alert.alert_id } })
+  router.push({ name: 'alert-details', params: { id: alert.alertId } })
 }
 
 const isFinalized = (alert: Alert) => {
@@ -74,8 +64,18 @@ const goToAlertsPage = () => {
   router.push({ name: 'alerts' })
 }
 
-onMounted(() => {
-  fetchAlerts()
+let unregisterNotificationTask: (() => void) | null = null
+
+onMounted(async () => {
+  await fetchAlerts()
+  unregisterNotificationTask = registerPeriodicTask(fetchAlerts)
+})
+
+onUnmounted(() => {
+  if (unregisterNotificationTask) {
+    unregisterNotificationTask()
+    unregisterNotificationTask = null
+  }
 })
 
 defineExpose({
@@ -123,14 +123,14 @@ defineExpose({
           <div
             v-for="alert in alerts"
             :key="alert.id"
-            class="notification-dropdown__item notification-dropdown__item--clickable"
+            class="notification-dropdown__item"
+            :class="{ 'notification-dropdown__item--clickable': !alert.finalized }"
             @click="goToAlertDetails(alert)"
-            tabindex="0"
-            role="button"
+            :tabindex="alert.finalized ? -1 : 0"
           >
             <div class="notification-dropdown__item-header">
               <span class="notification-dropdown__indicator">{{ alert.indicator }}</span>
-              <span class="notification-dropdown__time">{{ formatTime(alert.timestamp) }}</span>
+              <span class="notification-dropdown__time">{{ alert.timestamp }}</span>
               <v-icon
                 size="18"
                 :color="isFinalized(alert) ? 'success' : 'primary'"
@@ -269,6 +269,9 @@ defineExpose({
     font-weight: 600;
     color: #1f2937;
     font-size: 0.95rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 200px;
   }
 
   &__time {

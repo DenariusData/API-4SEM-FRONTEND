@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios from 'axios'
 
-export async function getGeoJson() {
-  const response = await axios.get("/sjc-geojson");
-  return response.data;
+export async function getRegionsLevel() {
+  const response = await axios.get('/alert/per-region')
+  return response.data
 }

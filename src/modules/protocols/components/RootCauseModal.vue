@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import type { Criterio, FormCausa } from '@/modules/protocols/types/protocolsTypes';
+import type { Criterio, FormCausa } from '@/modules/protocols/types/ProtocolsTypes'
 
 interface Props {
-  show: boolean;
-  formData: FormCausa;
-  criteria: Criterio[];
-  isEditing: boolean;
+  show: boolean
+  formData: FormCausa
+  criteria: Criterio[]
+  isEditing: boolean
 }
 
 interface Emits {
-  (e: 'close'): void;
-  (e: 'save'): void;
-  (e: 'update:formData', value: FormCausa): void;
+  (e: 'close'): void
+  (e: 'save'): void
+  (e: 'update:formData', value: FormCausa): void
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
 
 const updateField = (field: keyof FormCausa, value: unknown) => {
-  emit('update:formData', { ...props.formData, [field]: value } as FormCausa);
-};
+  emit('update:formData', { ...props.formData, [field]: value } as FormCausa)
+}
 </script>
 
 <template>
@@ -42,17 +42,13 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
         </div>
 
         <div class="form-group">
-          <label>Critério (Indicador) *</label>
-          <select
-            :value="formData.criterioId"
-            @change="updateField('criterioId', ($event.target as HTMLSelectElement).value)"
-          >
-            <option value="">Selecione um critério</option>
-            <option v-for="c in criteria" :key="c.id" :value="c.id">
-              {{ c.nome }}
-            </option>
-          </select>
-          <small>Escolha o indicador que será usado para identificar esta causa</small>
+          <label>Descrição</label>
+          <textarea
+            :value="formData.description"
+            @input="updateField('description', ($event.target as HTMLTextAreaElement).value)"
+            placeholder="Descreva os detalhes desta causa raiz..."
+            rows="3"
+          />
         </div>
 
         <div class="form-group checkbox-group">
@@ -71,9 +67,7 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
           <button @click="emit('save')" class="btn btn-primary">
             {{ isEditing ? 'Atualizar' : 'Criar' }} Causa Raiz
           </button>
-          <button @click="emit('close')" class="btn btn-secondary">
-            Cancelar
-          </button>
+          <button @click="emit('close')" class="btn btn-secondary">Cancelar</button>
         </div>
       </div>
     </div>
@@ -163,7 +157,8 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
     margin-bottom: 8px;
   }
 
-  input[type="text"],
+  input[type='text'],
+  textarea,
   select {
     width: 100%;
     padding: 10px 12px;
@@ -184,6 +179,11 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
     }
   }
 
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
   small {
     display: block;
     margin-top: 6px;
@@ -198,7 +198,7 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
       gap: 8px;
       cursor: pointer;
 
-      input[type="checkbox"] {
+      input[type='checkbox'] {
         width: auto;
         cursor: pointer;
       }

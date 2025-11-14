@@ -2,27 +2,54 @@
 import AutoCompleteMenu from './shared/AutoCompleteMenu.vue'
 import LoginPopup from './modules/login/LoginPopup.vue'
 import NotificationDropdown from './modules/alerts/components/NotificationDropdown.vue'
+import UserAuth from './modules/login/components/UserAuth.vue'
 import sharedServices from '@/shared/services/sharedServices.ts'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
+import { useRoleStore } from '@/modules/login/store/roleStore'
+import { parseJwt } from '@/utils/jwt'
 
 const menu = ref(false)
 const showLogin = ref(false)
+const isLoggedIn = ref(false)
 const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
+const { setRoles } = useRoleStore()
+
+const checkLoginStatus = () => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    const decodedToken = parseJwt(token)
+
+    if (decodedToken?.r) {
+      setRoles([decodedToken.r])
+    }
+    isLoggedIn.value = true
+  } else {
+    isLoggedIn.value = false
+    setRoles([])
+  }
+}
 
 const openLogin = () => {
-  showLogin.value = true
+  if (!isLoggedIn.value) {
+    showLogin.value = true
+  }
 }
+
 const updateDatabase = async () => {
   await sharedServices.updateDatabase()
 }
+
+onMounted(() => {
+  checkLoginStatus()
+})
 </script>
 
 <template>
   <v-app>
     <v-app-bar :elevation="0" class="top-bar" color="white">
       <div class="logo-container">
-        <img src="../radariustxt.svg" alt="Logo" class="logo" />
+        <img src="../public/radariustxt.svg" alt="Logo" class="logo" />
       </div>
 
       <AutoCompleteMenu v-model="menu" />
@@ -32,7 +59,7 @@ const updateDatabase = async () => {
       <div class="actions">
         <v-btn v-if="showRoutineButton" icon="mdi-refresh" variant="text" color="black" @click="updateDatabase"></v-btn>
         <NotificationDropdown />
-        <v-btn icon="mdi-login" variant="text" color="black" @click="openLogin"></v-btn>
+        <UserAuth :is-logged-in="isLoggedIn" @login="openLogin" @logout="checkLoginStatus" />
       </div>
     </v-app-bar>
 
@@ -40,7 +67,7 @@ const updateDatabase = async () => {
       <RouterView :key="$route.fullPath" />
     </div>
 
-    <LoginPopup v-model="showLogin" />
+    <LoginPopup v-model="showLogin" @login-success="checkLoginStatus" />
   </v-app>
 </template>
 
