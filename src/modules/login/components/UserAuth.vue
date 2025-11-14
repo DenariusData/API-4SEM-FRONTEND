@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useRoleStore } from '@/modules/login/store/roleStore'
-import { parseJwt } from '@/utils/jwt'
+import { ref, watch, computed } from 'vue'
+import { useRoleStore, UserRole } from '@/modules/login/store/roleStore'
 
 defineProps<{
   isLoggedIn: boolean
@@ -13,8 +12,7 @@ const emit = defineEmits<{
 }>()
 
 const menuOpen = ref(false)
-const userData = ref({})
-const { setRoles } = useRoleStore()
+const roleStore = useRoleStore()
 
 watch(menuOpen, () => {
   if (menuOpen.value) {
@@ -22,30 +20,31 @@ watch(menuOpen, () => {
   }
 })
 
+const roleLabels: Record<UserRole, string> = {
+  [UserRole.ADMIN]: 'Administrador',
+  [UserRole.GESTOR]: 'Gestor',
+  [UserRole.AGENTE]: 'Agente',
+  [UserRole.CIVIL]: 'Público',
+  [UserRole.PUBLIC]: 'Sem permissão'
+}
+
+const userData = computed(() => {
+  if (!roleStore.token) return null
+  
+  // You can decode JWT to get email if needed
+  // For now, using stored role
+  return {
+    email: 'Usuário', // TODO: Extract from JWT if needed
+    role: roleStore.role ? roleLabels[roleStore.role] : 'Sem permissão',
+  }
+})
+
 const getUserData = () => {
-  console.log('getUserData')
-  const token = localStorage.getItem('token')
-  if (!token) return null
-
-  const decoded = parseJwt(token)
-  if (!decoded) return null
-  console.log('decoded', decoded)
-
-  const roles = {
-    ROLE_AGENTE: 'Agente',
-    ROLE_GESTOR: 'Gestor',
-    ROLE_CIVIL: 'Público',
-  }
-
-  userData.value = {
-    email: decoded.e || 'Usuário',
-    role: roles[decoded.r as keyof typeof roles] || 'Sem permissão',
-  }
+  // Data is now reactive from computed property
 }
 
 const handleLogout = () => {
-  localStorage.removeItem('token')
-  setRoles([])
+  roleStore.clearAuth()
   menuOpen.value = false
   emit('logout')
 }
