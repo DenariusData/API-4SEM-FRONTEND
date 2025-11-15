@@ -40,6 +40,12 @@ const router = createRouter({
       name: 'persons',
       component: () => import('@/modules/persons/pages/PersonsView.vue'),
     },
+    {
+      path: '/zone-dashboard',
+      name: 'zoneDashboard',
+      component: () => import('@/modules/alerts/NewAlertDashboardView.vue')
+    }
+
   ],
 })
 
