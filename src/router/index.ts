@@ -21,11 +21,6 @@ const router = createRouter({
       props: true,
     },
     {
-      path: '/dashboards',
-      name: 'dashboards',
-      component: () => import('@/modules/dashboards/DashboardsView.vue'),
-    },
-    {
       path: '/indicators',
       name: 'indicators',
       component: () => import('@/modules/indicators/IndicatorsView.vue'),

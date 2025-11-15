@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import sjcGeojson from '@/utils/sjcGeojson.json'
-import DashboardView from '@/modules/dashboards/DashboardsView.vue'
+import DashboardPopup from '@/modules/dashboards/DashboardsPopup.vue'
 import { getRegionsLevel } from '@/modules/home/services/mapService'
 import { getRegions } from '@/modules/persons/services/regionService'
 import { registerPeriodicTask } from '@/shared/periodicUpdater'
@@ -145,10 +145,22 @@ function drawMap(features: any[]): void {
 
       if (props.layer === 'zona') {
         layer.bindTooltip(`Zona ${props.regiao}`, { sticky: true })
+        layer.bindPopup(`
+          <b>Zona ${props.regiao}</b><br>
+          Domicílios (origem): ${props.domiciliosOrigem || 'N/D'}<br>
+          Pessoas (origem): ${props.pessoasOrigem || 'N/D'}<br>
+          Moradores/domicílio (origem): ${props.moradoresOrigem || 'N/D'}<br>
+          Domicílios (est. 2025): ${props.domiciliosEst || 'N/D'}<br>
+          Pessoas (est. 2025): ${props.pessoasEst || 'N/D'}<br>
+          Moradores/dom. (est. 2025): ${props.moradoresEst || 'N/D'}
+        `)
+
         layer.on('dblclick', (e) => {
           L.DomEvent.stopPropagation(e)
           toggleZone(props.regiao, layer)
         })
+      } else if (props.layer === 'municipio') {
+        layer.bindPopup(`<b>${props.name}</b><br>${props.description || ''}`)
       }
     },
   }).addTo(map.value as L.Map)
@@ -156,7 +168,6 @@ function drawMap(features: any[]): void {
 
 onMounted(async () => {
   initializeMap()
-
   createLegend()
 
   unregisterPeriodicTask = registerPeriodicTask(async () => {
@@ -167,7 +178,6 @@ onMounted(async () => {
   })
 
   await fetchRegionData()
-
   drawMap(sjcGeojson.features)
 })
 
@@ -269,7 +279,7 @@ function closeDashboard() {
 
     <div class="content-wrapper">
 
-      <!-- 
+ <!-- 
       <div class="left-content">
         <div class="card">
           <h2 class="card-title">Principais vias</h2>
@@ -349,19 +359,23 @@ function closeDashboard() {
           </div>
 
           <div class="filter-group">
-            <v-date-input
+            <label for="start-datetime">Data/hora inicial</label>
+            <input
+              id="start-datetime"
               v-model="startDateTime"
-              label="Data/hora inicial"
-              placeholder="Selecione data e hora"
-            ></v-date-input>
+              type="datetime-local"
+              class="datetime-input"
+            />
           </div>
 
           <div class="filter-group">
-            <v-date-input
+            <label for="end-datetime">Data/hora final</label>
+            <input
+              id="end-datetime"
               v-model="endDateTime"
-              label="Data/hora final"
-              placeholder="Selecione data e hora"
-            ></v-date-input>
+              type="datetime-local"
+              class="datetime-input"
+            />
           </div>
 
           <div class="status">
@@ -398,7 +412,7 @@ function closeDashboard() {
       <div ref="mapContainer" class="map map-expanded"></div>
     </div>
 
-    <DashboardView 
+    <DashboardPopup 
       v-if="showDashboard" 
       :filtered-zones="filteredZones"
       @close="closeDashboard" 
@@ -458,134 +472,6 @@ function closeDashboard() {
     padding: 0 1rem 1rem;
   }
 
-  .left-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    overflow-y: auto;
-    padding-right: 1rem;
-  }
-
-  .card {
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    overflow: hidden;
-
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #1a1a1a;
-      padding: 1rem 1.25rem;
-      margin: 0;
-      background: #f8f9fa;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .table-container {
-      overflow-x: auto;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-
-      thead {
-        background: #f8f9fa;
-
-        th {
-          text-align: left;
-          padding: 0.75rem 1rem;
-          font-weight: 600;
-          color: #4a4a4a;
-          border-bottom: 2px solid #e0e0e0;
-        }
-      }
-
-      tbody {
-        tr {
-          border-bottom: 1px solid #f0f0f0;
-
-          &:hover {
-            background: #f9fafb;
-          }
-
-          &:last-child {
-            border-bottom: none;
-          }
-        }
-
-        td {
-          padding: 0.75rem 1rem;
-          color: #333;
-        }
-      }
-    }
-  }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    &.status-excelente {
-      background: #d4f4dd;
-      color: #0d6832;
-
-      .status-dot {
-        background: #00c853;
-      }
-    }
-
-    &.status-bom {
-      background: #d4f4dd;
-      color: #0d6832;
-
-      .status-dot {
-        background: #4caf50;
-      }
-    }
-
-    &.status-medio {
-      background: #fff3cd;
-      color: #856404;
-
-      .status-dot {
-        background: #ff9800;
-      }
-    }
-
-    &.status-ruim {
-      background: #f8d7da;
-      color: #721c24;
-
-      .status-dot {
-        background: #f44336;
-      }
-    }
-
-    &.status-pessimo {
-      background: #e8d0d0;
-      color: #5a1a1a;
-
-      .status-dot {
-        background: #8b0000;
-      }
-    }
-  }
-
   .filter-dropdown {
     position: absolute;
     top: 1rem;
@@ -595,7 +481,7 @@ function closeDashboard() {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
-    min-width: 300px;
+    min-width: 320px;
 
     .filter-content {
       padding: 1rem;
@@ -615,15 +501,43 @@ function closeDashboard() {
       .filter-group {
         display: flex;
         flex-direction: column;
-        font-size: 0.85rem;
+        gap: 0.4rem;
 
         label {
           font-weight: 500;
-          margin-bottom: 0.2rem;
+          font-size: 0.9rem;
+          color: #333;
         }
 
-        :deep(.v-date-input) {
+        .datetime-input {
           width: 100%;
+          padding: 0.6rem 0.8rem;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          font-size: 0.9rem;
+          color: #333;
+          background: white;
+          transition: all 0.2s;
+
+          &:hover {
+            border-color: #3b82f6;
+          }
+
+          &:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+
+          &::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+
+            &:hover {
+              opacity: 1;
+            }
+          }
         }
       }
 
@@ -642,13 +556,14 @@ function closeDashboard() {
 
         button {
           flex: 1;
-          padding: 0.5rem;
+          padding: 0.6rem;
           border: none;
           border-radius: 6px;
           cursor: pointer;
           color: white;
           transition: 0.2s;
           font-weight: 500;
+          font-size: 0.9rem;
 
           &:disabled {
             background: #bbb !important;
@@ -728,9 +643,8 @@ function closeDashboard() {
     height: 400px !important;
   }
 
-  .left-content {
-    padding-right: 0;
+  .filter-dropdown {
+    min-width: 280px;
   }
 }
 </style>
-add dashboard modal and map filters dropdown (UI only, no integration)
