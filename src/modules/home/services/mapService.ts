@@ -1,6 +1,6 @@
-import axios from 'axios'
+import api from '@/utils/servicesUtils'
 
 export async function getRegionsLevel() {
-  const response = await axios.get('/alert/per-region')
+  const response = await api.get('/alerts/per-region')
   return response.data
 }
