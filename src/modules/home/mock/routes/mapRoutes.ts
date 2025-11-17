@@ -6,7 +6,7 @@ const sjcGeoJsonRoutes = [
   mockFlag(
     {
       method: 'get',
-      url: '/alert/per-region',
+      url: '/alerts/per-region',
       result: () => {
         return APIFailureWrapper({
           content: {
