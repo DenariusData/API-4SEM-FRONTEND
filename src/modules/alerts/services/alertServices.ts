@@ -21,7 +21,7 @@ const alerts = {
     api.get('/alerts/last-ten'),
 
   getDetails: (id: number): Promise<{ data: AlertDetails }> =>
-    api.get(`/alerts/${id}/details`),
+    api.get(`/alerts/${id}`),
 
   finalizeAlert: (id: number, data?: FinalizeAlertPayload): Promise<{ data: FinalizeAlertResponse }> =>
     api.post(`/alerts/${id}/finalize`, data),
