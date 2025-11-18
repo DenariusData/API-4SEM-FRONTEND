@@ -24,8 +24,7 @@ const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: 'Administrador',
   [UserRole.GESTOR]: 'Gestor',
   [UserRole.AGENTE]: 'Agente',
-  [UserRole.CIVIL]: 'Público',
-  [UserRole.PUBLIC]: 'Sem permissão'
+  [UserRole.PUBLIC]: 'Público',
 }
 
 const userData = computed(() => {

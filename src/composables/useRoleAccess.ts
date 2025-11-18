@@ -7,16 +7,15 @@ export function useRoleAccess() {
   const canAccessDashboards = () => roleStore.hasGestorAccess
   const canAccessProtocols = () => roleStore.hasGestorAccess
   const canAccessPersons = () => roleStore.isAdmin
-  const canAccessIndicators = () => true // Public access
-  const canAccessHome = () => true // Public access
-
+  const canAccessIndicators = () => true 
+  const canAccessHome = () => true
+  
   const canManageUsers = () => roleStore.isAdmin
   const canManageProtocols = () => roleStore.hasGestorAccess
   const canCreateAlerts = () => roleStore.hasGestorAccess
   const canViewReports = () => roleStore.hasAgenteAccess
 
   return {
-    // Route access
     canAccessAlerts,
     canAccessDashboards,
     canAccessProtocols,
@@ -24,13 +23,11 @@ export function useRoleAccess() {
     canAccessIndicators,
     canAccessHome,
     
-    // Feature access
     canManageUsers,
     canManageProtocols,
     canCreateAlerts,
     canViewReports,
     
-    // Direct store access
     isAuthenticated: roleStore.isAuthenticated,
     isAdmin: roleStore.isAdmin,
     isGestor: roleStore.isGestor,
