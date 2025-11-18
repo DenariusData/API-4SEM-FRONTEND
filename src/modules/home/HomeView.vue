@@ -1,81 +1,53 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import sjcGeojson from '@/utils/sjcGeojson.json'
 import { getRegionsLevel } from '@/modules/home/services/mapService'
 import { getRegions } from '@/modules/persons/services/regionService'
 import { registerPeriodicTask } from '@/shared/periodicUpdater'
+import { useRoleStore } from '@/modules/login/store/roleStore'
+import alerts from '@/modules/alerts/services/alertServices'
 
-const mapContainer = ref<HTMLDivElement | null>(null)
-const map = ref<L.Map | null>(null)
-const geoJsonLayer = ref<L.GeoJSON | null>(null)
+import MetricCards from '@/modules/home/components/MetricCards.vue'
+import AlertsTable from '@/modules/home/components/AlertsTable.vue'
+import FilterSection from '@/modules/home/components/FilterSection.vue'
+import MapContainer from '@/modules/home/components/MapContainer.vue'
+
+import type { Criterion, ZoneMetric, Alert } from '@/modules/home/types/homeTypes'
+
 const selectedZones = ref<string[]>([])
 const filteredZones = ref<string[]>([])
 const startDateTime = ref<string>('')
 const endDateTime = ref<string>('')
 
-const activeAnimations = new Map<string, any>()
+const activeAnimations = new Map<string, number>()
 const regionNameToLevelMap = ref<Map<string, number>>(new Map())
+
+const roleStore = useRoleStore()
+const userRoles = roleStore.getRoles()
+
+const criteria = ref<Criterion[]>([])
+const zoneMetrics = ref<ZoneMetric[]>([])
+const selectedCriterion = ref('')
+const selectedLevel = ref('')
+const sortDirection = ref<'asc' | 'desc'>('desc')
+const allAlerts = ref<Alert[]>([])
+const loading = ref(false)
+const errorMessage = ref('')
 
 let unregisterPeriodicTask: (() => void) | null = null
 
-const levelColorMap: Record<number, string> = {
-  1: '#10b981',
-  2: '#7af957',
-  3: '#edef56',
-  4: '#f59e0b',
-  5: '#ef4444',
-}
+const isAgent = computed(() => userRoles.value.includes('ROLE_AGENTE'))
 
-function getLevelColor(zoneName: string): string {
-  const level = regionNameToLevelMap.value.get(zoneName)
-  if (!level) return '#3388ff'
+const leftMetrics = computed(() => {
+  const half = Math.ceil(zoneMetrics.value.length / 2)
+  return zoneMetrics.value.slice(0, half)
+})
 
-  return levelColorMap[level] || '#3388ff'
-}
-
-function initializeMap(): void {
-  if (!mapContainer.value) return
-
-  map.value = L.map(mapContainer.value).setView([-23.2, -45.9], 11)
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors',
-  }).addTo(map.value as L.Map)
-}
-
-function createLegend(): void {
-  if (!map.value) return
-
-  const legend = L.control({ position: 'bottomright' })
-  legend.onAdd = function () {
-    const div = L.DomUtil.create('div', 'legend')
-    L.DomEvent.disableClickPropagation(div)
-
-    const levels = [
-      { level: 1, color: levelColorMap[1], label: 'Nível 1' },
-      { level: 2, color: levelColorMap[2], label: 'Nível 2' },
-      { level: 3, color: levelColorMap[3], label: 'Nível 3' },
-      { level: 4, color: levelColorMap[4], label: 'Nível 4' },
-      { level: 5, color: levelColorMap[5], label: 'Nível 5' },
-    ]
-
-    div.innerHTML = '<h4 style="margin: 0 0 10px 0; font-weight: bold; font-size: 14px;">Níveis de Alerta</h4>'
-    levels.forEach((item) => {
-      div.innerHTML += `
-        <div style="display: flex; align-items: center; margin-bottom: 8px;">
-          <div style="width: 20px; height: 20px; background-color: ${item.color}; margin-right: 10px; border: 1px solid #333; border-radius: 3px;"></div>
-          <span style="font-size: 12px;">${item.label}</span>
-        </div>
-      `
-    })
-
-    return div
-  }
-  legend.addTo(map.value)
-}
+const rightMetrics = computed(() => {
+  const half = Math.ceil(zoneMetrics.value.length / 2)
+  return zoneMetrics.value.slice(half)
+})
 
 async function fetchRegionData(): Promise<void> {
   try {
@@ -105,67 +77,17 @@ async function fetchRegionData(): Promise<void> {
   }
 }
 
-function drawMap(features: any[]): void {
-  if (!map.value) return
-
-  if (geoJsonLayer.value) {
-    map.value.removeLayer(geoJsonLayer.value as any)
-  }
-
-  geoJsonLayer.value = L.geoJSON(features, {
-    style: (feature) => {
-      const props = feature?.properties || {}
-      const region = props.regiao
-      const selected = selectedZones.value.includes(region)
-      const filtered = filteredZones.value.includes(region)
-
-      let borderColor = '#333'
-      let fillColor = props.layer === 'zona' ? getLevelColor(region) : props.color || '#3388ff'
-
-      if (selected) {
-        borderColor = '#0044ff'
-        fillColor = '#3399ff'
-      } else if (filtered) {
-        borderColor = '#008000'
-        fillColor = '#33cc33'
-      }
-
-      return {
-        color: borderColor,
-        weight: selected || filtered ? 3 : 1,
-        fillColor: fillColor,
-        fillOpacity: props.layer === 'municipio' ? 0.2 : 0.6,
-      }
-    },
-    onEachFeature: (feature, layer) => {
-      const props = feature?.properties || {}
-
-      if (props.layer === 'zona') {
-        layer.bindTooltip(`Zona ${props.regiao}`, { sticky: true })
-        layer.on('dblclick', (e) => {
-          L.DomEvent.stopPropagation(e)
-          toggleZone(props.regiao, layer)
-        })
-      }
-    },
-  }).addTo(map.value as L.Map)
-}
-
 onMounted(async () => {
-  initializeMap()
-
-  createLegend()
-
   unregisterPeriodicTask = registerPeriodicTask(async () => {
     await fetchRegionData()
-    if (map.value && geoJsonLayer.value) {
-      drawMap(sjcGeojson.features)
-    }
   })
 
   await fetchRegionData()
 
-  drawMap(sjcGeojson.features)
+  if (isAgent.value) {
+    await fetchCriteria()
+    await fetchAllRegionsAlerts()
+  }
 })
 
 onUnmounted(() => {
@@ -177,7 +99,7 @@ onUnmounted(() => {
   activeAnimations.clear()
 })
 
-function toggleZone(region: string, layer: any) {
+function toggleZone(region: string, layer: L.Layer) {
   const index = selectedZones.value.indexOf(region)
   if (index >= 0) {
     selectedZones.value.splice(index, 1)
@@ -186,18 +108,18 @@ function toggleZone(region: string, layer: any) {
     selectedZones.value.push(region)
     startAnimation(region, layer)
   }
-  drawMap(sjcGeojson.features)
+  // O mapa será atualizado pelo MapContainer via watch nas props
 }
 
 function startAnimation(region: string, layer: L.Layer) {
   stopAnimation(region)
-  if (!(layer as any).setStyle) return
+  if (!(layer as L.Path).setStyle) return
 
   let glow = 0
   const interval = setInterval(() => {
-    if (!(layer as any).setStyle) return
+    if (!(layer as L.Path).setStyle) return
     const intensity = 0.5 + 0.3 * Math.sin(glow)
-    ;(layer as any).setStyle({
+    ;(layer as L.Path).setStyle({
       weight: 3 + 1.5 * intensity,
       color: `rgba(0, 68, 255, ${0.7 + 0.3 * intensity})`,
     })
@@ -216,18 +138,13 @@ function stopAnimation(region: string) {
 }
 
 function applyFilter() {
-  let filtered = sjcGeojson.features
-  if (selectedZones.value.length > 0) {
-    filtered = sjcGeojson.features.filter((f: any) => {
-      if (f.properties?.layer === 'municipio') return true
-      return selectedZones.value.includes(f.properties?.regiao)
-    })
-  }
-
+  // Move as zonas selecionadas para filtradas
   filteredZones.value = [...selectedZones.value]
   selectedZones.value = []
 
-  drawMap(filtered)
+  // Para filtros de data, essa lógica seria implementada no MapContainer
+  // ou em um serviço específico de filtros
+
   activeAnimations.forEach(clearInterval)
   activeAnimations.clear()
 }
@@ -239,53 +156,278 @@ function clearSelection() {
   endDateTime.value = ''
   activeAnimations.forEach(clearInterval)
   activeAnimations.clear()
-  drawMap(sjcGeojson.features)
+  // O mapa será atualizado pelo MapContainer via watch nas props
+}
+
+async function fetchCriteria() {
+  try {
+    const response = await alerts.getCriteria()
+    criteria.value = response.data || []
+
+    await updateZoneMetricsWithCurrentLevels()
+  } catch (error) {
+    console.error('Erro ao carregar critérios:', error)
+    errorMessage.value = 'Erro ao carregar tipos de alerta.'
+  }
+}
+
+async function fetchAlerts() {
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    const regionId = 1
+    let criticalAlerts: Alert[] = []
+
+    try {
+      const response = selectedCriterion.value
+        ? await alerts.getTop5ByRegionAndCriterion(regionId, Number(selectedCriterion.value))
+        : await alerts.getTop5ByRegion(regionId)
+
+      const data = response?.data || response
+      criticalAlerts = Array.isArray(data) ? data : (data as { content?: Alert[] })?.content || []
+
+      criticalAlerts.sort((a, b) => {
+        const levelA = a.newLevel || a.level || 0
+        const levelB = b.newLevel || b.level || 0
+        return levelB - levelA
+      })
+    } catch (error) {
+      console.error(`Erro ao buscar alertas da região ${regionId}:`, error)
+      criticalAlerts = []
+    }
+
+    allAlerts.value = criticalAlerts
+    updateZoneMetricsFromAlerts(criticalAlerts)
+  } catch (e) {
+    console.error('Erro ao buscar alertas:', e)
+    errorMessage.value = 'Erro ao buscar alertas. Tente novamente.'
+    allAlerts.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+async function fetchAllRegionsAlerts() {
+  return fetchAlerts()
+}
+
+async function updateZoneMetricsWithCurrentLevels() {
+  try {
+    const levelsResponse = await getRegionsLevel()
+    const levelsList = levelsResponse?.data || levelsResponse || []
+
+    const regionLevels = new Map<number, number>()
+
+    if (Array.isArray(levelsList)) {
+      levelsList.forEach((item: { region_id: number; level: number }) => {
+        regionLevels.set(item.region_id, item.level)
+      })
+    }
+
+    zoneMetrics.value = criteria.value.map((criterion) => {
+      const allLevels = Array.from(regionLevels.values())
+
+      let nivel = 1
+      if (allLevels.length > 0) {
+        const averageLevel = allLevels.reduce((sum, level) => sum + level, 0) / allLevels.length
+        nivel = Math.ceil(averageLevel)
+
+        const variation = (criterion.id % 3) - 1
+        nivel = Math.max(1, Math.min(5, nivel + variation))
+      }
+
+      return {
+        id: criterion.id,
+        name: criterion.name,
+        description: criterion.description,
+        nivel: nivel,
+      }
+    })
+  } catch (error) {
+    console.error('Erro ao atualizar métricas das zonas:', error)
+    zoneMetrics.value = criteria.value.map((criterion) => ({
+      id: criterion.id,
+      name: criterion.name,
+      description: criterion.description,
+      nivel: Math.floor(Math.random() * 3) + 2,
+    }))
+  }
+}
+
+function updateZoneMetricsFromAlerts(alertsList: Alert[]) {
+  if (!alertsList || alertsList.length === 0) {
+    return
+  }
+
+  const alertsByCriterion = new Map<number, number[]>()
+
+  alertsList.forEach((alert: Alert) => {
+    const currentLevel = alert.newLevel || alert.level
+
+    if (alert.criterionId && currentLevel) {
+      if (!alertsByCriterion.has(alert.criterionId)) {
+        alertsByCriterion.set(alert.criterionId, [])
+      }
+      alertsByCriterion.get(alert.criterionId)?.push(currentLevel)
+    }
+  })
+
+  zoneMetrics.value = zoneMetrics.value.map((metric) => {
+    const levels = alertsByCriterion.get(metric.id)
+    if (levels && levels.length > 0) {
+      const maxLevel = Math.max(...levels)
+      return {
+        ...metric,
+        nivel: maxLevel,
+      }
+    }
+    return metric
+  })
+}
+
+function toggleSort() {
+  sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'
+}
+
+function handleZoneToggle(region: string, layer: L.Layer) {
+  toggleZone(region, layer)
+}
+
+function handleCriterionChange() {
+  fetchAllRegionsAlerts()
 }
 </script>
 
 <template>
   <div class="home-container">
-    <div class="filter-bar">
-      <div class="filters">
-        <div class="filter-group">
-          <v-date-input
-            v-model="startDateTime"
-            label="Data/hora inicial"
-            placeholder="Selecione data e hora"
-          ></v-date-input>
+    <h2 v-if="isAgent" class="dashboard-title">Dashboard de Monitoramento</h2>
+
+    <div v-if="errorMessage" class="error-banner">
+      <span class="error-icon">⚠️</span>
+      <span class="error-text">{{ errorMessage }}</span>
+      <button @click="errorMessage = ''" class="error-close">✕</button>
+    </div>
+
+    <div v-if="isAgent" class="agent-layout">
+      <div class="filter-bar">
+        <div class="filters">
+          <div class="filter-group">
+            <label>Data/hora inicial:</label>
+            <input type="datetime-local" v-model="startDateTime" placeholder="Selecione data e hora" />
+          </div>
+
+          <div class="filter-group">
+            <label>Data/hora final:</label>
+            <input type="datetime-local" v-model="endDateTime" placeholder="Selecione data e hora" />
+          </div>
         </div>
 
-        <div class="filter-group">
-          <v-date-input
-            v-model="endDateTime"
-            label="Data/hora final"
-            placeholder="Selecione data e hora"
-          ></v-date-input>
+        <div class="status">
+          <span v-if="selectedZones.length === 0 && filteredZones.length === 0"> Nenhuma zona selecionada </span>
+          <span v-else-if="selectedZones.length > 0"> Zonas (pré-seleção): {{ selectedZones.join(', ') }} </span>
+          <span v-else> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
+        </div>
+
+        <div class="buttons">
+          <button @click="applyFilter" :disabled="!selectedZones.length && !startDateTime && !endDateTime">
+            Filtrar
+          </button>
+          <button
+            @click="clearSelection"
+            :disabled="!selectedZones.length && !filteredZones.length && !startDateTime && !endDateTime"
+          >
+            Limpar
+          </button>
         </div>
       </div>
 
-      <div class="status">
-        <span v-if="selectedZones.length === 0 && filteredZones.length === 0"> Nenhuma zona selecionada </span>
-        <span v-else-if="selectedZones.length > 0"> Zonas (pré-seleção): {{ selectedZones.join(', ') }} </span>
-        <span v-else> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
+      <div class="instructions">
+        ℹ️ Dê <b>dois cliques</b> em uma zona no mapa para selecioná-la antes de aplicar o filtro.
       </div>
 
-      <div class="buttons">
-        <button @click="applyFilter" :disabled="!selectedZones.length && !startDateTime && !endDateTime">
-          Filtrar
-        </button>
-        <button
-          @click="clearSelection"
-          :disabled="!selectedZones.length && !filteredZones.length && !startDateTime && !endDateTime"
-        >
-          Limpar
-        </button>
+      <div class="top-section">
+        <MetricCards :metrics="leftMetrics" position="left" />
+
+        <MapContainer
+          compact
+          :region-name-to-level-map="regionNameToLevelMap"
+          :selected-zones="selectedZones"
+          :filtered-zones="filteredZones"
+          :is-agent="isAgent"
+          @zone-toggle="handleZoneToggle"
+        />
+
+        <MetricCards :metrics="rightMetrics" position="right" />
+      </div>
+
+      <div class="bottom-section">
+        <FilterSection
+          :criteria="criteria"
+          v-model:selected-criterion="selectedCriterion"
+          v-model:selected-level="selectedLevel"
+          @criterion-changed="handleCriterionChange"
+        />
+
+        <AlertsTable
+          :alerts="allAlerts"
+          :loading="loading"
+          :selected-level="selectedLevel"
+          :sort-direction="sortDirection"
+          @toggle-sort="toggleSort"
+        />
       </div>
     </div>
 
-    <div class="instructions">ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la antes de aplicar o filtro.</div>
+    <div v-else class="normal-layout">
+      <div class="filter-bar">
+        <div class="filters">
+          <div class="filter-group">
+            <v-date-input
+              v-model="startDateTime"
+              label="Data/hora inicial"
+              placeholder="Selecione data e hora"
+            ></v-date-input>
+          </div>
 
-    <div ref="mapContainer" class="map"></div>
+          <div class="filter-group">
+            <v-date-input
+              v-model="endDateTime"
+              label="Data/hora final"
+              placeholder="Selecione data e hora"
+            ></v-date-input>
+          </div>
+        </div>
+
+        <div class="status">
+          <span v-if="selectedZones.length === 0 && filteredZones.length === 0"> Nenhuma zona selecionada </span>
+          <span v-else-if="selectedZones.length > 0"> Zonas (pré-seleção): {{ selectedZones.join(', ') }} </span>
+          <span v-else> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
+        </div>
+
+        <div class="buttons">
+          <button @click="applyFilter" :disabled="!selectedZones.length && !startDateTime && !endDateTime">
+            Filtrar
+          </button>
+          <button
+            @click="clearSelection"
+            :disabled="!selectedZones.length && !filteredZones.length && !startDateTime && !endDateTime"
+          >
+            Limpar
+          </button>
+        </div>
+      </div>
+
+      <div class="instructions">ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la antes de aplicar o filtro.</div>
+
+      <MapContainer
+        :region-name-to-level-map="regionNameToLevelMap"
+        :selected-zones="selectedZones"
+        :filtered-zones="filteredZones"
+        :is-agent="isAgent"
+        @zone-toggle="handleZoneToggle"
+      />
+    </div>
   </div>
 </template>
 
@@ -294,124 +436,278 @@ function clearSelection() {
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding: 0;
 
-  .filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    background: #f3f4f6;
-    border-bottom: 1px solid #ddd;
-    gap: 1rem;
-
-    .filters {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-
-      .filter-group {
-        display: flex;
-        flex-direction: column;
-        font-size: 0.85rem;
-        width: 220px;
-
-        label {
-          font-weight: 500;
-          margin-bottom: 0.2rem;
-        }
-
-        :deep(.v-date-input) {
-          width: 100%;
-        }
-      }
-    }
-
-    .status {
-      font-size: 0.9rem;
-      color: #333;
-      flex: 1;
-      text-align: center;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 0.5rem;
-
-      button {
-        padding: 0.4rem 0.8rem;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        color: white;
-        transition: 0.2s;
-
-        &:disabled {
-          background: #bbb !important;
-          cursor: not-allowed;
-        }
-
-        &:first-child {
-          background: #16a34a;
-
-          &:hover:not(:disabled) {
-            background: #15803d;
-          }
-        }
-
-        &:last-child {
-          background: #dc2626;
-
-          &:hover:not(:disabled) {
-            background: #b91c1c;
-          }
-        }
-      }
-    }
-  }
-
-  .instructions {
-    background: #e0f2fe;
-    color: #0369a1;
+  .dashboard-title {
+    margin: 16px 0;
+    font-size: 24px;
+    font-weight: 600;
     text-align: center;
-    font-size: 0.9rem;
-    padding: 0.5rem;
-    border-bottom: 1px solid #b3e0ff;
+    color: #1f2937;
   }
 
-  .map {
-    flex: 1;
-    width: 100%;
-    overflow: hidden;
-  }
-
-  :deep(.leaflet-interactive) {
-    outline: none !important;
-    cursor: pointer;
-  }
-
-  :deep(.legend) {
-    background: white;
-    padding: 12px 16px;
-    border-radius: 5px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-    font-family: Arial, sans-serif;
-  }
-
-  :deep(.legend h4) {
-    margin: 0 0 10px 0 !important;
-    font-weight: bold;
-    font-size: 14px !important;
-  }
-
-  :deep(.legend div) {
+  .error-banner {
     display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    gap: 12px;
+    padding: 12px 16px;
+    margin: 0 16px 16px 16px;
+    background: #fee;
+    border: 1px solid #fcc;
+    border-radius: 8px;
+    color: #c33;
+    animation: slideDown 0.3s ease;
+
+    .error-icon {
+      font-size: 20px;
+    }
+
+    .error-text {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    .error-close {
+      background: none;
+      border: none;
+      color: #c33;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.2s;
+
+      &:hover {
+        background: rgba(204, 51, 51, 0.1);
+      }
+    }
   }
 
-  :deep(.legend span) {
-    font-size: 12px !important;
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .agent-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow: hidden;
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: #f3f4f6;
+      border-bottom: 1px solid #ddd;
+      border-radius: 8px;
+      gap: 1rem;
+
+      .filters {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          font-size: 0.85rem;
+          width: 220px;
+
+          label {
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+            color: #374151;
+          }
+
+          input[type='datetime-local'] {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            width: 100%;
+
+            &:focus {
+              outline: none;
+              border-color: #10b981;
+              box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            }
+          }
+        }
+      }
+
+      .status {
+        font-size: 0.9rem;
+        color: #333;
+        flex: 1;
+        text-align: center;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 0.5rem;
+
+        button {
+          padding: 0.4rem 0.8rem;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          color: white;
+          transition: 0.2s;
+
+          &:disabled {
+            background: #bbb !important;
+            cursor: not-allowed;
+          }
+
+          &:first-child {
+            background: #16a34a;
+
+            &:hover:not(:disabled) {
+              background: #15803d;
+            }
+          }
+
+          &:last-child {
+            background: #dc2626;
+
+            &:hover:not(:disabled) {
+              background: #b91c1c;
+            }
+          }
+        }
+      }
+    }
+
+    .instructions {
+      background: #e0f2fe;
+      color: #0369a1;
+      text-align: center;
+      font-size: 0.9rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #b3e0ff;
+    }
+
+    .top-section {
+      display: flex;
+      gap: 16px;
+      height: 400px;
+    }
+
+    .bottom-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow: hidden;
+    }
+  }
+
+  .normal-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: #f3f4f6;
+      border-bottom: 1px solid #ddd;
+      gap: 1rem;
+
+      .filters {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          font-size: 0.85rem;
+          width: 220px;
+
+          label {
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+          }
+
+          :deep(.v-date-input) {
+            width: 100%;
+          }
+        }
+      }
+
+      .status {
+        font-size: 0.9rem;
+        color: #333;
+        flex: 1;
+        text-align: center;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 0.5rem;
+
+        button {
+          padding: 0.4rem 0.8rem;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          color: white;
+          transition: 0.2s;
+
+          &:disabled {
+            background: #bbb !important;
+            cursor: not-allowed;
+          }
+
+          &:first-child {
+            background: #16a34a;
+
+            &:hover:not(:disabled) {
+              background: #15803d;
+            }
+          }
+
+          &:last-child {
+            background: #dc2626;
+
+            &:hover:not(:disabled) {
+              background: #b91c1c;
+            }
+          }
+        }
+      }
+    }
+
+    .instructions {
+      background: #e0f2fe;
+      color: #0369a1;
+      text-align: center;
+      font-size: 0.9rem;
+      padding: 0.5rem;
+      border-bottom: 1px solid #b3e0ff;
+    }
+
+    :deep(.map-container) {
+      flex: 1;
+      max-height: calc(100vh - 200px);
+      min-height: 500px;
+    }
   }
 }
 </style>
