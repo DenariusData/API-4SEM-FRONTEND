@@ -11,19 +11,16 @@
 
     <section class="map-section">
       <div class="map-container">
-        
+
         <div class="legend-left">
-          <div class="legend-item" :class="`nivel-${zoneMetrics.congestionamento.nivel}`">
-            <div class="legend-title">{{ zoneMetrics.congestionamento.descricao }}</div>
-            <div class="legend-level">Nível {{ zoneMetrics.congestionamento.nivel }}</div>
-          </div>
-          <div class="legend-item" :class="`nivel-${zoneMetrics.densidadeVeiculos.nivel}`">
-            <div class="legend-title">{{ zoneMetrics.densidadeVeiculos.descricao }}</div>
-            <div class="legend-level">Nível {{ zoneMetrics.densidadeVeiculos.nivel }}</div>
-          </div>
-          <div class="legend-item" :class="`nivel-${zoneMetrics.circulacaoVeiculos.nivel}`">
-            <div class="legend-title">{{ zoneMetrics.circulacaoVeiculos.descricao }}</div>
-            <div class="legend-level">Nível {{ zoneMetrics.circulacaoVeiculos.nivel }}</div>
+          <div
+            v-for="metric in leftMetrics"
+            :key="metric.id"
+            class="legend-item"
+            :class="`nivel-${metric.nivel}`"
+          >
+            <div class="legend-title">{{ metric.name }}</div>
+            <div class="legend-level">Nível {{ metric.nivel }}</div>
           </div>
         </div>
 
@@ -32,9 +29,14 @@
         </div>
 
         <div class="legend-right">
-          <div class="legend-item" :class="`nivel-${zoneMetrics.excessoVelocidade.nivel}`">
-            <div class="legend-title">{{ zoneMetrics.excessoVelocidade.descricao }}</div>
-            <div class="legend-level">Nível {{ zoneMetrics.excessoVelocidade.nivel }}</div>
+          <div
+            v-for="metric in rightMetrics"
+            :key="metric.id"
+            class="legend-item"
+            :class="`nivel-${metric.nivel}`"
+          >
+            <div class="legend-title">{{ metric.name }}</div>
+            <div class="legend-level">Nível {{ metric.nivel }}</div>
           </div>
         </div>
       </div>
@@ -65,15 +67,18 @@
 
     <section class="filters-section">
       <div class="filters">
-        
+
         <div class="filter-item">
           <label>Filtrar por tipo:</label>
           <select v-model="selectedCriterion" @change="fetchAlerts">
             <option value="">Todos os tipos</option>
-            <option value="552">Congestionamento</option>
-            <option value="502">Densidade de veículos</option>
-            <option value="553">Circulação de grande porte</option>
-            <option value="554">Infrações de velocidade</option>
+            <option
+              v-for="criterion in criteria"
+              :key="criterion.id"
+              :value="criterion.id"
+            >
+              {{ criterion.name }}
+            </option>
           </select>
         </div>
 
@@ -98,8 +103,8 @@
             <th>Alerta</th>
             <th>Detalhes</th>
             <th>Criado em</th>
-            <th 
-              @click="toggleSort" 
+            <th
+              @click="toggleSort"
               class="sortable"
               title="Ordenar por criticidade"
               :aria-label="`Ordenar por criticidade ${sortDirection === 'desc' ? 'decrescente' : 'crescente'}`"
@@ -114,15 +119,15 @@
           <tr v-for="item in filteredAlerts" :key="item.id">
             <td>{{ item.criterionName || 'Alerta' }}</td>
             <td class="message-cell">
-              <span 
-                class="message-truncated" 
+              <span
+                class="message-truncated"
                 :title="item.message"
                 @click="toggleMessageExpand(item.id)"
               >
                 {{ isExpanded(item.id) ? item.message : truncateMessage(item.message) }}
               </span>
-              <button 
-                v-if="item.message && item.message.length > 80" 
+              <button
+                v-if="item.message && item.message.length > 80"
                 @click="toggleMessageExpand(item.id)"
                 class="expand-btn"
                 :aria-label="isExpanded(item.id) ? 'Recolher mensagem' : 'Expandir mensagem'"
@@ -165,12 +170,8 @@ const geoJsonLayer = ref<L.GeoJSON | null>(null)
 const regionNameToLevelMap = ref<Map<string, number>>(new Map())
 const selectedRegion = ref<{ name: string; level: number } | null>(null)
 
-const zoneMetrics = ref({
-  congestionamento: { nivel: 1, descricao: 'Congestionamento' },
-  densidadeVeiculos: { nivel: 3, descricao: 'Densidade relativa de veículos por câmera' },
-  circulacaoVeiculos: { nivel: 2, descricao: 'Circulação de veículos em grande porte' },
-  excessoVelocidade: { nivel: 5, descricao: 'Infrações por excesso de velocidade' }
-})
+const criteria = ref<any[]>([])
+const zoneMetrics = ref<any[]>([])
 
 const levelColorMap: Record<number, string> = {
   1: '#10b981',
@@ -196,6 +197,16 @@ const allAlerts = ref<any[]>([])
 const expandedMessages = ref<Set<number>>(new Set())
 const loading = ref(false)
 const errorMessage = ref('')
+
+const leftMetrics = computed(() => {
+  const half = Math.ceil(zoneMetrics.value.length / 2)
+  return zoneMetrics.value.slice(0, half)
+})
+
+const rightMetrics = computed(() => {
+  const half = Math.ceil(zoneMetrics.value.length / 2)
+  return zoneMetrics.value.slice(half)
+})
 
 const filteredAlerts = computed(() => {
   let alerts = [...allAlerts.value]
@@ -230,6 +241,23 @@ function initializeMap(): void {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
   }).addTo(map.value as L.Map)
+}
+
+async function fetchCriteria() {
+  try {
+    const response = await alerts.getCriteria()
+    criteria.value = response.data || []
+
+    zoneMetrics.value = criteria.value.map(criterion => ({
+      id: criterion.id,
+      name: criterion.name,
+      description: criterion.description,
+      nivel: 1
+    }))
+  } catch (error) {
+    console.error('Erro ao carregar critérios:', error)
+    errorMessage.value = 'Erro ao carregar tipos de alerta.'
+  }
 }
 
 async function fetchRegionData(): Promise<void> {
@@ -301,7 +329,7 @@ function drawMap(features: any[]): void {
 
 async function fetchAlerts() {
   loading.value = true
-  errorMessage.value = '' 
+  errorMessage.value = ''
 
   try {
     let response
@@ -318,15 +346,11 @@ async function fetchAlerts() {
     const data = response?.data || response
     const list = data?.content || data || []
 
-    console.log('📊 Total de alertas:', list.length)
-    console.log('📄 Total de páginas:', data?.totalPages)
-    
     allAlerts.value = list
- 
     updateZoneMetricsFromAlerts(list)
-    
+
   } catch (e) {
-    console.error('❌ Erro ao buscar alertas:', e)
+    console.error('Erro ao buscar alertas:', e)
     errorMessage.value = 'Erro ao buscar alertas da região. Tente novamente.'
     allAlerts.value = []
   } finally {
@@ -335,8 +359,6 @@ async function fetchAlerts() {
 }
 
 function updateZoneMetricsFromAlerts(alertsList: any[]) {
-  console.log('📊 Processando', alertsList.length, 'alertas para atualizar cards')
-
   const alertsByCriterion = new Map<number, number[]>()
 
   alertsList.forEach((alert: any) => {
@@ -348,46 +370,20 @@ function updateZoneMetricsFromAlerts(alertsList: any[]) {
     }
   })
 
-  console.log('📈 Alertas agrupados por critério:', Object.fromEntries(alertsByCriterion))
+  zoneMetrics.value = criteria.value.map(criterion => {
+    const levels = alertsByCriterion.get(criterion.id) || []
+    const maxLevel = levels.length > 0 ? Math.max(...levels) : 1
 
-  const criterionLevels = new Map<number, number>()
-  alertsByCriterion.forEach((levels, criterionId) => {
-    const maxLevel = Math.max(...levels)
-    criterionLevels.set(criterionId, maxLevel)
-    console.log(`  ✓ Critério ${criterionId}: nível ${maxLevel} (max de ${levels.join(', ')})`)
-  })
-
-  const criterionMap: Record<number, keyof typeof zoneMetrics.value> = {
-    552: 'congestionamento',
-    502: 'densidadeVeiculos',
-    553: 'circulacaoVeiculos',
-    554: 'excessoVelocidade'
-  }
-
-  Object.values(zoneMetrics.value).forEach(metric => {
-    metric.nivel = 1
-  })
-
-  Object.entries(criterionMap).forEach(([criterionIdStr, metricKey]) => {
-    const criterionId = parseInt(criterionIdStr)
-    const level = criterionLevels.get(criterionId)
-
-    if (level && zoneMetrics.value[metricKey]) {
-      zoneMetrics.value[metricKey].nivel = level
-      console.log(`  🔄 ${metricKey}: nível ${level}`)
+    return {
+      id: criterion.id,
+      name: criterion.name,
+      description: criterion.description,
+      nivel: maxLevel
     }
   })
-
-  console.log('✅ Cards laterais atualizados:', 
-    Object.fromEntries(
-      Object.entries(zoneMetrics.value).map(([k, v]) => [k, v.nivel])
-    )
-  )
 }
 
 async function handleZoneClick(zoneName: string) {
-  console.log('🗺️ Zona clicada:', zoneName)
-  
   const level = regionNameToLevelMap.value.get(zoneName)
 
   selectedRegion.value = {
@@ -395,21 +391,13 @@ async function handleZoneClick(zoneName: string) {
     level: level || 0
   }
 
-  console.log('📍 Região selecionada:', selectedRegion.value)
-
   const regionIdForZone = await getRegionIdByName(zoneName)
-  
-  console.log('🔢 RegionId encontrado:', regionIdForZone)
 
   if (regionIdForZone) {
     regionId = regionIdForZone
-
-    console.log('⏳ Buscando alertas da região...')
     await fetchAlerts()
-    
-    console.log('✅ Tudo atualizado!')
   } else {
-    console.error('❌ RegionId não encontrado para zona:', zoneName)
+    console.error('RegionId não encontrado para zona:', zoneName)
     errorMessage.value = `Não foi possível encontrar dados para a ${zoneName}`
   }
 
@@ -460,7 +448,7 @@ function isExpanded(id: number): boolean {
 
 function formatFullDate(dateString: string): string {
   if (!dateString) return 'Data não disponível'
-  
+
   const date = new Date(dateString)
   return date.toLocaleString('pt-BR', {
     day: '2-digit',
@@ -473,6 +461,7 @@ function formatFullDate(dateString: string): string {
 
 onMounted(async () => {
   initializeMap()
+  await fetchCriteria()
   await fetchRegionData()
   drawMap(sjcGeojson.features)
   await fetchAlerts()

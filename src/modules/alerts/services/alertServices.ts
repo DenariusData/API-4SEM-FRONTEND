@@ -32,6 +32,14 @@ interface AlertSearchResponse {
   number: number
 }
 
+interface CriterionResponse {
+  id: number
+  name: string
+  description: string
+  example: string
+  mathExpression: string
+}
+
 const alerts = {
   getLastTen: (): Promise<{ data: LastTenAlertsResponse }> =>
     api.get('/alerts/last-ten'),
@@ -50,10 +58,10 @@ const alerts = {
     criterionId: number
   ): Promise<{ data: any[] }> =>
     api.get(`/alerts/top5/region/${regionId}/criterion/${criterionId}`),
-    
+
   search: (params: AlertSearchParams): Promise<{ data: AlertSearchResponse }> => {
     const queryParams = new URLSearchParams()
-    
+
     if (params.regionIds && params.regionIds.length > 0) {
       params.regionIds.forEach(id => queryParams.append('regionIds', id.toString()))
     }
@@ -61,10 +69,12 @@ const alerts = {
     if (params.endDate) queryParams.append('endDate', params.endDate)
     if (params.page !== undefined) queryParams.append('page', params.page.toString())
     if (params.size !== undefined) queryParams.append('size', params.size.toString())
-    
-    return api.get(`/alerts/search?${queryParams.toString()}`)
-  }  
 
+    return api.get(`/alerts/search?${queryParams.toString()}`)
+  },
+
+  getCriteria: (): Promise<{ data: CriterionResponse[] }> =>
+    api.get('/criterion/summary')
 }
 
 export default alerts
