@@ -126,12 +126,10 @@ function drawMap(features: GeoJsonFeature[]): void {
       if (propsData.layer === 'zona') {
         layer.bindTooltip(`Zona ${propsData.regiao}`, { sticky: true })
 
-        if (!props.isAgent) {
-          layer.on('dblclick', (e) => {
-            L.DomEvent.stopPropagation(e)
-            emit('zoneToggle', propsData.regiao, layer)
-          })
-        }
+        layer.on('dblclick', (e) => {
+          L.DomEvent.stopPropagation(e)
+          emit('zoneToggle', propsData.regiao, layer)
+        })
       }
     },
   }).addTo(map.value as L.Map)
