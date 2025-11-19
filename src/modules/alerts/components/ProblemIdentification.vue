@@ -11,7 +11,7 @@
           :items="problems"
           item-title="name"
           item-value="id"
-          label="Select the identified problem"
+          label="Selecione o problema identificado"
           variant="outlined"
           :hint="selectedProblemDescription"
           persistent-hint
