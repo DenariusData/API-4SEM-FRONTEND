@@ -93,10 +93,10 @@ onMounted(() => {
 
 .app {
   position: relative;
-  height: calc(100vh - 65px);
   max-width: 1472px;
   width: 100%;
   margin: 64px auto 0 auto;
-  padding: 24px 16px;
+  padding: 24px 16px 32px 16px;
+  overflow-y: auto;
 }
 </style>

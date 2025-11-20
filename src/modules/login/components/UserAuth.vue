@@ -24,7 +24,7 @@ const roleLabels: Record<UserRole, string> = {
 
 const userData = computed(() => {
   if (!roleStore.token) return null
-  
+
   return {
     email: 'Usuário',
     role: roleStore.role ? roleLabels[roleStore.role] : 'Sem permissão',
