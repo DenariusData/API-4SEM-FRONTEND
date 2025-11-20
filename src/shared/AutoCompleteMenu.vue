@@ -41,7 +41,7 @@ const menuItems = computed(() => {
     if (item.requiresAdmin) return roleAccess.isAdmin
     if (item.requiresGestor) return roleAccess.hasGestorAccess
     if (item.requiresAgente) return roleAccess.hasAgenteAccess
-    return true // Public items
+    return true
   })
 })
 

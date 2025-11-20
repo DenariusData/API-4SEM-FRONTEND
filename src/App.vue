@@ -16,8 +16,6 @@ const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
 const isLoggedIn = computed(() => roleStore.isAuthenticated)
 
 const checkLoginStatus = () => {
-  // Role store automatically loads from localStorage on init
-  // This forces a reactive update
   roleStore.role
 }
 

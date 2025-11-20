@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { useRoleStore, UserRole } from '@/modules/login/store/roleStore'
+import { ref, computed } from 'vue'
+import { useRoleStore } from '@/modules/login/store/roleStore'
+import { UserRole } from '@/modules/users/enum/roles'
 
 defineProps<{
   isLoggedIn: boolean
@@ -14,12 +15,6 @@ const emit = defineEmits<{
 const menuOpen = ref(false)
 const roleStore = useRoleStore()
 
-watch(menuOpen, () => {
-  if (menuOpen.value) {
-    getUserData()
-  }
-})
-
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: 'Administrador',
   [UserRole.GESTOR]: 'Gestor',
@@ -30,17 +25,11 @@ const roleLabels: Record<UserRole, string> = {
 const userData = computed(() => {
   if (!roleStore.token) return null
   
-  // You can decode JWT to get email if needed
-  // For now, using stored role
   return {
-    email: 'Usuário', // TODO: Extract from JWT if needed
+    email: 'Usuário',
     role: roleStore.role ? roleLabels[roleStore.role] : 'Sem permissão',
   }
 })
-
-const getUserData = () => {
-  // Data is now reactive from computed property
-}
 
 const handleLogout = () => {
   roleStore.clearAuth()
