@@ -12,6 +12,7 @@ import MetricCards from '@/modules/home/components/MetricCards.vue'
 import AlertsTable from '@/modules/home/components/AlertsTable.vue'
 import FilterSection from '@/modules/home/components/FilterSection.vue'
 import MapContainer from '@/modules/home/components/MapContainer.vue'
+import HomeFilter from '@/modules/home/components/HomeFilter.vue'
 
 import type { Criterion, ZoneMetric, Alert } from '@/modules/home/types/homeTypes'
 
@@ -309,43 +310,16 @@ function handleCriterionChange() {
       <button @click="errorMessage = ''" class="error-close">✕</button>
     </div>
 
+    <HomeFilter
+      :selected-zones="selectedZones"
+      :filtered-zones="filteredZones"
+      @apply-filter="applyFilter"
+      @clear-selection="clearSelection"
+      @update:start-date-time="startDateTime = $event"
+      @update:end-date-time="endDateTime = $event"
+    />
+
     <div v-if="isAgent" class="agent-layout">
-      <div class="filter-bar">
-        <div class="filters">
-          <div class="filter-group">
-            <label>Data/hora inicial:</label>
-            <input type="datetime-local" v-model="startDateTime" placeholder="Selecione data e hora" />
-          </div>
-
-          <div class="filter-group">
-            <label>Data/hora final:</label>
-            <input type="datetime-local" v-model="endDateTime" placeholder="Selecione data e hora" />
-          </div>
-        </div>
-
-        <div class="status">
-          <span v-if="selectedZones.length === 0 && filteredZones.length === 0"> Nenhuma zona selecionada </span>
-          <span v-else-if="selectedZones.length > 0"> Zonas (pré-seleção): {{ selectedZones.join(', ') }} </span>
-          <span v-else> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
-        </div>
-
-        <div class="buttons">
-          <button @click="applyFilter" :disabled="!selectedZones.length && !startDateTime && !endDateTime">
-            Filtrar
-          </button>
-          <button
-            @click="clearSelection"
-            :disabled="!selectedZones.length && !filteredZones.length && !startDateTime && !endDateTime"
-          >
-            Limpar
-          </button>
-        </div>
-      </div>
-
-      <div class="instructions">
-        ℹ️ Dê <b>dois cliques</b> em uma zona no mapa para selecioná-la antes de aplicar o filtro.
-      </div>
-
       <div class="top-section">
         <MetricCards :metrics="leftMetrics" position="left" />
 
@@ -380,46 +354,6 @@ function handleCriterionChange() {
     </div>
 
     <div v-else class="normal-layout">
-      <div class="filter-bar">
-        <div class="filters">
-          <div class="filter-group">
-            <v-date-input
-              v-model="startDateTime"
-              label="Data/hora inicial"
-              placeholder="Selecione data e hora"
-            ></v-date-input>
-          </div>
-
-          <div class="filter-group">
-            <v-date-input
-              v-model="endDateTime"
-              label="Data/hora final"
-              placeholder="Selecione data e hora"
-            ></v-date-input>
-          </div>
-        </div>
-
-        <div class="status">
-          <span v-if="selectedZones.length === 0 && filteredZones.length === 0"> Nenhuma zona selecionada </span>
-          <span v-else-if="selectedZones.length > 0"> Zonas (pré-seleção): {{ selectedZones.join(', ') }} </span>
-          <span v-else> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
-        </div>
-
-        <div class="buttons">
-          <button @click="applyFilter" :disabled="!selectedZones.length && !startDateTime && !endDateTime">
-            Filtrar
-          </button>
-          <button
-            @click="clearSelection"
-            :disabled="!selectedZones.length && !filteredZones.length && !startDateTime && !endDateTime"
-          >
-            Limpar
-          </button>
-        </div>
-      </div>
-
-      <div class="instructions">ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la antes de aplicar o filtro.</div>
-
       <MapContainer
         :region-name-to-level-map="regionNameToLevelMap"
         :selected-zones="selectedZones"
@@ -501,104 +435,6 @@ function handleCriterionChange() {
     gap: 16px;
     overflow: hidden;
 
-    .filter-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 1rem;
-      background: #f3f4f6;
-      border-bottom: 1px solid #ddd;
-      border-radius: 8px;
-      gap: 1rem;
-
-      .filters {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-
-        .filter-group {
-          display: flex;
-          flex-direction: column;
-          font-size: 0.85rem;
-          width: 220px;
-
-          label {
-            font-weight: 500;
-            margin-bottom: 0.2rem;
-            color: #374151;
-          }
-
-          input[type='datetime-local'] {
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            background: white;
-            width: 100%;
-
-            &:focus {
-              outline: none;
-              border-color: #10b981;
-              box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-            }
-          }
-        }
-      }
-
-      .status {
-        font-size: 0.9rem;
-        color: #333;
-        flex: 1;
-        text-align: center;
-      }
-
-      .buttons {
-        display: flex;
-        gap: 0.5rem;
-
-        button {
-          padding: 0.4rem 0.8rem;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          color: white;
-          transition: 0.2s;
-
-          &:disabled {
-            background: #bbb !important;
-            cursor: not-allowed;
-          }
-
-          &:first-child {
-            background: #16a34a;
-
-            &:hover:not(:disabled) {
-              background: #15803d;
-            }
-          }
-
-          &:last-child {
-            background: #dc2626;
-
-            &:hover:not(:disabled) {
-              background: #b91c1c;
-            }
-          }
-        }
-      }
-    }
-
-    .instructions {
-      background: #e0f2fe;
-      color: #0369a1;
-      text-align: center;
-      font-size: 0.9rem;
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid #b3e0ff;
-    }
-
     .top-section {
       display: flex;
       gap: 16px;
@@ -618,90 +454,6 @@ function handleCriterionChange() {
     flex: 1;
     display: flex;
     flex-direction: column;
-
-    .filter-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 1rem;
-      background: #f3f4f6;
-      border-bottom: 1px solid #ddd;
-      gap: 1rem;
-
-      .filters {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-
-        .filter-group {
-          display: flex;
-          flex-direction: column;
-          font-size: 0.85rem;
-          width: 220px;
-
-          label {
-            font-weight: 500;
-            margin-bottom: 0.2rem;
-          }
-
-          :deep(.v-date-input) {
-            width: 100%;
-          }
-        }
-      }
-
-      .status {
-        font-size: 0.9rem;
-        color: #333;
-        flex: 1;
-        text-align: center;
-      }
-
-      .buttons {
-        display: flex;
-        gap: 0.5rem;
-
-        button {
-          padding: 0.4rem 0.8rem;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          color: white;
-          transition: 0.2s;
-
-          &:disabled {
-            background: #bbb !important;
-            cursor: not-allowed;
-          }
-
-          &:first-child {
-            background: #16a34a;
-
-            &:hover:not(:disabled) {
-              background: #15803d;
-            }
-          }
-
-          &:last-child {
-            background: #dc2626;
-
-            &:hover:not(:disabled) {
-              background: #b91c1c;
-            }
-          }
-        }
-      }
-    }
-
-    .instructions {
-      background: #e0f2fe;
-      color: #0369a1;
-      text-align: center;
-      font-size: 0.9rem;
-      padding: 0.5rem;
-      border-bottom: 1px solid #b3e0ff;
-    }
 
     :deep(.map-container) {
       flex: 1;
