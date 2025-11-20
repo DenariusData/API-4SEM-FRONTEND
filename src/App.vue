@@ -4,30 +4,19 @@ import LoginPopup from './modules/login/LoginPopup.vue'
 import NotificationDropdown from './modules/alerts/components/NotificationDropdown.vue'
 import UserAuth from './modules/login/components/UserAuth.vue'
 import sharedServices from '@/shared/services/sharedServices.ts'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { RouterView } from 'vue-router'
 import { useRoleStore } from '@/modules/login/store/roleStore'
-import { parseJwt } from '@/utils/jwt'
 
 const menu = ref(false)
 const showLogin = ref(false)
-const isLoggedIn = ref(false)
+const roleStore = useRoleStore()
 const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
-const { setRoles } = useRoleStore()
+
+const isLoggedIn = computed(() => roleStore.isAuthenticated)
 
 const checkLoginStatus = () => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    const decodedToken = parseJwt(token)
-
-    if (decodedToken?.r) {
-      setRoles([decodedToken.r])
-    }
-    isLoggedIn.value = true
-  } else {
-    isLoggedIn.value = false
-    setRoles([])
-  }
+  roleStore.role
 }
 
 const openLogin = () => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { createPerson, updatePerson } from '../services/personService'
 import { getRegions } from '../services/regionService'
 import type { PersonRequest, PersonResponse, Region } from '../protocols/personProtocols'
@@ -29,6 +29,15 @@ const formData = ref<PersonRequest>({
   role: 'ROLE_AGENTE',
   regions: [],
 })
+
+const isEditingAdmin = computed(() => {
+  return props.isEdit && props.person?.role === 'ROLE_ADMIN'
+})
+
+const availableRoles = [
+  { title: 'Agente', value: 'ROLE_AGENTE' },
+  { title: 'Gestor', value: 'ROLE_GESTOR' },
+]
 
 async function loadRegions() {
   try {
@@ -168,7 +177,8 @@ watch(
           <v-select
             v-model="formData.role"
             label="Perfil *"
-            :items="[{ title: 'Agente', value: 'ROLE_AGENTE' }]"
+            :items="availableRoles"
+            :disabled="isEditingAdmin"
             variant="outlined"
             density="comfortable"
             class="mb-3"
