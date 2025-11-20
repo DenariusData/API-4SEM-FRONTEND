@@ -150,7 +150,7 @@ const onProblemSelected = async (problemId: number) => {
 
   try {
     isLoadingProtocol.value = true
-    const response = await protocolsServices.getProtocol(problemId)
+    const response = await protocolsServices.getProtocolByRootCause(problemId)
     protocol.value = response.data
   } catch (err) {
     console.error('Error fetching protocol:', err)
