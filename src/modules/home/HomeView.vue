@@ -10,7 +10,6 @@ import alerts from '@/modules/alerts/services/alertServices'
 
 import MetricCards from '@/modules/home/components/MetricCards.vue'
 import AlertsTable from '@/modules/home/components/AlertsTable.vue'
-import FilterSection from '@/modules/home/components/FilterSection.vue'
 import MapContainer from '@/modules/home/components/MapContainer.vue'
 import HomeFilter from '@/modules/home/components/HomeFilter.vue'
 
@@ -109,7 +108,6 @@ function toggleZone(region: string, layer: L.Layer) {
     selectedZones.value.push(region)
     startAnimation(region, layer)
   }
-  // O mapa será atualizado pelo MapContainer via watch nas props
 }
 
 function startAnimation(region: string, layer: L.Layer) {
@@ -139,12 +137,8 @@ function stopAnimation(region: string) {
 }
 
 function applyFilter() {
-  // Move as zonas selecionadas para filtradas
   filteredZones.value = [...selectedZones.value]
   selectedZones.value = []
-
-  // Para filtros de data, essa lógica seria implementada no MapContainer
-  // ou em um serviço específico de filtros
 
   activeAnimations.forEach(clearInterval)
   activeAnimations.clear()
@@ -157,7 +151,6 @@ function clearSelection() {
   endDateTime.value = ''
   activeAnimations.forEach(clearInterval)
   activeAnimations.clear()
-  // O mapa será atualizado pelo MapContainer via watch nas props
 }
 
 async function fetchCriteria() {
@@ -336,19 +329,17 @@ function handleCriterionChange() {
       </div>
 
       <div class="bottom-section">
-        <FilterSection
-          :criteria="criteria"
-          v-model:selected-criterion="selectedCriterion"
-          v-model:selected-level="selectedLevel"
-          @criterion-changed="handleCriterionChange"
-        />
-
         <AlertsTable
           :alerts="allAlerts"
+          :criteria="criteria"
           :loading="loading"
           :selected-level="selectedLevel"
+          :selected-criterion="selectedCriterion"
           :sort-direction="sortDirection"
           @toggle-sort="toggleSort"
+          @update:selected-criterion="selectedCriterion = $event"
+          @update:selected-level="selectedLevel = $event"
+          @criterion-changed="handleCriterionChange"
         />
       </div>
     </div>
@@ -369,7 +360,6 @@ function handleCriterionChange() {
 .home-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
   padding: 0;
 
   .dashboard-title {

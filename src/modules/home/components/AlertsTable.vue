@@ -4,6 +4,28 @@
       <h3>Top Alertas Mais Críticos ({{ filteredAlerts.length }})</h3>
     </div>
 
+    <div class="filters-section">
+      <div class="filters">
+        <div class="filter-item">
+          <label>Filtrar por tipo:</label>
+          <select :value="selectedCriterion" @change="onCriterionChange">
+            <option value="">Todos os tipos</option>
+            <option v-for="criterion in criteria" :key="criterion.id" :value="criterion.id">
+              {{ criterion.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label>Filtrar por nível:</label>
+          <select :value="selectedLevel" @change="onLevelChange">
+            <option value="">Todos os níveis</option>
+            <option v-for="level in [1, 2, 3, 4, 5]" :key="level" :value="level">Nível {{ level }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <table class="alerts-table" v-if="filteredAlerts.length > 0">
       <thead>
         <tr>
@@ -57,17 +79,22 @@
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
-import type { Alert } from '@/modules/home/types/homeTypes'
+import type { Alert, Criterion } from '@/modules/home/types/homeTypes'
 
 interface Props {
   alerts: Alert[]
+  criteria: Criterion[]
   loading: boolean
   selectedLevel: string
+  selectedCriterion: string
   sortDirection: 'asc' | 'desc'
 }
 
 interface Emits {
   (event: 'toggleSort'): void
+  (event: 'update:selectedCriterion', value: string): void
+  (event: 'update:selectedLevel', value: string): void
+  (event: 'criterionChanged'): void
 }
 
 const props = defineProps<Props>()
@@ -93,6 +120,17 @@ const filteredAlerts = computed(() => {
 
   return alerts
 })
+
+function onCriterionChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  emit('update:selectedCriterion', target.value)
+  emit('criterionChanged')
+}
+
+function onLevelChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  emit('update:selectedLevel', target.value)
+}
 
 function truncateMessage(message: string): string {
   if (!message) return ''
@@ -141,6 +179,45 @@ function formatFullDate(dateString: string): string {
       font-size: 18px;
       font-weight: 600;
       color: #1f2937;
+    }
+  }
+
+  .filters-section {
+    .filters {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+
+    .filter-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+      }
+
+      select {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        background: white;
+        min-width: 180px;
+
+        &:focus {
+          outline: none;
+          border-color: #10b981;
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+      }
     }
   }
 
