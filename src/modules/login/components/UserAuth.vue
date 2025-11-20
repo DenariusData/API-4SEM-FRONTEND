@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { useRoleStore, UserRole } from '@/modules/login/store/roleStore'
+import { useRoleStore } from '@/modules/login/store/roleStore'
+import { UserRole } from '@/modules/users/types/userTypes'
 
 defineProps<{
   isLoggedIn: boolean
