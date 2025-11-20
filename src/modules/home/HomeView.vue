@@ -458,14 +458,14 @@ function handleCriterionChange() {
   }
 
   .normal-layout {
-    flex: 1;
     display: flex;
     flex-direction: column;
 
     :deep(.map-container) {
-      flex: 1;
-      max-height: calc(100vh - 200px);
-      min-height: 500px;
+      height: calc(100vh - 254px);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
   }
 }
