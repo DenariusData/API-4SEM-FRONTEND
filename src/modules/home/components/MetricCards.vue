@@ -1,6 +1,7 @@
 <template>
   <div class="metric-cards-container">
     <div v-for="metric in metrics" :key="metric.id" class="metric-card" :class="`nivel-${metric.nivel}`">
+      <div class="metric-region">{{ metric.region }}</div>
       <div class="metric-title">{{ metric.name }}</div>
       <div class="metric-level">Nível {{ metric.nivel }}</div>
     </div>
@@ -57,6 +58,15 @@ defineProps<Props>()
 
     &.nivel-5 {
       background: #ef4444;
+    }
+
+    .metric-region {
+      font-size: 10px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .metric-title {

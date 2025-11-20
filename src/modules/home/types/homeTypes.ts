@@ -9,8 +9,9 @@ export interface Criterion {
 export interface ZoneMetric {
   id: number
   name: string
-  description: string
+  description?: string
   nivel: number
+  region?: string
 }
 
 export interface Alert {
@@ -23,6 +24,7 @@ export interface Alert {
   previousLevel?: number
   message: string
   location?: string
+  regionName?: string
   createdAt: string
   timestamp?: string
   status?: string

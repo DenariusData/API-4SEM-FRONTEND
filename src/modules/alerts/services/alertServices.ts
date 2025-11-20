@@ -1,8 +1,5 @@
 import api from '@/utils/servicesUtils'
-import type {
-  LastTenAlertsResponse,
-  AlertDetails
-} from '@/modules/alerts/types/alertsTypes'
+import type { LastTenAlertsResponse, AlertDetails } from '@/modules/alerts/types/alertsTypes'
 
 interface FinalizeAlertPayload {
   problem_id?: number
@@ -32,38 +29,29 @@ interface AlertSearchResponse {
   number: number
 }
 
-interface CriterionResponse {
-  id: number
-  name: string
-  description: string
-  example: string
-  mathExpression: string
-}
-
 const alerts = {
-  getLastTen: (): Promise<{ data: LastTenAlertsResponse }> =>
-    api.get('/alerts/last-ten'),
+  getLastTen: (): Promise<{ data: LastTenAlertsResponse }> => api.get('/alerts/last-ten'),
 
-  getDetails: (id: number): Promise<{ data: AlertDetails }> =>
-    api.get(`/alerts/${id}/details`),
+  getDetails: (id: number): Promise<{ data: AlertDetails }> => api.get(`/alerts/${id}/details`),
 
   finalizeAlert: (id: number, data?: FinalizeAlertPayload): Promise<{ data: FinalizeAlertResponse }> =>
     api.post(`/alerts/${id}/finalize`, data),
 
-  getTop5ByRegion: (regionId: number): Promise<{ data: any[] }> =>
-    api.get(`/alerts/top5/region/${regionId}`),
+  getRegionsLevel: (): Promise<any> => api.get('/alerts/per-region'),
 
-  getTop5ByRegionAndCriterion: (
-    regionId: number,
-    criterionId: number
-  ): Promise<{ data: any[] }> =>
-    api.get(`/alerts/top5/region/${regionId}/criterion/${criterionId}`),
+  getRegionsAlerts: (regionIds: number[]): Promise<any> => api.get('/alerts/active', { params: { regionIds } }),
+
+  getTop5ByRegion: (regionIds: number[]): Promise<{ data: any[] }> =>
+    api.get('/alerts/top5/region', { params: { regionIds } }),
+
+  getTop5ByRegionAndCriterion: (regionIds: number[], criterionId: number): Promise<{ data: any[] }> =>
+    api.get(`/alerts/top5/region/criterion/${criterionId}`, { params: { regionIds } }),
 
   search: (params: AlertSearchParams): Promise<{ data: AlertSearchResponse }> => {
     const queryParams = new URLSearchParams()
 
     if (params.regionIds && params.regionIds.length > 0) {
-      params.regionIds.forEach(id => queryParams.append('regionIds', id.toString()))
+      params.regionIds.forEach((id) => queryParams.append('regionIds', id.toString()))
     }
     if (params.startDate) queryParams.append('startDate', params.startDate)
     if (params.endDate) queryParams.append('endDate', params.endDate)
@@ -72,9 +60,6 @@ const alerts = {
 
     return api.get(`/alerts/search?${queryParams.toString()}`)
   },
-
-  getCriteria: (): Promise<{ data: CriterionResponse[] }> =>
-    api.get('/criterion/summary')
 }
 
 export default alerts
