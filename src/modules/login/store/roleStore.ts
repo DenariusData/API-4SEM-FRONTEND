@@ -40,7 +40,6 @@ export const useRoleStore = defineStore('role', () => {
   
   const hasAgenteAccess = computed(() => 
     role.value === UserRole.AGENTE || 
-    role.value === UserRole.GESTOR || 
     role.value === UserRole.ADMIN
   )
   
