@@ -35,7 +35,7 @@ export const useRoleStore = defineStore('role', () => {
   const isAuthenticated = computed(() => token.value !== null && role.value !== null)
   const isAdmin = computed(() => role.value === UserRole.ADMIN)
   const isGestor = computed(() => role.value === UserRole.GESTOR || role.value === UserRole.ADMIN)
-  const isAgente = computed(() => role.value === UserRole.AGENTE || role.value === UserRole.GESTOR || role.value === UserRole.ADMIN)
+  const isAgente = computed(() => role.value === UserRole.AGENTE || role.value === UserRole.ADMIN)
   const isPublic = computed(() => role.value === null || role.value === UserRole.PUBLIC)
   
   const hasAgenteAccess = computed(() => 
