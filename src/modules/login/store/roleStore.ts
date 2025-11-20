@@ -1,12 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-
-export enum UserRole {
-  ADMIN = 'ROLE_ADMIN',
-  GESTOR = 'ROLE_GESTOR',
-  AGENTE = 'ROLE_AGENTE',
-  PUBLIC = 'PUBLIC'
-}
+import { UserRole } from '@/modules/users/enum/roles'
 
 export const useRoleStore = defineStore('role', () => {
   const role = ref<UserRole | null>(loadRoleFromStorage())
