@@ -39,14 +39,8 @@ let unregisterPeriodicTask: (() => void) | null = null
 
 const isAgent = computed(() => userRoles.value.includes('ROLE_AGENTE'))
 
-const leftMetrics = computed(() => {
-  const half = Math.ceil(zoneMetrics.value.length / 2)
-  return zoneMetrics.value.slice(0, half)
-})
-
-const rightMetrics = computed(() => {
-  const half = Math.ceil(zoneMetrics.value.length / 2)
-  return zoneMetrics.value.slice(half)
+const allMetrics = computed(() => {
+  return zoneMetrics.value
 })
 
 async function fetchRegionData(): Promise<void> {
@@ -314,7 +308,9 @@ function handleCriterionChange() {
 
     <div v-if="isAgent" class="agent-layout">
       <div class="top-section">
-        <MetricCards :metrics="leftMetrics" position="left" />
+        <div class="metrics-container">
+          <MetricCards :metrics="allMetrics" />
+        </div>
 
         <MapContainer
           compact
@@ -324,8 +320,6 @@ function handleCriterionChange() {
           :is-agent="isAgent"
           @zone-toggle="handleZoneToggle"
         />
-
-        <MetricCards :metrics="rightMetrics" position="right" />
       </div>
 
       <div class="bottom-section">
@@ -363,7 +357,7 @@ function handleCriterionChange() {
   padding: 0;
 
   .dashboard-title {
-    margin: 16px 0;
+    margin-bottom: 16px;
     font-size: 24px;
     font-weight: 600;
     text-align: center;
@@ -428,7 +422,30 @@ function handleCriterionChange() {
     .top-section {
       display: flex;
       gap: 16px;
-      height: 400px;
+      height: 50vh;
+
+      .metrics-container {
+        width: 220px;
+        overflow-y: auto;
+
+        &::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 3px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 3px;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+          background: #a1a1a1;
+        }
+      }
     }
 
     .bottom-section {

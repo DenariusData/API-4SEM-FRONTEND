@@ -1,5 +1,5 @@
 <template>
-  <div class="metric-cards-container" :class="position">
+  <div class="metric-cards-container">
     <div v-for="metric in metrics" :key="metric.id" class="metric-card" :class="`nivel-${metric.nivel}`">
       <div class="metric-title">{{ metric.name }}</div>
       <div class="metric-level">Nível {{ metric.nivel }}</div>
@@ -12,7 +12,6 @@ import type { ZoneMetric } from '@/modules/home/types/homeTypes'
 
 interface Props {
   metrics: ZoneMetric[]
-  position: 'left' | 'right'
 }
 
 defineProps<Props>()
@@ -23,6 +22,7 @@ defineProps<Props>()
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 8px;
   min-width: 200px;
 
   .metric-card {
