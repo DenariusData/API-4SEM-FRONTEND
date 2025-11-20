@@ -11,6 +11,29 @@ export interface Alert {
 
 export interface LastTenAlertsResponse extends Array<Alert> {}
 
+// New types for AlertsView
+export interface AlertListItem {
+  alertId: number
+  alertRegion: string
+  criterionName: string
+  alertClosedAt: string | null
+}
+
+export interface AlertLog {
+  alertLogId: number
+  logDatetime: string
+  previousLevel: number
+  newLevel: number
+}
+
+export interface Pageable<T> {
+  content: T
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+}
+
 export interface AlertDetails {
   id: number
   alert_id: number
