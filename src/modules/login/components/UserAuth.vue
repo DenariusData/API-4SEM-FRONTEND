@@ -23,13 +23,11 @@ watch(menuOpen, () => {
 })
 
 const getUserData = () => {
-  console.log('getUserData')
   const token = localStorage.getItem('token')
   if (!token) return null
 
   const decoded = parseJwt(token)
   if (!decoded) return null
-  console.log('decoded', decoded)
 
   const roles = {
     ROLE_AGENTE: 'Agente',
