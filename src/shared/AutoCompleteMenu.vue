@@ -34,7 +34,6 @@ const allMenuItems: MenuItem[] = [
   { title: 'Indicadores', value: 'indicators', route: 'indicators' },
   { title: 'Protocolos', value: 'protocols', route: 'protocols', requiresAuth: true, requiresGestor: true },
   { title: 'Usuários', value: 'persons', route: 'persons', requiresAuth: true, requiresAdmin: true },
-  { title: 'Controle de Agente', value: 'persons', route: 'persons', requiresAuth: true, requiresGestor: true },
 ]
 
 const menuItems = computed(() => {
