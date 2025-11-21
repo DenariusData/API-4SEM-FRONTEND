@@ -1,8 +1,5 @@
 import api from '@/utils/servicesUtils'
-import type {
-  LastTenAlertsResponse,
-  AlertDetails
-} from '@/modules/alerts/types/alertsTypes'
+import type { LastTenAlertsResponse, AlertDetails } from '@/modules/alerts/types/alertsTypes'
 
 interface FinalizeAlertPayload {
   problem_id?: number
@@ -16,15 +13,53 @@ interface FinalizeAlertResponse {
   alert_id: number
 }
 
-const alerts = {
-  getLastTen: (): Promise<{ data: LastTenAlertsResponse }> =>
-    api.get('/alerts/last-ten'),
+interface AlertSearchParams {
+  regionIds?: number[]
+  startDate?: string
+  endDate?: string
+  page?: number
+  size?: number
+}
 
-  getDetails: (id: number): Promise<{ data: AlertDetails }> =>
-    api.get(`/alerts/${id}/details`),
+interface AlertSearchResponse {
+  content: any[]
+  totalElements: number
+  totalPages: number
+  size: number
+  number: number
+}
+
+const alerts = {
+  getLastTen: (): Promise<{ data: LastTenAlertsResponse }> => api.get('/alerts/last-ten'),
+
+  getDetails: (id: number): Promise<{ data: AlertDetails }> => api.get(`/alerts/${id}/details`),
 
   finalizeAlert: (id: number, data?: FinalizeAlertPayload): Promise<{ data: FinalizeAlertResponse }> =>
     api.post(`/alerts/${id}/finalize`, data),
+
+  getRegionsLevel: (): Promise<any> => api.get('/alerts/per-region'),
+
+  getRegionsAlerts: (regionIds: number[]): Promise<any> => api.get('/alerts/active', { params: { regionIds } }),
+
+  getTop5ByRegion: (regionIds: number[]): Promise<{ data: any[] }> =>
+    api.get('/alerts/top5/region', { params: { regionIds } }),
+
+  getTop5ByRegionAndCriterion: (regionIds: number[], criterionId: number): Promise<{ data: any[] }> =>
+    api.get(`/alerts/top5/region/criterion/${criterionId}`, { params: { regionIds } }),
+
+  search: (params: AlertSearchParams): Promise<{ data: AlertSearchResponse }> => {
+    const queryParams = new URLSearchParams()
+
+    if (params.regionIds && params.regionIds.length > 0) {
+      params.regionIds.forEach((id) => queryParams.append('regionIds', id.toString()))
+    }
+    if (params.startDate) queryParams.append('startDate', params.startDate)
+    if (params.endDate) queryParams.append('endDate', params.endDate)
+    if (params.page !== undefined) queryParams.append('page', params.page.toString())
+    if (params.size !== undefined) queryParams.append('size', params.size.toString())
+
+    return api.get(`/alerts/search?${queryParams.toString()}`)
+  },
 }
 
 export default alerts

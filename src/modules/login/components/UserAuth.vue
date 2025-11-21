@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoleStore } from '@/modules/login/store/roleStore'
-import { parseJwt } from '@/utils/jwt'
+import { UserRole } from '@/modules/users/enum/roles'
 
 defineProps<{
   isLoggedIn: boolean
@@ -13,39 +13,26 @@ const emit = defineEmits<{
 }>()
 
 const menuOpen = ref(false)
-const userData = ref({})
-const { setRoles } = useRoleStore()
+const roleStore = useRoleStore()
 
-watch(menuOpen, () => {
-  if (menuOpen.value) {
-    getUserData()
+const roleLabels: Record<UserRole, string> = {
+  [UserRole.ADMIN]: 'Administrador',
+  [UserRole.GESTOR]: 'Gestor',
+  [UserRole.AGENTE]: 'Agente',
+  [UserRole.PUBLIC]: 'Público',
+}
+
+const userData = computed(() => {
+  if (!roleStore.token) return null
+
+  return {
+    email: 'Usuário',
+    role: roleStore.role ? roleLabels[roleStore.role] : 'Sem permissão',
   }
 })
 
-const getUserData = () => {
-  console.log('getUserData')
-  const token = localStorage.getItem('token')
-  if (!token) return null
-
-  const decoded = parseJwt(token)
-  if (!decoded) return null
-  console.log('decoded', decoded)
-
-  const roles = {
-    ROLE_AGENTE: 'Agente',
-    ROLE_GESTOR: 'Gestor',
-    ROLE_CIVIL: 'Público',
-  }
-
-  userData.value = {
-    email: decoded.e || 'Usuário',
-    role: roles[decoded.r as keyof typeof roles] || 'Sem permissão',
-  }
-}
-
 const handleLogout = () => {
-  localStorage.removeItem('token')
-  setRoles([])
+  roleStore.clearAuth()
   menuOpen.value = false
   emit('logout')
 }
