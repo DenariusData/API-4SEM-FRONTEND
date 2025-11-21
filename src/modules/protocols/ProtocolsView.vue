@@ -213,7 +213,6 @@ const handleSaveProtocolo = async () => {
   try {
     isLoading.value = true;
     
-    // TODO: Get actual user ID from auth context
     const createdBy = 1;
     const backendData = mapProtocoloToBackend(formProtocolo.value, createdBy);
 
