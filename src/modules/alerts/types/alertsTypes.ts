@@ -9,19 +9,31 @@ export interface Alert {
   finalized: boolean
 }
 
-export interface LastTenAlertsResponse extends Array<Alert> {}
+export type LastTenAlertsResponse = Array<Alert>
 
-// New types for AlertsView
 export interface AlertListItem {
-  alertId: number
-  alertRegion: string
+  id: number
+  level: number
+  message: string
+  conclusion: string | null
+  sourceType: string
+  createdAt: string
+  closedAt: string | null
+  createdByName: string | null
+  assignedToName: string | null
   criterionName: string
-  alertClosedAt: string | null
+  criterionId: number
+  regionName: string
+  regionId: number
+  rootCauseName: string | null
+  protocolName: string | null
+  isOpen: boolean
+  status: string
 }
 
 export interface AlertLog {
-  alertLogId: number
-  logDatetime: string
+  id: number
+  createdAt: string
   previousLevel: number
   newLevel: number
 }
@@ -32,6 +44,15 @@ export interface Pageable<T> {
   totalElements: number
   size: number
   number: number
+}
+
+export interface AlertFilters {
+  regionIds?: number[]
+  criterionIds?: number[]
+  levels?: number[]
+  isOpen?: boolean
+  startDate?: string
+  endDate?: string
 }
 
 export interface AlertDetails {

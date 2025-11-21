@@ -43,11 +43,28 @@ const alerts = {
   finalizeAlert: (id: number, data?: FinalizeAlertPayload): Promise<{ data: FinalizeAlertResponse }> =>
     api.post(`/alerts/${id}/finalize`, data),
 
-  getAlerts: (page: number = 0, size: number = 10): Promise<{ data: Pageable<AlertListItem[]> }> =>
-    api.get('/alerts', { params: { page, size } }),
+  getAlerts: (
+    page: number = 0,
+    size: number = 10,
+    filters?: {
+      regionIds?: number[]
+      criterionIds?: number[]
+      levels?: number[]
+      isOpen?: boolean
+      startDate?: string
+      endDate?: string
+    }
+  ): Promise<{ data: Pageable<AlertListItem[]> }> =>
+    api.get('/alerts/history', {
+      params: {
+        page,
+        size,
+        ...filters,
+      },
+    }),
 
   getAlertLogs: (alertId: number): Promise<{ data: AlertLog[] }> =>
-    api.get(`/alert-logs/${alertId}`),
+    api.get(`/alerts/${alertId}/logs`),
 }
 
 export default alerts

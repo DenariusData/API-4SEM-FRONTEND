@@ -3,7 +3,9 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import alertServices from './services/alertServices'
 import AddPagination from '@/shared/pagination/AddPagination.vue'
+import AlertFilters from './components/AlertFilters.vue'
 import type { AlertListItem, AlertLog } from './types/alertsTypes'
+import type { AlertFiltersData } from './components/AlertFilters.vue'
 
 const router = useRouter()
 
@@ -17,10 +19,13 @@ const expandedAlertId = ref<number | null>(null)
 const alertLogs = ref<Record<number, AlertLog[]>>({})
 const loadingLogs = ref<Record<number, boolean>>({})
 
+const showFilters = ref(false)
+const currentFilters = ref<AlertFiltersData>({})
+
 async function loadAlerts() {
   loading.value = true
   try {
-    const response = await alertServices.getAlerts(page.value, size.value)
+    const response = await alertServices.getAlerts(page.value, size.value, currentFilters.value)
     alerts.value = response.data.content
     totalPages.value = response.data.totalPages
   } catch (error) {
@@ -28,6 +33,18 @@ async function loadAlerts() {
   } finally {
     loading.value = false
   }
+}
+
+function handleApplyFilters(filters: AlertFiltersData) {
+  currentFilters.value = filters
+  page.value = 0
+  loadAlerts()
+}
+
+function handleClearFilters() {
+  currentFilters.value = {}
+  page.value = 0
+  loadAlerts()
 }
 
 async function toggleAccordion(alertId: number) {
@@ -38,7 +55,6 @@ async function toggleAccordion(alertId: number) {
 
   expandedAlertId.value = alertId
 
-  // Load logs if not already loaded
   if (!alertLogs.value[alertId]) {
     loadingLogs.value[alertId] = true
     try {
@@ -81,7 +97,7 @@ function goToLast() {
 }
 
 function getStatusClass(alert: AlertListItem): string {
-  return alert.alertClosedAt ? 'closed' : 'open'
+  return alert.closedAt ? 'closed' : 'open'
 }
 
 function formatDateTime(dateTimeString: string | null): string {
@@ -97,13 +113,15 @@ function formatDateTime(dateTimeString: string | null): string {
 }
 
 function getStatusText(alert: AlertListItem): string {
-  return alert.alertClosedAt ? `Fechado em ${formatDateTime(alert.alertClosedAt)}` : 'Em aberto'
+  return alert.closedAt ? `Fechado em ${formatDateTime(alert.closedAt)}` : 'Em aberto'
 }
 
 function getLevelClass(level: number): string {
-  if (level === 1) return 'level-low'
-  if (level === 2) return 'level-medium'
-  if (level === 3) return 'level-high'
+  if (level === 1) return 'level-1'
+  if (level === 2) return 'level-2'
+  if (level === 3) return 'level-3'
+  if (level === 4) return 'level-4'
+  if (level === 5) return 'level-5'
   return ''
 }
 
@@ -118,20 +136,33 @@ onMounted(loadAlerts)
   <div class="alerts-view">
     <div class="header">
       <h1 class="page-title">Alertas</h1>
+      <v-btn 
+        color="primary" 
+        @click="showFilters = !showFilters"
+        :prepend-icon="showFilters ? 'mdi-filter-off' : 'mdi-filter'"
+      >
+        {{ showFilters ? 'Ocultar Filtros' : 'Filtros' }}
+      </v-btn>
     </div>
+
+    <AlertFilters
+      v-model="showFilters"
+      @apply="handleApplyFilters"
+      @clear="handleClearFilters"
+    />
 
     <div v-if="loading" class="loading">Carregando alertas...</div>
 
     <div v-else class="alerts-list">
       <div 
         v-for="alert in alerts" 
-        :key="alert.alertId" 
+        :key="alert.id" 
         class="alert-card"
-        :class="{ expanded: expandedAlertId === alert.alertId }"
+        :class="{ expanded: expandedAlertId === alert.id }"
       >
-        <div class="alert-header" @click="goToAlertDetails(alert.alertId)">
+        <div class="alert-header" @click="goToAlertDetails(alert.id)">
           <div class="alert-info">
-            <span class="alert-id">Alerta {{ alert.alertId }}: {{ alert.criterionName }} na {{ alert.alertRegion }}</span>
+            <span class="alert-id">Alerta {{ alert.id }}: {{ alert.criterionName }} na {{ alert.regionName }}</span>
             <span 
               class="alert-status" 
               :class="getStatusClass(alert)"
@@ -142,31 +173,31 @@ onMounted(loadAlerts)
           
           <button 
             class="toggle-btn"
-            @click.stop="toggleAccordion(alert.alertId)"
+            @click.stop="toggleAccordion(alert.id)"
           >
             <v-icon>
-              {{ expandedAlertId === alert.alertId ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+              {{ expandedAlertId === alert.id ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
             </v-icon>
           </button>
         </div>
 
         <div 
-          v-if="expandedAlertId === alert.alertId" 
+          v-if="expandedAlertId === alert.id" 
           class="alert-logs-container"
         >
           <h3 class="logs-title">Histórico de Alterações</h3>
           
-          <div v-if="loadingLogs[alert.alertId]" class="loading-logs">
+          <div v-if="loadingLogs[alert.id]" class="loading-logs">
             Carregando histórico...
           </div>
 
-          <div v-else-if="alertLogs[alert.alertId]?.length" class="logs-scroll">
+          <div v-else-if="alertLogs[alert.id]?.length" class="logs-scroll">
             <div 
-              v-for="log in alertLogs[alert.alertId]" 
-              :key="log.alertLogId"
+              v-for="log in alertLogs[alert.id]" 
+              :key="log.id"
               class="log-item"
             >
-              <div class="log-datetime">{{ formatDateTime(log.logDatetime) }}</div>
+              <div class="log-datetime">{{ formatDateTime(log.createdAt) }}</div>
               <div class="log-levels">
                 <span class="level-badge" :class="getLevelClass(log.previousLevel)">
                   Nível {{ log.previousLevel }}
@@ -187,7 +218,7 @@ onMounted(loadAlerts)
     </div>
 
     <AddPagination
-      v-if="!loading && alerts.length"
+      v-if="!loading && alerts?.length"
       :page="page"
       :total-pages="totalPages"
       @go-first="goToFirst"
@@ -205,6 +236,9 @@ onMounted(loadAlerts)
 
 .header {
   margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .page-title {
@@ -367,18 +401,28 @@ onMounted(loadAlerts)
   font-size: 13px;
   font-weight: 500;
 
-  &.level-low {
-    background: #00c853;
+  &.level-1 {
+    background: #4caf50;
     color: white;
   }
 
-  &.level-medium {
+  &.level-2 {
+    background: #8bc34a;
+    color: white;
+  }
+
+  &.level-3 {
     background: #ffd60a;
     color: #333;
   }
 
-  &.level-high {
-    background: #ff1e1e;
+  &.level-4 {
+    background: #ff9800;
+    color: white;
+  }
+
+  &.level-5 {
+    background: #f44336;
     color: white;
   }
 }
