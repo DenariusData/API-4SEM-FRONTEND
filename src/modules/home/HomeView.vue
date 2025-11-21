@@ -38,7 +38,7 @@ const regionsLevelData = ref<{ region_id: number; level: number }[]>([])
 
 let unregisterPeriodicTask: (() => void) | null = null
 
-const isAgent = computed(() => roleStore.getRoles().value.includes('ROLE_AGENTE'))
+const isAgent = computed(() => roleStore.isAgente)
 
 const criteriaForTable = computed<Criterion[]>(() => {
   const uniqueCriteria = new Map()

@@ -1,5 +1,5 @@
 import api from '@/utils/servicesUtils.ts'
-import { UserRole } from '../store/roleStore'
+import { UserRole } from '@/modules/users/enum/roles'
 
 interface LoginResponse {
   token: string
