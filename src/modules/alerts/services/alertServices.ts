@@ -1,5 +1,11 @@
 import api from '@/utils/servicesUtils'
-import type { LastTenAlertsResponse, AlertDetails } from '@/modules/alerts/types/alertsTypes'
+import type {
+  LastTenAlertsResponse,
+  AlertDetails,
+  AlertListItem,
+  AlertLog,
+  Pageable
+} from '@/modules/alerts/types/alertsTypes'
 
 interface FinalizeAlertPayload {
   problem_id?: number
@@ -37,29 +43,28 @@ const alerts = {
   finalizeAlert: (id: number, data?: FinalizeAlertPayload): Promise<{ data: FinalizeAlertResponse }> =>
     api.post(`/alerts/${id}/finalize`, data),
 
-  getRegionsLevel: (): Promise<any> => api.get('/alerts/per-region'),
-
-  getRegionsAlerts: (regionIds: number[]): Promise<any> => api.get('/alerts/active', { params: { regionIds } }),
-
-  getTop5ByRegion: (regionIds: number[]): Promise<{ data: any[] }> =>
-    api.get('/alerts/top5/region', { params: { regionIds } }),
-
-  getTop5ByRegionAndCriterion: (regionIds: number[], criterionId: number): Promise<{ data: any[] }> =>
-    api.get(`/alerts/top5/region/criterion/${criterionId}`, { params: { regionIds } }),
-
-  search: (params: AlertSearchParams): Promise<{ data: AlertSearchResponse }> => {
-    const queryParams = new URLSearchParams()
-
-    if (params.regionIds && params.regionIds.length > 0) {
-      params.regionIds.forEach((id) => queryParams.append('regionIds', id.toString()))
+  getAlerts: (
+    page: number = 0,
+    size: number = 10,
+    filters?: {
+      regionIds?: number[]
+      criterionIds?: number[]
+      levels?: number[]
+      isOpen?: boolean
+      startDate?: string
+      endDate?: string
     }
-    if (params.startDate) queryParams.append('startDate', params.startDate)
-    if (params.endDate) queryParams.append('endDate', params.endDate)
-    if (params.page !== undefined) queryParams.append('page', params.page.toString())
-    if (params.size !== undefined) queryParams.append('size', params.size.toString())
+  ): Promise<{ data: Pageable<AlertListItem[]> }> =>
+    api.get('/alerts/history', {
+      params: {
+        page,
+        size,
+        ...filters,
+      },
+    }),
 
-    return api.get(`/alerts/search?${queryParams.toString()}`)
-  },
+  getAlertLogs: (alertId: number): Promise<{ data: AlertLog[] }> =>
+    api.get(`/alerts/${alertId}/logs`),
 }
 
 export default alerts
