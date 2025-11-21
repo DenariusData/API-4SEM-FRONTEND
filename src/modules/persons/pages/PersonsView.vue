@@ -104,6 +104,7 @@ onMounted(loadData);
             <th>Nome</th>
             <th>Email</th>
             <th>Perfil</th>
+            <th>Região</th> 
             <th class="actions-col">Ações</th>
           </tr>
         </thead>
@@ -113,7 +114,12 @@ onMounted(loadData);
             <td>{{ p.name }}</td>
             <td>{{ p.email }}</td>
             <td>{{ p.role }}</td>
-
+            <td>
+              <span v-for="(r, i) in p.regions" :key="r.id">
+                {{ r.name }}<span v-if="i < p.regions.length - 1">, </span>
+              </span>
+            </td> 
+            
             <td class="actions">
               <v-icon class="edit-icon" title="Editar" @click="openEditModal(p)">
                 mdi-pencil
@@ -128,17 +134,27 @@ onMounted(loadData);
       </table>
     </div>
 
-<AddPagination
-  :page="page"
-  :total-pages="totalPages"
-  @go-first="goToFirst"
-  @go-prev="previousPage"
-  @go-next="nextPage"
-  @go-last="goToLast"
-/>
+    <AddPagination
+      :page="page"
+      :total-pages="totalPages"
+      @go-first="goToFirst"
+      @go-prev="previousPage"
+      @go-next="nextPage"
+      @go-last="goToLast"
+    />
 
-    <AddEditPersonModal v-model="showAddEditModal" :is-edit="isEdit" :person="editingPerson" @saved="handleSaved" />
-    <PersonDeleteModal v-model="showDeleteModal" :user-id="userToDelete" @confirm="handleConfirmDelete" />
+    <AddEditPersonModal
+      v-model="showAddEditModal"
+      :is-edit="isEdit"
+      :person="editingPerson"
+      @saved="handleSaved"
+    />
+
+    <PersonDeleteModal
+      v-model="showDeleteModal"
+      :user-id="userToDelete"
+      @confirm="handleConfirmDelete"
+    />
   </div>
 </template>
 
@@ -207,5 +223,4 @@ onMounted(loadData);
   color: #d32f2f;
   transform: scale(1.1);
 }
-
 </style>
