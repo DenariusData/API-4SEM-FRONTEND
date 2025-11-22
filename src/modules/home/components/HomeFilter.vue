@@ -16,23 +16,19 @@ interface Emits {
 defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-// Refs para as datas (objetos Date)
 const startDate = ref<Date | null>(null)
 const endDate = ref<Date | null>(null)
 const startTime = ref<string>('00:00')
 const endTime = ref<string>('23:59')
 
-// Refs para controlar a exibição dos pickers
 const showStartDatePicker = ref(false)
 const showEndDatePicker = ref(false)
 
-// Função para formatar data para exibição (dd/mm/yyyy)
 function formatDateDisplay(date: Date | null): string {
   if (!date) return ''
   return date.toLocaleDateString('pt-BR')
 }
 
-// Função para combinar data e hora em formato ISO
 function combineDateTime(date: Date | null, time: string): string {
   if (!date) return ''
 
@@ -223,12 +219,10 @@ function clearSelection() {
           font-size: 0.875rem;
         }
 
-        // Campo de data maior que o de hora
         :deep(.v-menu > .v-input) {
           min-width: 180px;
         }
 
-        // Campo de hora menor
         :deep(.v-input:last-child) {
           min-width: 120px;
         }
@@ -261,12 +255,10 @@ function clearSelection() {
   border: 1px solid #b3e0ff;
 }
 
-// Estilização do date picker
 :deep(.v-date-picker) {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-// Responsividade
 @media (max-width: 1200px) {
   .filter-bar {
     .filters {
