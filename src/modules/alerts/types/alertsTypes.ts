@@ -9,7 +9,51 @@ export interface Alert {
   finalized: boolean
 }
 
-export interface LastTenAlertsResponse extends Array<Alert> {}
+export type LastTenAlertsResponse = Array<Alert>
+
+export interface AlertListItem {
+  id: number
+  level: number
+  message: string
+  conclusion: string | null
+  sourceType: string
+  createdAt: string
+  closedAt: string | null
+  createdByName: string | null
+  assignedToName: string | null
+  criterionName: string
+  criterionId: number
+  regionName: string
+  regionId: number
+  rootCauseName: string | null
+  protocolName: string | null
+  isOpen: boolean
+  status: string
+}
+
+export interface AlertLog {
+  id: number
+  createdAt: string
+  previousLevel: number
+  newLevel: number
+}
+
+export interface Pageable<T> {
+  content: T
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+}
+
+export interface AlertFilters {
+  regionIds?: number[]
+  criterionIds?: number[]
+  levels?: number[]
+  isOpen?: boolean
+  startDate?: string
+  endDate?: string
+}
 
 export interface AlertDetails {
   id: number

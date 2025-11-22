@@ -5,13 +5,19 @@ import type { Alert } from '@/modules/alerts/types/alertsTypes'
 import { LEVELS_ENUM } from '@/shared/enums'
 import { useRouter } from 'vue-router'
 import { registerPeriodicTask } from '@/shared/periodicUpdater'
+import { useRoleStore } from '@/modules/login/store/roleStore'
 
 const router = useRouter()
+const roleStore = useRoleStore()
 
 const isOpen = ref(false)
 const alerts = ref<Alert[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
+
+const isAuthorized = computed(
+  () => roleStore.isAuthenticated && (roleStore.isAgente || roleStore.isGestor || roleStore.isAdmin),
+)
 
 const alertsCount = computed(() =>
   alerts.value.reduce((count, alert) => {
@@ -28,6 +34,11 @@ const levelColors = {
 }
 
 const fetchAlerts = async () => {
+  if (!isAuthorized.value) {
+    alerts.value = []
+    return
+  }
+
   try {
     isLoading.value = true
     error.value = null
@@ -67,8 +78,10 @@ const goToAlertsPage = () => {
 let unregisterNotificationTask: (() => void) | null = null
 
 onMounted(async () => {
-  await fetchAlerts()
-  unregisterNotificationTask = registerPeriodicTask(fetchAlerts)
+  if (isAuthorized.value) {
+    await fetchAlerts()
+    unregisterNotificationTask = registerPeriodicTask(fetchAlerts)
+  }
 })
 
 onUnmounted(() => {
