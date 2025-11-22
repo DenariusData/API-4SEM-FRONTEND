@@ -17,14 +17,15 @@ const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
 
 const isLoggedIn = computed(() => roleStore.isAuthenticated)
 
-// Monitorar mudanças na autenticação para redirecionamento
 watch(isLoggedIn, (newIsLoggedIn, oldIsLoggedIn) => {
-  // Se usuário deslogou (estava logado e agora não está mais)
   if (oldIsLoggedIn && !newIsLoggedIn) {
-    // Verificar se a rota atual requer autenticação
     const currentRoute = route.meta
-    if (currentRoute?.requiresAuth || currentRoute?.requiresAdmin || currentRoute?.requiresGestor || currentRoute?.requiresAgente) {
-      // Redirecionar para home se estiver em uma rota protegida
+    if (
+      currentRoute?.requiresAuth ||
+      currentRoute?.requiresAdmin ||
+      currentRoute?.requiresGestor ||
+      currentRoute?.requiresAgente
+    ) {
       router.push({ name: 'home' })
     }
   }
@@ -36,9 +37,13 @@ const checkLoginStatus = () => {
 
 const handleLogout = () => {
   checkLoginStatus()
-  // Verificar se a rota atual requer autenticação e redirecionar se necessário
   const currentRoute = route.meta
-  if (currentRoute?.requiresAuth || currentRoute?.requiresAdmin || currentRoute?.requiresGestor || currentRoute?.requiresAgente) {
+  if (
+    currentRoute?.requiresAuth ||
+    currentRoute?.requiresAdmin ||
+    currentRoute?.requiresGestor ||
+    currentRoute?.requiresAgente
+  ) {
     router.push({ name: 'home' })
   }
 }

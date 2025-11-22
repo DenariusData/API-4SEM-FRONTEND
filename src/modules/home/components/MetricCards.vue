@@ -20,8 +20,8 @@ defineProps<Props>()
 
 <style lang="scss" scoped>
 .metric-cards-container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 8px;
   min-width: 200px;
