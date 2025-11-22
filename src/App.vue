@@ -41,7 +41,7 @@ onMounted(() => {
         <img src="../public/radariustxt.svg" alt="Logo" class="logo" />
       </div>
 
-      <AutoCompleteMenu v-model="menu" />
+      <AutoCompleteMenu v-model="menu" :key="`menu-${roleStore.role}-${roleStore.token ? 'logged' : 'guest'}`" />
 
       <v-spacer></v-spacer>
 
