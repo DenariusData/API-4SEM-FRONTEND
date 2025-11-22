@@ -1,8 +1,9 @@
 <template>
   <div class="alerts-container">
     <div class="panel-header">
-      <div>
+      <div class="header-info">
         <h2>Top Alertas Mais Críticos</h2>
+        <span class="separator">|</span>
         <p>{{ filteredAlerts.length }} alerta(s) encontrado(s)</p>
       </div>
     </div>
@@ -197,11 +198,22 @@ function formatFullDate(dateString: string): string {
   margin-bottom: 24px;
   gap: 20px;
 
+  .header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
   h2 {
     font-size: 1.5rem;
     color: #1f2937;
     margin: 0 0 4px 0;
     font-weight: 600;
+  }
+
+  .separator {
+    color: #d1d5db;
+    font-size: 1.2rem;
   }
 
   p {
@@ -465,6 +477,16 @@ function formatFullDate(dateString: string): string {
   .panel-header {
     flex-direction: column;
     align-items: flex-start;
+
+    .header-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+
+      .separator {
+        display: none;
+      }
+    }
   }
 }
 </style>
