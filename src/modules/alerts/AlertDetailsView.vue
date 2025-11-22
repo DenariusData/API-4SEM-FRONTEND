@@ -20,7 +20,7 @@
       <AlertInformation :alert-details="alertDetails" :user-role="userRole" />
 
       <div v-if="userRole === 'agent' && !alertDetails.finalized" class="alert-details__agent-section">
-        <InitialGuidelines :radar-id="alertDetails.radar_id" :location="alertDetails.location" />
+        <InitialGuidelines :radar-id="alertDetails.radar_id" :location="alertDetails.location || ''" />
 
         <ProblemIdentification
           v-model="selectedProblem"
@@ -162,7 +162,7 @@ const fetchAlertDetails = async () => {
 const fetchProblems = async () => {
   try {
     const response = await problemsService.getAll()
-    problems.value = response.data
+    problems.value = response.data.items
   } catch (err) {
     console.error('Erro ao buscar problemas:', err)
   }

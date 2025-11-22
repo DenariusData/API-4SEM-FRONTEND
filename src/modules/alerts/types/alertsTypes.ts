@@ -61,13 +61,19 @@ export interface AlertDetails {
   indicator: string
   currentLevel: number
   previousLevel: number
-  location: string
+  location: string | undefined
   timestamp: string
   finalized: boolean
   radar_id?: string
   zone?: string
   description?: string
   affected_radars?: string[]
+  message: string
+  sourceType: string
+  level: number
+  criterionName: string
+  regionName: string
+  createdAt: string
 }
 
 export interface Problem {

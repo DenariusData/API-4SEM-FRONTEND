@@ -6,8 +6,6 @@
     </v-card-title>
 
     <v-card-text class="alert-info__content">
-
-      <!-- MENSAGEM -->
       <div class="alert-info__row">
         <div class="alert-info__item alert-info__item--full">
           <span class="alert-info__label">Mensagem:</span>
@@ -17,7 +15,6 @@
         </div>
       </div>
 
-      <!-- ORIGEM + NÍVEL -->
       <div class="alert-info__row">
         <div class="alert-info__item">
           <span class="alert-info__label">Origem:</span>
@@ -40,7 +37,6 @@
         </div>
       </div>
 
-      <!-- CRITÉRIO + REGIÃO -->
       <div class="alert-info__row">
         <div class="alert-info__item">
           <span class="alert-info__label">Critério:</span>
@@ -56,7 +52,6 @@
         </div>
       </div>
 
-      <!-- CRIADO EM + TEMPO DECORRIDO -->
       <div class="alert-info__row">
         <div class="alert-info__item">
           <span class="alert-info__label">
@@ -76,7 +71,6 @@
         </div>
       </div>
 
-      <!-- ZONA + RADAR -->
       <div class="alert-info__row">
         <div class="alert-info__item">
           <span class="alert-info__label">Zona:</span>
@@ -89,7 +83,6 @@
         </div>
       </div>
 
-      <!-- RADARES AFETADOS (MANAGER) -->
       <div v-if="userRole === 'manager' && alertDetails.affected_radars?.length" class="alert-info__affected-radars">
         <span class="alert-info__label mb-2">Radares Afetados:</span>
         <div class="alert-info__radar-chips">
@@ -107,12 +100,10 @@
         </div>
       </div>
 
-      <!-- DESCRIÇÃO -->
       <div v-if="alertDetails.description" class="alert-info__description">
         <span class="alert-info__label">Descrição:</span>
         <p class="alert-info__description-text">{{ alertDetails.description }}</p>
       </div>
-
     </v-card-text>
   </v-card>
 </template>
