@@ -16,23 +16,19 @@ interface Emits {
 defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-// Refs para as datas (objetos Date)
 const startDate = ref<Date | null>(null)
 const endDate = ref<Date | null>(null)
 const startTime = ref<string>('00:00')
 const endTime = ref<string>('23:59')
 
-// Refs para controlar a exibição dos pickers
 const showStartDatePicker = ref(false)
 const showEndDatePicker = ref(false)
 
-// Função para formatar data para exibição (dd/mm/yyyy)
 function formatDateDisplay(date: Date | null): string {
   if (!date) return ''
   return date.toLocaleDateString('pt-BR')
 }
 
-// Função para combinar data e hora em formato ISO
 function combineDateTime(date: Date | null, time: string): string {
   if (!date) return ''
 
@@ -66,248 +62,377 @@ function clearSelection() {
 </script>
 
 <template>
-  <div class="filter-bar">
-    <div class="filters">
-      <div class="filter-group">
-        <label>Data/hora inicial:</label>
-        <div class="date-time-container">
-          <v-menu v-model="showStartDatePicker" :close-on-content-click="false">
-            <template v-slot:activator="{ props }">
-              <v-text-field
-                v-bind="props"
-                :model-value="formatDateDisplay(startDate)"
-                label="Selecionar data"
-                prepend-inner-icon="mdi-calendar"
-                readonly
-                variant="outlined"
-                density="compact"
-                hide-details
-                placeholder="dd/mm/yyyy"
-              />
-            </template>
-            <v-date-picker
-              v-model="startDate"
-              @update:model-value="showStartDatePicker = false"
-              locale="pt-BR"
-              :display-date="formatDateDisplay(startDate)"
-            />
-          </v-menu>
-
-          <v-text-field
-            v-model="startTime"
-            label="Hora"
-            type="time"
-            prepend-inner-icon="mdi-clock-outline"
-            variant="outlined"
-            density="compact"
-            hide-details
-          />
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <label>Data/hora final:</label>
-        <div class="date-time-container">
-          <v-menu v-model="showEndDatePicker" :close-on-content-click="false">
-            <template v-slot:activator="{ props }">
-              <v-text-field
-                v-bind="props"
-                :model-value="formatDateDisplay(endDate)"
-                label="Selecionar data"
-                prepend-inner-icon="mdi-calendar"
-                readonly
-                variant="outlined"
-                density="compact"
-                hide-details
-                placeholder="dd/mm/yyyy"
-              />
-            </template>
-            <v-date-picker
-              v-model="endDate"
-              @update:model-value="showEndDatePicker = false"
-              locale="pt-BR"
-              :display-date="formatDateDisplay(endDate)"
-            />
-          </v-menu>
-
-          <v-text-field
-            v-model="endTime"
-            label="Hora"
-            type="time"
-            prepend-inner-icon="mdi-clock-outline"
-            variant="outlined"
-            density="compact"
-            hide-details
-          />
-        </div>
+  <div class="filter-container">
+    <div class="panel-header">
+      <div class="header-info">
+        <h2>Filtros</h2>
+        <span class="separator">|</span>
+        <p>Configure os filtros para visualizar dados específicos</p>
       </div>
     </div>
 
-    <div class="status">
-      <span v-if="selectedZones.length === 0 && filteredZones.length === 0"> Nenhuma zona selecionada </span>
-      <span v-else-if="selectedZones.length > 0"> Zonas (pré-seleção): {{ selectedZones.join(', ') }} </span>
-      <span v-else> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
-    </div>
+    <div class="filter-content">
+      <div class="datetime-row">
+        <div class="datetime-inputs">
+          <div class="filter-group">
+            <label>Data/hora inicial</label>
+            <div class="date-time-inputs">
+              <v-menu v-model="showStartDatePicker" :close-on-content-click="false">
+                <template v-slot:activator="{ props }">
+                  <input
+                    v-bind="props"
+                    :value="formatDateDisplay(startDate)"
+                    placeholder="Selecionar data"
+                    readonly
+                    class="date-input"
+                  />
+                </template>
+                <v-date-picker v-model="startDate" @update:model-value="showStartDatePicker = false" locale="pt-BR" />
+              </v-menu>
+              <input v-model="startTime" type="time" class="time-input" />
+            </div>
+          </div>
 
-    <div class="buttons">
-      <v-btn
-        @click="applyFilter"
-        :disabled="!selectedZones.length && !startDateTime && !endDateTime"
-        color="success"
-        variant="flat"
-        size="small"
-      >
-        Filtrar
-      </v-btn>
-      <v-btn
-        @click="clearSelection"
-        :disabled="!selectedZones.length && !filteredZones.length && !startDateTime && !endDateTime"
-        color="error"
-        variant="flat"
-        size="small"
-      >
-        Limpar
-      </v-btn>
-    </div>
-  </div>
+          <div class="filter-group">
+            <label>Data/hora final</label>
+            <div class="date-time-inputs">
+              <v-menu v-model="showEndDatePicker" :close-on-content-click="false">
+                <template v-slot:activator="{ props }">
+                  <input
+                    v-bind="props"
+                    :value="formatDateDisplay(endDate)"
+                    placeholder="Selecionar data"
+                    readonly
+                    class="date-input"
+                  />
+                </template>
+                <v-date-picker v-model="endDate" @update:model-value="showEndDatePicker = false" locale="pt-BR" />
+              </v-menu>
+              <input v-model="endTime" type="time" class="time-input" />
+            </div>
+          </div>
+        </div>
 
-  <div class="instructions">
-    ℹ️ Dê <b>dois cliques</b> em uma zona no mapa para selecioná-la antes de aplicar o filtro.
+        <div class="status-info">
+          <span v-if="selectedZones.length === 0 && filteredZones.length === 0" class="status-text">
+            Nenhuma zona selecionada
+          </span>
+          <span v-else-if="selectedZones.length > 0" class="status-text">
+            Zonas (pré-seleção): {{ selectedZones.join(', ') }}
+          </span>
+          <span v-else class="status-text"> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
+        </div>
+
+        <div class="action-buttons">
+          <button
+            @click="applyFilter"
+            :disabled="!selectedZones.length && !startDateTime && !endDateTime"
+            class="btn btn-primary"
+          >
+            Filtrar
+          </button>
+          <button
+            @click="clearSelection"
+            :disabled="!selectedZones.length && !filteredZones.length && !startDateTime && !endDateTime"
+            class="btn btn-secondary"
+          >
+            Limpar
+          </button>
+        </div>
+      </div>
+
+      <div class="instructions-banner">
+        <span class="info-icon">ℹ️</span>
+        Dê <strong>dois cliques</strong> em uma zona no mapa para selecioná-la antes de aplicar o filtro.
+      </div>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.filter-bar {
+.filter-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.panel-header {
+  margin-bottom: 16px;
+
+  .header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    color: #1f2937;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .separator {
+    color: #d1d5db;
+    font-size: 1.2rem;
+  }
+
+  p {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin: 0;
+  }
+}
+
+.filter-content {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.datetime-row {
+  display: flex;
+  align-items: stretch;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: #f3f4f6;
-  border-bottom: 1px solid #ddd;
-  border-radius: 6px 6px 0 0;
-  gap: 1rem;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-height: 80px;
+}
 
-  .filters {
-    display: flex;
-    gap: 1.5rem;
-    align-items: flex-end;
+.datetime-inputs {
+  display: flex;
+  gap: 16px;
+  align-self: flex-end;
+}
 
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      font-size: 0.85rem;
-      min-width: 300px;
+.filter-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
 
-      label {
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-        color: #374151;
-        font-size: 0.9rem;
-      }
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 
-      .date-time-container {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-
-        :deep(.v-input) {
-          flex: 1;
-        }
-
-        :deep(.v-field) {
-          background-color: white;
-        }
-
-        :deep(.v-field__input) {
-          font-size: 0.875rem;
-        }
-
-        // Campo de data maior que o de hora
-        :deep(.v-menu > .v-input) {
-          min-width: 180px;
-        }
-
-        // Campo de hora menor
-        :deep(.v-input:last-child) {
-          min-width: 120px;
-        }
-      }
-    }
+  label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 2px;
   }
 
-  .status {
-    font-size: 0.9rem;
-    color: #333;
-    flex: 1;
-    text-align: center;
-    margin: 0 1rem;
-  }
-
-  .buttons {
+  .date-time-inputs {
     display: flex;
-    gap: 0.5rem;
+    gap: 6px;
     align-items: center;
   }
+
+  .date-input,
+  .time-input {
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    font-family: inherit;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: #00963e;
+      box-shadow: 0 0 0 2px rgba(0, 150, 62, 0.1);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+
+    &[readonly] {
+      cursor: pointer;
+      background: white;
+    }
+  }
+
+  .date-input {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .time-input {
+    min-width: 100px;
+  }
 }
 
-.instructions {
-  background: #e0f2fe;
-  color: #0369a1;
-  text-align: center;
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.status-info {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+
+  .status-text {
+    font-size: 0.85rem;
+    color: #374151;
+    font-weight: 500;
+    text-align: center;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+.instructions-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #1e40af;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  background: #f0f9ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+
+  .info-icon {
+    font-size: 1rem;
+  }
+
+  strong {
+    color: #1e3a8a;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
   font-size: 0.9rem;
-  padding: 0.5rem;
-  border-radius: 0 0 6px 6px;
-  border: 1px solid #b3e0ff;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  &-primary {
+    background: linear-gradient(135deg, #00c853 0%, #00963e 100%);
+    color: white;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0, 150, 62, 0.3);
+    }
+  }
+
+  &-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+
+    &:hover:not(:disabled) {
+      background: #e5e7eb;
+    }
+  }
 }
 
-// Estilização do date picker
-:deep(.v-date-picker) {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
+.instructions-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #1e40af;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  background: #f0f9ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
 
-// Responsividade
-@media (max-width: 1200px) {
-  .filter-bar {
-    .filters {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 1rem;
+  .info-icon {
+    font-size: 1rem;
+  }
 
-      .filter-group {
-        min-width: auto;
-      }
-    }
-
-    .status {
-      margin: 0.5rem 0;
-    }
+  strong {
+    color: #1e3a8a;
   }
 }
 
 @media (max-width: 768px) {
-  .filter-bar {
+  .filter-container {
+    padding: 12px;
+  }
+
+  .datetime-row {
     flex-direction: column;
     align-items: stretch;
-    gap: 1rem;
+    gap: 12px;
+  }
 
-    .filters .filter-group .date-time-container {
-      flex-direction: column;
-      gap: 0.75rem;
+  .filter-group .date-time-inputs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
 
-      :deep(.v-input) {
-        width: 100%;
-        min-width: auto;
-      }
+    .date-input,
+    .time-input {
+      min-width: auto;
+      width: 100%;
     }
+  }
 
-    .buttons {
+  .info-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .action-buttons {
+    justify-content: stretch;
+    gap: 6px;
+
+    .btn {
+      flex: 1;
       justify-content: center;
-      gap: 1rem;
+    }
+  }
 
-      :deep(.v-btn) {
-        flex: 1;
-      }
+  .instructions-banner {
+    justify-content: center;
+  }
+
+  .panel-header .header-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+
+    .separator {
+      display: none;
     }
   }
 }

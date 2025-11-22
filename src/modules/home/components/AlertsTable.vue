@@ -1,79 +1,95 @@
 <template>
-  <div class="alerts-table-container">
-    <div class="table-header">
-      <h3>Top Alertas Mais Críticos ({{ filteredAlerts.length }})</h3>
-    </div>
-
-    <div class="filters-section">
-      <div class="filters">
-        <div class="filter-item">
-          <label>Filtrar por tipo:</label>
-          <select :value="selectedCriterion" @change="onCriterionChange">
-            <option value="">Todos os tipos</option>
-            <option v-for="criterion in criteria" :key="criterion.id" :value="criterion.id">
-              {{ criterion.name }}
-            </option>
-          </select>
-        </div>
-
-        <div class="filter-item">
-          <label>Filtrar por nível:</label>
-          <select :value="selectedLevel" @change="onLevelChange">
-            <option value="">Todos os níveis</option>
-            <option v-for="level in [1, 2, 3, 4, 5]" :key="level" :value="level">Nível {{ level }}</option>
-          </select>
-        </div>
+  <div class="alerts-container">
+    <div class="panel-header">
+      <div class="header-info">
+        <h2>Top Alertas Mais Críticos</h2>
+        <span class="separator">|</span>
+        <p>{{ filteredAlerts.length }} alerta(s) encontrado(s)</p>
       </div>
     </div>
 
-    <table class="alerts-table" v-if="filteredAlerts.length > 0">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Tipo</th>
-          <th @click="emit('toggleSort')" class="sortable">
-            Nível
-            <span>{{ sortDirection === 'desc' ? '↓' : '↑' }}</span>
-          </th>
-          <th>Mensagem</th>
-          <th>Data/Hora</th>
-          <th>Status</th>
-        </tr>
-      </thead>
+    <div class="filters-section">
+      <div class="filter-group">
+        <label>Filtrar por tipo:</label>
+        <select :value="selectedCriterion" @change="onCriterionChange" class="filter-select">
+          <option value="">Todos os tipos</option>
+          <option v-for="criterion in criteria" :key="criterion.id" :value="criterion.id">
+            {{ criterion.name }}
+          </option>
+        </select>
+      </div>
 
-      <tbody>
-        <tr v-for="item in filteredAlerts" :key="item.id">
-          <td>{{ item.id }}</td>
-          <td>{{ item.indicator || item.criterionName || 'N/A' }}</td>
-          <td>
-            <span class="badge" :class="`badge-nivel-${item.newLevel || item.level}`">
-              Nível {{ item.newLevel || item.level }}
-            </span>
-          </td>
-          <td class="message-cell">
-            <span v-if="!isExpanded(item.id)" class="message-truncated">
-              {{ truncateMessage(item.message || item.location || 'Sem mensagem') }}
-            </span>
-            <span v-else>{{ item.message || item.location || 'Sem mensagem' }}</span>
-            <button
-              v-if="(item.message || item.location) && (item.message || item.location || '').length > 80"
-              @click="toggleMessageExpand(item.id)"
-              class="expand-btn"
-            >
-              {{ isExpanded(item.id) ? 'Menos' : 'Mais' }}
-            </button>
-          </td>
-          <td class="date-cell">{{ formatFullDate(item.timestamp || item.createdAt) }}</td>
-          <td>{{ item.finalized ? 'Finalizado' : 'Ativo' }}</td>
-        </tr>
-      </tbody>
-    </table>
+      <div class="filter-group">
+        <label>Filtrar por nível:</label>
+        <select :value="selectedLevel" @change="onLevelChange" class="filter-select">
+          <option value="">Todos os níveis</option>
+          <option v-for="level in [1, 2, 3, 4, 5]" :key="level" :value="level">Nível {{ level }}</option>
+        </select>
+      </div>
+    </div>
 
-    <p v-else class="no-data">
-      {{
-        loading ? 'Carregando...' : `Nenhum alerta encontrado${selectedLevel ? ' para este nível de criticidade' : ''}.`
-      }}
-    </p>
+    <div v-if="filteredAlerts.length === 0" class="empty-state">
+      <span class="empty-icon">📊</span>
+      <p>
+        {{
+          loading
+            ? 'Carregando alertas...'
+            : `Nenhum alerta encontrado${selectedLevel ? ' para este nível de criticidade' : ''}.`
+        }}
+      </p>
+    </div>
+
+    <div v-else class="table-container">
+      <table class="alerts-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th @click="emit('toggleSort')" class="sortable">
+              Nível
+              <span class="sort-icon">{{ sortDirection === 'desc' ? '↓' : '↑' }}</span>
+            </th>
+            <th>Mensagem</th>
+            <th>Data/Hora</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in filteredAlerts" :key="item.id" class="table-row">
+            <td class="id-cell">{{ item.id }}</td>
+            <td class="type-cell">{{ item.indicator || item.criterionName || 'N/A' }}</td>
+            <td class="level-cell">
+              <span class="badge" :class="`badge-nivel-${item.newLevel || item.level}`">
+                Nível {{ item.newLevel || item.level }}
+              </span>
+            </td>
+            <td class="message-cell">
+              <div class="message-content">
+                <span v-if="!isExpanded(item.id)" class="message-text">
+                  {{ truncateMessage(item.message || item.location || 'Sem mensagem') }}
+                </span>
+                <span v-else class="message-text">
+                  {{ item.message || item.location || 'Sem mensagem' }}
+                </span>
+                <button
+                  v-if="(item.message || item.location) && (item.message || item.location || '').length > 80"
+                  @click="toggleMessageExpand(item.id)"
+                  class="expand-btn"
+                >
+                  {{ isExpanded(item.id) ? 'Menos' : 'Mais' }}
+                </button>
+              </div>
+            </td>
+            <td class="date-cell">{{ formatFullDate(item.timestamp || item.createdAt) }}</td>
+            <td class="status-cell">
+              <span :class="['status-badge', item.finalized ? 'status-finalized' : 'status-active']">
+                {{ item.finalized ? 'Finalizado' : 'Ativo' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
@@ -165,181 +181,312 @@ function formatFullDate(dateString: string): string {
 </script>
 
 <style lang="scss" scoped>
-.alerts-table-container {
+.alerts-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
   flex: 1;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+}
 
-  .table-header {
-    margin-bottom: 16px;
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 20px;
 
-    h3 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #1f2937;
-    }
+  .header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
-  .filters-section {
-    .filters {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-      padding: 16px;
-      background: #f8fafc;
-      border-radius: 8px;
-    }
-
-    .filter-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      label {
-        font-size: 14px;
-        font-weight: 500;
-        color: #374151;
-      }
-
-      select {
-        padding: 8px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 14px;
-        cursor: pointer;
-        background: white;
-        min-width: 180px;
-
-        &:focus {
-          outline: none;
-          border-color: #10b981;
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-      }
-    }
+  h2 {
+    font-size: 1.5rem;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+    font-weight: 600;
   }
 
-  .alerts-table {
-    flex: 1;
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    font-size: 14px;
+  .separator {
+    color: #d1d5db;
+    font-size: 1.2rem;
+  }
 
-    th,
-    td {
-      padding: 6px 12px;
-      text-align: left;
-      border-bottom: 1px solid #e5e7eb;
-      vertical-align: middle;
-    }
+  p {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+  }
+}
 
-    tr {
-      height: auto;
-    }
+.filters-section {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 
-    th {
-      background: #f9fafb;
-      font-weight: 600;
-      font-size: 12px;
-      white-space: nowrap;
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 500;
       color: #374151;
-      padding: 8px 12px;
     }
 
-    .sortable {
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: white;
+      cursor: pointer;
+      min-width: 180px;
+      transition: all 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: #00963e;
+        box-shadow: 0 0 0 3px rgba(0, 150, 62, 0.1);
+      }
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 2px dashed #e5e7eb;
+
+  .empty-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: #6b7280;
+    margin: 8px 0;
+    font-size: 1rem;
+  }
+}
+
+.table-container {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.alerts-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 0.9rem;
+
+  th {
+    background: #f9fafb;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+
+    &.sortable {
       cursor: pointer;
       user-select: none;
+      transition: background-color 0.2s;
 
       &:hover {
         background: #f3f4f6;
       }
 
-      span {
+      .sort-icon {
         margin-left: 4px;
+        color: #00963e;
+        font-weight: bold;
       }
     }
+  }
 
-    .message-cell {
-      max-width: 300px;
+  .table-row {
+    transition: background-color 0.2s;
 
-      .expand-btn {
-        background: none;
-        border: none;
-        color: #10b981;
-        cursor: pointer;
-        padding: 1px 4px;
-        margin-left: 4px;
-        font-size: 11px;
-        border-radius: 3px;
-
-        &:hover {
-          background: #f0fdf4;
-        }
-      }
-    }
-
-    .date-cell {
-      white-space: nowrap;
-      color: #6b7280;
-      font-size: 12px;
-    }
-
-    .badge {
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 600;
-      display: inline-block;
-      white-space: nowrap;
-
-      &.badge-nivel-1 {
-        background: #10b981;
-        color: white;
-      }
-
-      &.badge-nivel-2 {
-        background: #7af957;
-        color: #333;
-      }
-
-      &.badge-nivel-3 {
-        background: #edef56;
-        color: #333;
-      }
-
-      &.badge-nivel-4 {
-        background: #f59e0b;
-        color: white;
-      }
-
-      &.badge-nivel-5 {
-        background: #ef4444;
-        color: white;
-      }
-    }
-
-    tbody tr:hover {
+    &:hover {
       background: #f9fafb;
     }
 
-    tbody tr:last-child td {
+    &:last-child td {
       border-bottom: none;
     }
   }
 
-  .no-data {
-    text-align: center;
-    padding: 40px 20px;
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+  }
+
+  .id-cell {
+    font-weight: 600;
+    color: #374151;
+    width: 80px;
+  }
+
+  .type-cell {
     color: #6b7280;
-    font-size: 14px;
-    font-style: italic;
-    margin: 0;
+    max-width: 150px;
+  }
+
+  .level-cell {
+    width: 120px;
+  }
+
+  .message-cell {
+    max-width: 300px;
+
+    .message-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .message-text {
+      flex: 1;
+      color: #374151;
+      line-height: 1.4;
+    }
+
+    .expand-btn {
+      background: none;
+      border: none;
+      color: #00963e;
+      cursor: pointer;
+      padding: 2px 6px;
+      font-size: 0.8rem;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      flex-shrink: 0;
+
+      &:hover {
+        background: #f0fdf4;
+      }
+    }
+  }
+
+  .date-cell {
+    color: #6b7280;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    min-width: 120px;
+  }
+
+  .status-cell {
+    width: 100px;
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.badge-nivel-1 {
+    background: #10b981;
+    color: white;
+  }
+
+  &.badge-nivel-2 {
+    background: #7af957;
+    color: #333;
+  }
+
+  &.badge-nivel-3 {
+    background: #edef56;
+    color: #333;
+  }
+
+  &.badge-nivel-4 {
+    background: #f59e0b;
+    color: white;
+  }
+
+  &.badge-nivel-5 {
+    background: #ef4444;
+    color: white;
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.status-active {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  &.status-finalized {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+}
+
+@media (max-width: 768px) {
+  .filters-section {
+    flex-direction: column;
+    gap: 16px;
+
+    .filter-group .filter-select {
+      min-width: auto;
+    }
+  }
+
+  .alerts-table {
+    font-size: 0.8rem;
+
+    th,
+    td {
+      padding: 8px;
+    }
+
+    .message-cell {
+      max-width: 200px;
+    }
+  }
+
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .header-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+
+      .separator {
+        display: none;
+      }
+    }
   }
 }
 </style>

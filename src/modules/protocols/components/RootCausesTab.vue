@@ -40,13 +40,15 @@ const emit = defineEmits<Emits>()
         <div class="item-content">
           <div class="item-main">
             <div class="item-header-row">
-              <h3>{{ causa.nome }}</h3>
+              <h3>{{ causa.name }}</h3>
               <span :class="['badge', causa.ativo ? 'badge-success' : 'badge-inactive']">
                 {{ causa.ativo ? 'Ativo' : 'Inativo' }}
               </span>
             </div>
-            <p class="item-info"><strong>Critério:</strong> {{ causa.criterioNome }}</p>
-            <p class="item-info"><strong>Protocolos associados:</strong> {{ causa.protocolosIds.length }}</p>
+            <p class="item-info" v-if="causa.description"><strong>Descrição:</strong> {{ causa.description }}</p>
+            <p class="item-info" v-if="causa.protocolName">
+              <strong>Protocolo associado:</strong> {{ causa.protocolName }}
+            </p>
           </div>
           <div class="item-actions">
             <button

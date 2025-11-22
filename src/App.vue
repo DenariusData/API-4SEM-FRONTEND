@@ -4,19 +4,48 @@ import LoginPopup from './modules/login/LoginPopup.vue'
 import NotificationDropdown from './modules/alerts/components/NotificationDropdown.vue'
 import UserAuth from './modules/login/components/UserAuth.vue'
 import sharedServices from '@/shared/services/sharedServices.ts'
-import { ref, onMounted, computed } from 'vue'
-import { RouterView } from 'vue-router'
+import { ref, onMounted, computed, watch } from 'vue'
+import { RouterView, useRouter, useRoute } from 'vue-router'
 import { useRoleStore } from '@/modules/login/store/roleStore'
 
 const menu = ref(false)
 const showLogin = ref(false)
 const roleStore = useRoleStore()
+const router = useRouter()
+const route = useRoute()
 const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
 
 const isLoggedIn = computed(() => roleStore.isAuthenticated)
 
+watch(isLoggedIn, (newIsLoggedIn, oldIsLoggedIn) => {
+  if (oldIsLoggedIn && !newIsLoggedIn) {
+    const currentRoute = route.meta
+    if (
+      currentRoute?.requiresAuth ||
+      currentRoute?.requiresAdmin ||
+      currentRoute?.requiresGestor ||
+      currentRoute?.requiresAgente
+    ) {
+      router.push({ name: 'home' })
+    }
+  }
+})
+
 const checkLoginStatus = () => {
   roleStore.role
+}
+
+const handleLogout = () => {
+  checkLoginStatus()
+  const currentRoute = route.meta
+  if (
+    currentRoute?.requiresAuth ||
+    currentRoute?.requiresAdmin ||
+    currentRoute?.requiresGestor ||
+    currentRoute?.requiresAgente
+  ) {
+    router.push({ name: 'home' })
+  }
 }
 
 const openLogin = () => {
@@ -41,14 +70,14 @@ onMounted(() => {
         <img src="../public/radariustxt.svg" alt="Logo" class="logo" />
       </div>
 
-      <AutoCompleteMenu v-model="menu" />
+      <AutoCompleteMenu v-model="menu" :key="`menu-${roleStore.role}-${roleStore.token ? 'logged' : 'guest'}`" />
 
       <v-spacer></v-spacer>
 
       <div class="actions">
         <v-btn v-if="showRoutineButton" icon="mdi-refresh" variant="text" color="black" @click="updateDatabase"></v-btn>
         <NotificationDropdown />
-        <UserAuth :is-logged-in="isLoggedIn" @login="openLogin" @logout="checkLoginStatus" />
+        <UserAuth :is-logged-in="isLoggedIn" @login="openLogin" @logout="handleLogout" />
       </div>
     </v-app-bar>
 

@@ -1,19 +1,21 @@
 import api from '@/utils/servicesUtils'
 
-interface RootCauseBackendDTO {
+export interface RootCauseBackendDTO {
   id: number
   name: string
   description: string
   createdAt: string
   personName: string
+  protocolName?: string
 }
 
-interface ProtocolBackendDTO {
+export interface ProtocolBackendDTO {
   id: number
   name: string
   description: string
   createdAt: string
   createdByName: string
+  causaRaizId?: number
 }
 
 interface RootCauseRequestDTO {
@@ -26,6 +28,7 @@ interface ProtocolRequestDTO {
   name: string
   description: string
   createdBy: number
+  causaRaizId: number
 }
 
 const protocols = {
