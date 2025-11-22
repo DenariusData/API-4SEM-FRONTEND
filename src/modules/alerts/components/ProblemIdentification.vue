@@ -143,7 +143,7 @@ const onProblemSelected = async (problemId: number) => {
   try {
     isLoadingProtocol.value = true
     const response = await protocolsServices.getProtocolByRootCause(problemId)
-    protocol.value = response.data.length > 0 ? response.data[0] : null
+    protocol.value = response.data
   } catch (err) {
     console.error('Error fetching protocol:', err)
     protocol.value = null
@@ -186,6 +186,10 @@ const onProblemSelected = async (problemId: number) => {
     gap: 12px;
     padding: 24px;
     justify-content: center;
+  }
+
+  &__protocol {
+    padding: 16px 0;
   }
 
   &__protocol-title {

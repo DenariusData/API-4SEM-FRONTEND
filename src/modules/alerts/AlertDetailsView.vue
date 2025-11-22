@@ -17,7 +17,11 @@
     </div>
 
     <div v-else-if="alertDetails" class="alert-details__content">
-      <AlertInformation :alert-details="alertDetails" :user-role="userRole" />
+      <div v-if="isLoadingAlertDetails" class="alert-details__loading">
+        <v-progress-circular indeterminate size="48" color="primary"></v-progress-circular>
+        <p>Carregando detalhes do alerta...</p>
+      </div>
+      <AlertInformation v-else :alert-details="alertDetails" :user-role="userRole" />
 
       <div v-if="userRole === 'agent' && !alertDetails.finalized" class="alert-details__agent-section">
         <InitialGuidelines :radar-id="alertDetails.radar_id" :location="alertDetails.location || ''" />
@@ -124,6 +128,7 @@ const selectedAgent = ref<number | null>(null)
 const resolutionNotes = ref('')
 
 const isLoading = ref(true)
+const isLoadingAlertDetails = ref(false)
 const error = ref<string | null>(null)
 
 let updateInterval: number | null = null
@@ -145,7 +150,7 @@ const managerContactPhone = '5512999999999'
 
 const fetchAlertDetails = async () => {
   try {
-    isLoading.value = true
+    isLoadingAlertDetails.value = true
     error.value = null
 
     const alertId = Number(props.id)
@@ -155,7 +160,7 @@ const fetchAlertDetails = async () => {
     error.value = 'Erro ao carregar detalhes do alerta'
     console.error('Erro ao buscar detalhes do alerta:', err)
   } finally {
-    isLoading.value = false
+    isLoadingAlertDetails.value = false
   }
 }
 
@@ -230,6 +235,7 @@ const goBack = () => {
 }
 
 onMounted(async () => {
+  isLoading.value = true
   await fetchAlertDetails()
 
   if (userRole.value === 'agent') {
@@ -237,6 +243,7 @@ onMounted(async () => {
   } else {
     await fetchAgents()
   }
+  isLoading.value = false
 
   updateInterval = window.setInterval(() => {
     fetchAlertDetails()

@@ -29,8 +29,7 @@ interface ProtocolRequestDTO {
 }
 
 const protocols = {
-  getAllRootCauses: (): Promise<{ data: RootCauseBackendDTO[] }> =>
-    api.get('/root-causes'),
+  getAllRootCauses: (): Promise<{ data: RootCauseBackendDTO[] }> => api.get('/root-causes'),
 
   createRootCause: (data: RootCauseRequestDTO): Promise<{ data: RootCauseBackendDTO }> =>
     api.post('/root-causes', data),
@@ -38,26 +37,21 @@ const protocols = {
   updateRootCause: (id: number, data: RootCauseRequestDTO): Promise<{ data: RootCauseBackendDTO }> =>
     api.put(`/root-causes/${id}`, data),
 
-  deleteRootCause: (id: number): Promise<void> =>
-    api.delete(`/root-causes/${id}`),
+  deleteRootCause: (id: number): Promise<void> => api.delete(`/root-causes/${id}`),
 
-  getAllProtocols: (): Promise<{ data: ProtocolBackendDTO[] }> =>
-    api.get('/protocols'),
+  getAllProtocols: (): Promise<{ data: ProtocolBackendDTO[] }> => api.get('/protocols'),
 
-  getProtocolByRootCause: (rootCauseId: number): Promise<{ data: ProtocolBackendDTO[] }> =>
+  getProtocolByRootCause: (rootCauseId: number): Promise<{ data: ProtocolBackendDTO }> =>
     api.get(`/protocols/root-cause/${rootCauseId}`),
 
-  getProtocolById: (id: number): Promise<{ data: ProtocolBackendDTO }> =>
-    api.get(`/protocols/${id}`),
+  getProtocolById: (id: number): Promise<{ data: ProtocolBackendDTO }> => api.get(`/protocols/${id}`),
 
-  createProtocol: (data: ProtocolRequestDTO): Promise<{ data: ProtocolBackendDTO }> =>
-    api.post('/protocols', data),
+  createProtocol: (data: ProtocolRequestDTO): Promise<{ data: ProtocolBackendDTO }> => api.post('/protocols', data),
 
   updateProtocol: (id: number, data: ProtocolRequestDTO): Promise<{ data: ProtocolBackendDTO }> =>
     api.put(`/protocols/${id}`, data),
 
-  deleteProtocol: (id: number): Promise<void> =>
-    api.delete(`/protocols/${id}`),
+  deleteProtocol: (id: number): Promise<void> => api.delete(`/protocols/${id}`),
 }
 
 export default protocols
