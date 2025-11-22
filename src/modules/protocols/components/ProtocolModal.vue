@@ -67,7 +67,7 @@ const updatePasso = (index: number, value: string) => {
           >
             <option value="">Selecione uma causa raiz</option>
             <option v-for="c in causas.filter((c) => c.ativo)" :key="c.id" :value="c.id">
-              {{ c.nome }} ({{ c.criterioNome }})
+              {{ c.name }}
             </option>
           </select>
           <small>Apenas causas ativas estão disponíveis</small>

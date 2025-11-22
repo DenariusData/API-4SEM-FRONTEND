@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import type { Criterio, FormCausa } from '@/modules/protocols/types/ProtocolsTypes'
+import type { FormCausa } from '@/modules/protocols/types/ProtocolsTypes'
 
 interface Props {
   show: boolean
   formData: FormCausa
-  criteria: Criterio[]
   isEditing: boolean
 }
 
@@ -34,8 +33,8 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
         <div class="form-group">
           <label>Nome da Causa Raiz *</label>
           <input
-            :value="formData.nome"
-            @input="updateField('nome', ($event.target as HTMLInputElement).value)"
+            :value="formData.name"
+            @input="updateField('name', ($event.target as HTMLInputElement).value)"
             type="text"
             placeholder="Ex: Acidente de Trânsito"
           />
