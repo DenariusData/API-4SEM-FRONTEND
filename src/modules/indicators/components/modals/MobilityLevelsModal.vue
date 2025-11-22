@@ -127,8 +127,9 @@ defineExpose({
     color: white !important;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 24px 32px;
+    gap: 12px;
   }
 
   &__title {
@@ -136,6 +137,7 @@ defineExpose({
     font-size: 1.6rem;
     font-weight: 600;
     color: white;
+    text-wrap: wrap;
   }
 
   &__close-btn {
