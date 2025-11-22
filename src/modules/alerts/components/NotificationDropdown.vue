@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import alertServices from '@/modules/alerts/services/alertServices'
 import type { Alert } from '@/modules/alerts/types/alertsTypes'
 import { LEVELS_ENUM } from '@/shared/enums'
@@ -24,6 +24,24 @@ const alertsCount = computed(() =>
     return alert.finalized ? count : count + 1
   }, 0),
 )
+
+watch(isAuthorized, (newIsAuthorized) => {
+  if (!newIsAuthorized) {
+    alerts.value = []
+    error.value = null
+    isOpen.value = false
+
+    if (unregisterNotificationTask) {
+      unregisterNotificationTask()
+      unregisterNotificationTask = null
+    }
+  } else {
+    fetchAlerts()
+    if (!unregisterNotificationTask) {
+      unregisterNotificationTask = registerPeriodicTask(fetchAlerts)
+    }
+  }
+})
 
 const levelColors = {
   1: '#4CAF50',

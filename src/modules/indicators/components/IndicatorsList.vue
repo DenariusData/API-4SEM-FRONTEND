@@ -41,22 +41,45 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="indicators-list">
-    <div v-if="isLoading" class="indicators-list__loading">Carregando indicadores...</div>
-
-    <div v-else-if="error" class="indicators-list__error">
-      {{ error }}
+  <div class="indicators-container">
+    <div class="panel-header">
+      <div>
+        <h2>Indicadores</h2>
+        <p>Lista de todos os indicadores de mobilidade urbana</p>
+      </div>
     </div>
 
-    <div v-else v-for="(indicator, index) in indicators" :key="indicator.id" class="indicators-list__card">
-      <div class="indicators-list__content">
-        <h3 class="indicators-list__title">{{ index + 1 }}. {{ indicator.name }}</h3>
-        <div class="indicators-list__details">
-          <p class="indicators-list__description">{{ indicator.description }}</p>
-          <div class="indicators-list__example"><strong>Exemplo:</strong> {{ indicator.example }}</div>
-          <div class="indicators-list__math"><strong>Fórmula:</strong> {{ indicator.mathExpression }}</div>
+    <div v-if="isLoading" class="loading-state">
+      <p>Carregando indicadores...</p>
+    </div>
+
+    <div v-else-if="error" class="error-state">
+      <span class="error-icon">⚠</span>
+      <p>{{ error }}</p>
+    </div>
+
+    <div v-else-if="indicators.length === 0" class="empty-state">
+      <span class="empty-icon">📊</span>
+      <p>Nenhum indicador encontrado</p>
+    </div>
+
+    <div v-else class="items-grid">
+      <div v-for="(indicator, index) in indicators" :key="indicator.id" class="item-card">
+        <div class="item-content">
+          <div class="item-main">
+            <div class="item-header-row">
+              <h3>{{ index + 1 }}. {{ indicator.name }}</h3>
+            </div>
+            <p class="item-description">{{ indicator.description }}</p>
+            <div class="item-details">
+              <div class="detail-box example-box"><strong>Exemplo:</strong> {{ indicator.example }}</div>
+              <div class="detail-box formula-box"><strong>Fórmula:</strong> {{ indicator.mathExpression }}</div>
+            </div>
+          </div>
+          <div class="item-actions">
+            <button @click="showMobilityLevels(indicator)" class="btn btn-primary">Ver Detalhes</button>
+          </div>
         </div>
-        <button class="indicators-list__btn" @click="showMobilityLevels(indicator)">Ver Detalhes</button>
       </div>
     </div>
 
@@ -65,124 +88,213 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.indicators-list {
+.indicators-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 20px;
+
+  h2 {
+    font-size: 1.5rem;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+    font-weight: 600;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+  }
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  border-radius: 8px;
+  border: 2px dashed #e5e7eb;
+
+  p {
+    color: #6b7280;
+    margin: 8px 0;
+    font-size: 1rem;
+  }
+}
+
+.loading-state {
+  background: #f9fafb;
+}
+
+.error-state {
+  background: #fef2f2;
+  border-color: #fecaca;
+
+  .error-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 16px;
+    color: #dc2626;
+  }
+
+  p {
+    color: #dc2626;
+  }
+}
+
+.empty-state {
+  background: #f9fafb;
+
+  .empty-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 16px;
+  }
+}
+
+.items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 20px;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
+}
 
-  &__card {
-    background: white;
-    border-radius: 24px;
-    padding: 32px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: 2px solid transparent;
-    overflow: hidden;
+.item-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.2s;
 
-    &:hover {
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-      border-color: #00c853;
-    }
-
-    @media (max-width: 768px) {
-      padding: 24px;
-    }
-
-    @media (max-width: 480px) {
-      padding: 20px;
-    }
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #d1d5db;
   }
 
-  &__content {
+  .item-content {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 24px;
+    gap: 16px;
     height: 100%;
   }
 
-  &__title {
-    font-size: 1.5rem;
+  .item-main {
+    flex: 1;
+  }
+
+  .item-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    font-size: 1.15rem;
     color: #1f2937;
+    margin: 0;
     font-weight: 600;
   }
 
-  &__details {
+  .item-description {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 6px 0 16px 0;
+    line-height: 1.6;
+  }
+
+  .item-details {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     gap: 12px;
-    flex-grow: 1;
   }
 
-  &__description {
-    color: #6b7280;
-    line-height: 1.6;
-    font-size: 1.05rem;
-  }
+  .detail-box {
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    line-height: 1.5;
 
-  &__example,
-  &__math {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f7fa 100%);
-    border: 1px solid #bfdbfe;
-    border-radius: 16px;
-    padding: 16px;
-    font-size: 0.95rem;
-    color: #1e40af;
-    line-height: 1.6;
-    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.1);
-  }
-
-  &__math {
-    background: linear-gradient(135deg, #f4f4f4 0%, #e0e0e0 100%);
-    border: 1px solid #bdbdbd;
-    color: #4d4d4d;
-    box-shadow: 0 2px 8px rgba(77, 77, 77, 0.1);
-  }
-
-  &__btn {
-    display: inline-block;
-    background: linear-gradient(135deg, #00c853 0%, #00963e 100%);
-    color: white;
-    padding: 14px 28px;
-    border-radius: 16px;
-    font-size: 1rem;
-    font-weight: 600;
-    text-decoration: none;
-    box-shadow: 0 6px 16px rgba(0, 200, 83, 0.3);
-    transition: all 0.2s ease;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0, 200, 83, 0.4);
+    strong {
+      color: inherit;
+      margin-right: 4px;
     }
   }
 
-  &__loading,
-  &__error {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 40px;
-    border-radius: 16px;
-    font-size: 1.1rem;
-    font-weight: 500;
-  }
-
-  &__loading {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f7fa 100%);
-    color: #1e40af;
+  .example-box {
+    background: #f0f9ff;
     border: 1px solid #bfdbfe;
+    color: #1e40af;
   }
 
-  &__error {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-    color: #dc2626;
-    border: 1px solid #fecaca;
+  .formula-box {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #374151;
+  }
+
+  .item-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &-primary {
+    background: linear-gradient(135deg, #00c853 0%, #00963e 100%);
+    color: white;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 150, 62, 0.3);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .items-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .item-card {
+    .item-actions {
+      justify-content: stretch;
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   }
 }
 </style>

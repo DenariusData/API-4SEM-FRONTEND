@@ -1,299 +1,260 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue'
 import type {
   CausaRaiz,
   Protocolo,
-  Criterio,
   Alert,
   FormCausa,
   FormProtocolo,
   ModalType,
-  TabType
-} from '@/modules/protocols/types/protocolsTypes';
+  TabType,
+} from '@/modules/protocols/types/ProtocolsTypes'
 import {
   initialFormCausa,
   initialFormProtocolo,
-  mapRootCauseToFrontend,
   mapProtocolToFrontend,
   mapCausaToBackend,
-  mapProtocoloToBackend
-} from '@/modules/protocols/types/ProtocolsTypes';
-import {
-  mockCriterios
-} from '@/modules/protocols/mock/routes/protocolRoutes';
-import protocolsService from '@/modules/protocols/services/protocolsServices';
+  mapProtocoloToBackend,
+} from '@/modules/protocols/types/ProtocolsTypes'
+import protocolsService from '@/modules/protocols/services/protocolsServices'
+import type { RootCauseBackendDTO } from '@/modules/protocols/services/protocolsServices'
 
-import AlertMessage from '@/modules/protocols/components/AlertMessage.vue';
-import RootCausesTab from '@/modules/protocols/components/RootCausesTab.vue';
-import ProtocolsTab from '@/modules/protocols/components/ProtocolsTab.vue';
-import RootCauseModal from '@/modules/protocols/components/RootCauseModal.vue';
-import ProtocolModal from '@/modules/protocols/components/ProtocolModal.vue';
+import AlertMessage from '@/modules/protocols/components/AlertMessage.vue'
+import RootCausesTab from '@/modules/protocols/components/RootCausesTab.vue'
+import ProtocolsTab from '@/modules/protocols/components/ProtocolsTab.vue'
+import RootCauseModal from '@/modules/protocols/components/RootCauseModal.vue'
+import ProtocolModal from '@/modules/protocols/components/ProtocolModal.vue'
 
-const activeTab = ref<TabType>('causas');
-const showModal = ref(false);
-const modalType = ref<ModalType>('causa');
-const editingItem = ref<CausaRaiz | Protocolo | null>(null);
-const showAlert = ref<Alert | null>(null);
-const isLoading = ref(false);
+const activeTab = ref<TabType>('causas')
+const showModal = ref(false)
+const modalType = ref<ModalType>('causa')
+const editingItem = ref<CausaRaiz | Protocolo | null>(null)
+const showAlert = ref<Alert | null>(null)
+const isLoading = ref(false)
 
-const causasRaiz = ref<CausaRaiz[]>([]);
-const protocolos = ref<Protocolo[]>([]);
-const criterios = ref<Criterio[]>(JSON.parse(JSON.stringify(mockCriterios)));
+const causasRaiz = ref<CausaRaiz[]>([])
+const protocolos = ref<Protocolo[]>([])
 
-const formCausa = ref<FormCausa>({ ...initialFormCausa });
-const formProtocolo = ref<FormProtocolo>({ ...initialFormProtocolo });
+const formCausa = ref<FormCausa>({ ...initialFormCausa })
+const formProtocolo = ref<FormProtocolo>({ ...initialFormProtocolo })
 
 const loadRootCauses = async () => {
   try {
-    isLoading.value = true;
-    const response = await protocolsService.getAllRootCauses();
-    causasRaiz.value = response.data.map(rc => 
-      mapRootCauseToFrontend(
-        rc, 
-        1,
-        'Padrão',
-        true,
-        []
-      )
-    );
+    isLoading.value = true
+    const response = await protocolsService.getAllRootCauses()
+    causasRaiz.value = response.data.map((rc: RootCauseBackendDTO) => ({
+      ...rc,
+      ativo: true,
+      protocolName: rc.protocolName || '',
+    }))
   } catch (error) {
-    console.error('Erro ao carregar causas raiz:', error);
-    showAlertMessage('error', 'Erro ao carregar causas raiz do servidor');
+    console.error('Erro ao carregar causas raiz:', error)
+    showAlertMessage('error', 'Erro ao carregar causas raiz do servidor')
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 const loadProtocols = async () => {
   try {
-    isLoading.value = true;
-    const response = await protocolsService.getAllProtocols();
-    protocolos.value = response.data.map(p => {
-      const passos = p.description ? p.description.split(' |-| ') : [p.description];
-      return mapProtocolToFrontend(p, 1, passos);
-    });
+    isLoading.value = true
+    const response = await protocolsService.getAllProtocols()
+    protocolos.value = response.data.map((p) => {
+      const passos = p.description ? p.description.split(' |-| ') : [p.description]
+      return mapProtocolToFrontend(p, 1, passos)
+    })
   } catch (error) {
-    console.error('Erro ao carregar protocolos:', error);
-    showAlertMessage('error', 'Erro ao carregar protocolos do servidor');
+    console.error('Erro ao carregar protocolos:', error)
+    showAlertMessage('error', 'Erro ao carregar protocolos do servidor')
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
-onMounted(() => Promise.all([loadRootCauses(), loadProtocols()]));
+onMounted(() => Promise.all([loadRootCauses(), loadProtocols()]))
 
 const openModalCausa = (item: CausaRaiz | null = null) => {
-  modalType.value = 'causa';
-  editingItem.value = item;
-  formCausa.value = item ? {
-    nome: item.nome,
-    description: item.description || '',
-    criterioId: item.criterioId,
-    ativo: item.ativo
-  } : { ...initialFormCausa };
-  showModal.value = true;
-};
+  modalType.value = 'causa'
+  editingItem.value = item
+  formCausa.value = item
+    ? {
+        name: item.name,
+        description: item.description || '',
+        ativo: item.ativo,
+      }
+    : { ...initialFormCausa }
+  showModal.value = true
+}
 
 const openModalProtocolo = (item: Protocolo | null = null) => {
-  modalType.value = 'protocolo';
-  editingItem.value = item;
-  formProtocolo.value = item ? {
-    titulo: item.titulo,
-    description: item.description || '',
-    causaRaizId: item.causaRaizId,
-    passos: [...item.passos]
-  } : { ...initialFormProtocolo };
-  showModal.value = true;
-};
+  modalType.value = 'protocolo'
+  editingItem.value = item
+  formProtocolo.value = item
+    ? {
+        titulo: item.titulo,
+        description: item.description || '',
+        causaRaizId: item.causaRaizId,
+        passos: [...item.passos],
+      }
+    : { ...initialFormProtocolo }
+  showModal.value = true
+}
 
 const closeModal = () => {
-  showModal.value = false;
-  editingItem.value = null;
-  formCausa.value = { ...initialFormCausa };
-  formProtocolo.value = { ...initialFormProtocolo };
-};
+  showModal.value = false
+  editingItem.value = null
+  formCausa.value = { ...initialFormCausa }
+  formProtocolo.value = { ...initialFormProtocolo }
+}
 
 const showAlertMessage = (type: Alert['type'], message: string) => {
-  showAlert.value = { type, message };
-  setTimeout(() => (showAlert.value = null), 4000);
-};
+  showAlert.value = { type, message }
+  setTimeout(() => (showAlert.value = null), 4000)
+}
 
 const handleSaveCausa = async () => {
-  if (!formCausa.value.nome || !formCausa.value.criterioId) {
-    showAlertMessage('error', 'Preencha todos os campos obrigatórios');
-    return;
-  }
-
-  const criterio = criterios.value.find(c => c.id === parseInt(String(formCausa.value.criterioId)));
-  if (!criterio) {
-    showAlertMessage('error', 'Critério não encontrado');
-    return;
+  if (!formCausa.value.name) {
+    showAlertMessage('error', 'Preencha todos os campos obrigatórios')
+    return
   }
 
   try {
-    isLoading.value = true;
-    
-    const createdBy = 1;
-    const backendData = mapCausaToBackend(formCausa.value, createdBy);
+    isLoading.value = true
+
+    const createdBy = 1
+    const backendData = mapCausaToBackend(formCausa.value, createdBy)
 
     if (editingItem.value) {
-      const response = await protocolsService.updateRootCause((editingItem.value as CausaRaiz).id, backendData);
-      const updatedCausa = mapRootCauseToFrontend(
-        response.data,
-        parseInt(String(formCausa.value.criterioId)),
-        criterio.nome,
-        formCausa.value.ativo,
-        (editingItem.value as CausaRaiz).protocolosIds
-      );
-      
-      causasRaiz.value = causasRaiz.value.map(c =>
-        c.id === updatedCausa.id ? updatedCausa : c
-      );
-      showAlertMessage('success', 'Causa raiz atualizada com sucesso');
+      const response = await protocolsService.updateRootCause((editingItem.value as CausaRaiz).id, backendData)
+      const updatedCausa = {
+        ...response.data,
+        ativo: formCausa.value.ativo,
+        protocolName: response.data.protocolName || '',
+      }
+
+      causasRaiz.value = causasRaiz.value.map((c) => (c.id === updatedCausa.id ? updatedCausa : c))
+      showAlertMessage('success', 'Causa raiz atualizada com sucesso')
     } else {
-      const response = await protocolsService.createRootCause(backendData);
-      const novaCausa = mapRootCauseToFrontend(
-        response.data,
-        parseInt(String(formCausa.value.criterioId)),
-        criterio.nome,
-        formCausa.value.ativo,
-        []
-      );
-      
-      causasRaiz.value.push(novaCausa);
-      showAlertMessage('success', 'Causa raiz criada com sucesso');
+      const response = await protocolsService.createRootCause(backendData)
+      const novaCausa = {
+        ...response.data,
+        ativo: formCausa.value.ativo,
+        protocolName: response.data.protocolName || '',
+      }
+
+      causasRaiz.value.push(novaCausa)
+      showAlertMessage('success', 'Causa raiz criada com sucesso')
     }
 
-    closeModal();
+    closeModal()
   } catch (error) {
-    console.error('Erro ao salvar causa raiz:', error);
-    showAlertMessage('error', 'Erro ao salvar causa raiz. Tente novamente.');
+    console.error('Erro ao salvar causa raiz:', error)
+    showAlertMessage('error', 'Erro ao salvar causa raiz. Tente novamente.')
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 const handleDeleteCausa = async (id: number) => {
-  const protocolosAssociados = protocolos.value.filter(p => p.causaRaizId === id);
+  const protocolosAssociados = protocolos.value.filter((p) => p.causaRaizId === id)
 
   if (protocolosAssociados.length > 0) {
-    showAlertMessage('error', `Não é possível excluir. Esta causa possui ${protocolosAssociados.length} protocolo(s) associado(s). Desative a causa ou remova os protocolos primeiro.`);
-    return;
+    showAlertMessage(
+      'error',
+      `Não é possível excluir. Esta causa possui ${protocolosAssociados.length} protocolo(s) associado(s). Desative a causa ou remova os protocolos primeiro.`,
+    )
+    return
   }
 
   try {
-    isLoading.value = true;
-    await protocolsService.deleteRootCause(id);
-    causasRaiz.value = causasRaiz.value.filter(c => c.id !== id);
-    showAlertMessage('success', 'Causa raiz excluída com sucesso');
+    isLoading.value = true
+    await protocolsService.deleteRootCause(id)
+    causasRaiz.value = causasRaiz.value.filter((c) => c.id !== id)
+    showAlertMessage('success', 'Causa raiz excluída com sucesso')
   } catch (error) {
-    console.error('Erro ao excluir causa raiz:', error);
-    showAlertMessage('error', 'Erro ao excluir causa raiz. Tente novamente.');
+    console.error('Erro ao excluir causa raiz:', error)
+    showAlertMessage('error', 'Erro ao excluir causa raiz. Tente novamente.')
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 const handleToggleCausa = (id: number) => {
-  causasRaiz.value = causasRaiz.value.map(c =>
-    c.id === id ? { ...c, ativo: !c.ativo, atualizadoEm: new Date().toISOString().split('T')[0] } : c
-  );
-  const causa = causasRaiz.value.find(c => c.id === id);
-  showAlertMessage('info', `Causa raiz ${causa?.ativo ? 'ativada' : 'desativada'} com sucesso`);
-};
+  causasRaiz.value = causasRaiz.value.map((c) => (c.id === id ? { ...c, ativo: !c.ativo } : c))
+  const causa = causasRaiz.value.find((c) => c.id === id)
+  showAlertMessage('info', `Causa raiz ${causa?.ativo ? 'ativada' : 'desativada'} com sucesso`)
+}
 
 const handleSaveProtocolo = async () => {
-  if (!formProtocolo.value.titulo || !formProtocolo.value.causaRaizId || formProtocolo.value.passos.filter(p => p.trim()).length === 0) {
-    showAlertMessage('error', 'Preencha todos os campos obrigatórios e adicione pelo menos um passo');
-    return;
+  if (
+    !formProtocolo.value.titulo ||
+    !formProtocolo.value.causaRaizId ||
+    formProtocolo.value.passos.filter((p) => p.trim()).length === 0
+  ) {
+    showAlertMessage('error', 'Preencha todos os campos obrigatórios e adicione pelo menos um passo')
+    return
   }
 
-  const passosLimpos = formProtocolo.value.passos.filter(p => p.trim());
+  const passosLimpos = formProtocolo.value.passos.filter((p) => p.trim())
 
   try {
-    isLoading.value = true;
-    
-    const createdBy = 1;
-    const backendData = mapProtocoloToBackend(formProtocolo.value, createdBy);
+    isLoading.value = true
+
+    const createdBy = 1
+    const backendData = mapProtocoloToBackend(formProtocolo.value, createdBy)
 
     if (editingItem.value) {
-      const response = await protocolsService.updateProtocol((editingItem.value as Protocolo).id, backendData);
+      const response = await protocolsService.updateProtocol((editingItem.value as Protocolo).id, backendData)
       const updatedProtocolo = mapProtocolToFrontend(
         response.data,
         parseInt(String(formProtocolo.value.causaRaizId)),
-        passosLimpos
-      );
-      
-      protocolos.value = protocolos.value.map(p =>
-        p.id === updatedProtocolo.id ? updatedProtocolo : p
-      );
-      showAlertMessage('success', 'Protocolo atualizado com sucesso');
+        passosLimpos,
+      )
+
+      protocolos.value = protocolos.value.map((p) => (p.id === updatedProtocolo.id ? updatedProtocolo : p))
+      showAlertMessage('success', 'Protocolo atualizado com sucesso')
     } else {
-      const response = await protocolsService.createProtocol(backendData);
+      const response = await protocolsService.createProtocol(backendData)
       const novoProtocolo = mapProtocolToFrontend(
         response.data,
         parseInt(String(formProtocolo.value.causaRaizId)),
-        passosLimpos
-      );
-      
-      protocolos.value.push(novoProtocolo);
+        passosLimpos,
+      )
 
-      causasRaiz.value = causasRaiz.value.map(c =>
-        c.id === parseInt(String(formProtocolo.value.causaRaizId))
-          ? { ...c, protocolosIds: [...c.protocolosIds, novoProtocolo.id] }
-          : c
-      );
-
-      showAlertMessage('success', 'Protocolo criado com sucesso');
+      protocolos.value.push(novoProtocolo)
+      showAlertMessage('success', 'Protocolo criado com sucesso')
     }
 
-    closeModal();
+    closeModal()
   } catch (error) {
-    console.error('Erro ao salvar protocolo:', error);
-    showAlertMessage('error', 'Erro ao salvar protocolo. Tente novamente.');
+    console.error('Erro ao salvar protocolo:', error)
+    showAlertMessage('error', 'Erro ao salvar protocolo. Tente novamente.')
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 const handleDeleteProtocolo = async (id: number) => {
-  const protocolo = protocolos.value.find(p => p.id === id);
-  if (!protocolo) return;
-
-  const causa = causasRaiz.value.find(c => c.id === protocolo.causaRaizId);
-  if (!causa) return;
-
-  if (causa.protocolosIds.length === 1) {
-    showAlertMessage('warning', 'Este é o último protocolo da causa raiz. A causa será desativada se você prosseguir. Confirme desativando a causa primeiro.');
-    return;
-  }
-
   try {
-    isLoading.value = true;
-    await protocolsService.deleteProtocol(id);
-    
-    protocolos.value = protocolos.value.filter(p => p.id !== id);
-    causasRaiz.value = causasRaiz.value.map(c =>
-      c.id === protocolo.causaRaizId
-        ? { ...c, protocolosIds: c.protocolosIds.filter(pid => pid !== id) }
-        : c
-    );
-    showAlertMessage('success', 'Protocolo excluído com sucesso');
+    isLoading.value = true
+    await protocolsService.deleteProtocol(id)
+    protocolos.value = protocolos.value.filter((p) => p.id !== id)
+    showAlertMessage('success', 'Protocolo excluído com sucesso')
   } catch (error) {
-    console.error('Erro ao excluir protocolo:', error);
-    showAlertMessage('error', 'Erro ao excluir protocolo. Tente novamente.');
+    console.error('Erro ao excluir protocolo:', error)
+    showAlertMessage('error', 'Erro ao excluir protocolo. Tente novamente.')
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 const addStep = () => {
-  formProtocolo.value.passos.push('');
-};
+  formProtocolo.value.passos.push('')
+}
 
 const removeStep = (index: number) => {
-  formProtocolo.value.passos = formProtocolo.value.passos.filter((_, i) => i !== index);
-};
+  formProtocolo.value.passos = formProtocolo.value.passos.filter((_, i) => i !== index)
+}
 </script>
 
 <template>
@@ -303,24 +264,15 @@ const removeStep = (index: number) => {
       <p>Gerencie causas raiz e seus protocolos de resolução</p>
     </div>
 
-    <AlertMessage
-      :alert="showAlert"
-      @close="showAlert = null"
-    />
+    <AlertMessage :alert="showAlert" @close="showAlert = null" />
 
     <div class="tabs-container">
       <div class="tabs-header">
-        <button
-          @click="activeTab = 'causas'"
-          :class="['tab-button', { active: activeTab === 'causas' }]"
-        >
+        <button @click="activeTab = 'causas'" :class="['tab-button', { active: activeTab === 'causas' }]">
           Causas Raiz
           <span class="tab-count">{{ causasRaiz.length }}</span>
         </button>
-        <button
-          @click="activeTab = 'protocolos'"
-          :class="['tab-button', { active: activeTab === 'protocolos' }]"
-        >
+        <button @click="activeTab = 'protocolos'" :class="['tab-button', { active: activeTab === 'protocolos' }]">
           Protocolos
           <span class="tab-count">{{ protocolos.length }}</span>
         </button>
@@ -350,7 +302,6 @@ const removeStep = (index: number) => {
     <RootCauseModal
       :show="showModal && modalType === 'causa'"
       :form-data="formCausa"
-      :criteria="criterios"
       :is-editing="!!editingItem"
       @close="closeModal"
       @save="handleSaveCausa"

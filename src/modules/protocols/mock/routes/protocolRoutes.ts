@@ -31,7 +31,6 @@ interface UpdateProtocoloBody {
   passos?: string[]
 }
 
-// Mock data
 export const mockCausasRaiz = [
   {
     id: 1,
@@ -80,7 +79,7 @@ export const mockCausasRaiz = [
     criterioNome: 'Velocidade Média',
     ativo: true,
     protocolosIds: [6],
-  }
+  },
 ]
 
 export const mockProtocolos = [
@@ -162,46 +161,45 @@ export const mockProtocolos = [
       'Aguardar reparo',
       'Confirmar funcionamento após manutenção',
     ],
-  }
+  },
 ]
 
 export const mockCriterios = [
   {
     id: 1,
     nome: 'Velocidade Média',
-    descricao: 'Monitora velocidade média na via'
+    descricao: 'Monitora velocidade média na via',
   },
   {
     id: 2,
     nome: 'Tempo de Parada',
-    descricao: 'Tempo que veículos ficam parados'
+    descricao: 'Tempo que veículos ficam parados',
   },
   {
     id: 3,
     nome: 'Obstrução de Faixa',
-    descricao: 'Percentual de faixas obstruídas'
+    descricao: 'Percentual de faixas obstruídas',
   },
   {
     id: 4,
     nome: 'Volume de Tráfego',
-    descricao: 'Quantidade de veículos por hora'
+    descricao: 'Quantidade de veículos por hora',
   },
   {
     id: 5,
     nome: 'Densidade Veicular',
-    descricao: 'Densidade de veículos por km'
-  }
+    descricao: 'Densidade de veículos por km',
+  },
 ]
 
 const protocolRoutes = [
-  // Get protocolo by problemId
   mockFlag(
     {
       method: 'get',
       url: '/protocols/:problemId',
       result: (params: MockParams) => {
         const problemId = Number(params.problemId)
-        const protocol = mockProtocolos.find(p => p.causaRaizId === problemId)
+        const protocol = mockProtocolos.find((p) => p.causaRaizId === problemId)
 
         return APIFailureWrapper({
           content: protocol || null,
@@ -212,7 +210,6 @@ const protocolRoutes = [
     'on',
   ),
 
-  // Get all protocolos
   mockFlag(
     {
       method: 'get',
@@ -227,7 +224,6 @@ const protocolRoutes = [
     'on',
   ),
 
-  // Get all causas raiz
   mockFlag(
     {
       method: 'get',
@@ -242,7 +238,6 @@ const protocolRoutes = [
     'on',
   ),
 
-  // Get all criterios
   mockFlag(
     {
       method: 'get',
@@ -257,7 +252,6 @@ const protocolRoutes = [
     'on',
   ),
 
-  // Create causa raiz
   mockFlag(
     {
       method: 'post',
@@ -285,7 +279,6 @@ const protocolRoutes = [
     'on',
   ),
 
-  // Update causa raiz
   mockFlag(
     {
       method: 'put',
@@ -293,7 +286,7 @@ const protocolRoutes = [
       result: (params: MockParams, body: unknown) => {
         const id = Number(params.id)
         const requestBody = body as UpdateCausaRaizBody
-        const index = mockCausasRaiz.findIndex(c => c.id === id)
+        const index = mockCausasRaiz.findIndex((c) => c.id === id)
 
         if (index !== -1) {
           mockCausasRaiz[index] = {
@@ -315,14 +308,13 @@ const protocolRoutes = [
     'on',
   ),
 
-  // Delete causa raiz
   mockFlag(
     {
       method: 'delete',
       url: '/root-causes/:id',
       result: (params: MockParams) => {
         const id = Number(params.id)
-        const index = mockCausasRaiz.findIndex(c => c.id === id)
+        const index = mockCausasRaiz.findIndex((c) => c.id === id)
 
         if (index !== -1) {
           mockCausasRaiz.splice(index, 1)
@@ -341,7 +333,6 @@ const protocolRoutes = [
     'on',
   ),
 
-  // Create protocolo
   mockFlag(
     {
       method: 'post',
@@ -367,7 +358,6 @@ const protocolRoutes = [
     'on',
   ),
 
-  // Update protocolo
   mockFlag(
     {
       method: 'put',
@@ -375,7 +365,7 @@ const protocolRoutes = [
       result: (params: MockParams, body: unknown) => {
         const id = Number(params.id)
         const requestBody = body as UpdateProtocoloBody
-        const index = mockProtocolos.findIndex(p => p.id === id)
+        const index = mockProtocolos.findIndex((p) => p.id === id)
 
         if (index !== -1) {
           mockProtocolos[index] = {
@@ -397,14 +387,13 @@ const protocolRoutes = [
     'on',
   ),
 
-  // Delete protocolo
   mockFlag(
     {
       method: 'delete',
       url: '/protocols/:id',
       result: (params: MockParams) => {
         const id = Number(params.id)
-        const index = mockProtocolos.findIndex(p => p.id === id)
+        const index = mockProtocolos.findIndex((p) => p.id === id)
 
         if (index !== -1) {
           mockProtocolos.splice(index, 1)

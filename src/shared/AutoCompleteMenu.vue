@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoleAccess } from '@/composables/useRoleAccess'
 
@@ -36,13 +36,34 @@ const allMenuItems: MenuItem[] = [
 ]
 
 const menuItems = computed(() => {
+  const isAuth = roleAccess.isAuthenticated
+  const isAdminUser = roleAccess.isAdmin
+  const hasGestor = roleAccess.hasGestorAccess
+  const hasAgente = roleAccess.hasAgenteAccess
+
   return allMenuItems.filter((item) => {
-    if (item.requiresAdmin) return roleAccess.isAdmin
-    if (item.requiresGestor) return roleAccess.hasGestorAccess
-    if (item.requiresAgente) return roleAccess.hasAgenteAccess
+    if (item.requiresAuth && !isAuth) return false
+
+    if (item.requiresAdmin) return isAdminUser
+    if (item.requiresGestor) return hasGestor
+    if (item.requiresAgente) return hasAgente
+
     return true
   })
 })
+
+watch(
+  [
+    () => roleAccess.isAuthenticated,
+    () => roleAccess.isAdmin,
+    () => roleAccess.hasGestorAccess,
+    () => roleAccess.hasAgenteAccess,
+  ],
+  () => {
+    selectedItem.value = null
+  },
+  { immediate: false },
+)
 
 const menu = computed({
   get: () => props.modelValue,

@@ -14,6 +14,7 @@ const model = ref(props.modelValue)
 const email = ref('')
 const password = ref('')
 const showError = ref(false)
+const showPassword = ref(false)
 
 watch(
   () => props.modelValue,
@@ -37,8 +38,12 @@ const handleLogin = async () => {
       emit('login-success')
     }
     closePopup()
-  } catch (error: any) {
-    if (error?.status === 401) {
+  } catch (error: unknown) {
+    const hasStatus = (err: unknown): err is { status: number } => {
+      return typeof err === 'object' && err !== null && 'status' in err
+    }
+
+    if (hasStatus(error) && error.status === 401) {
       alert('Email ou senha incorretos')
     } else {
       alert('Erro no login do usuário')
@@ -78,23 +83,22 @@ const handleLogin = async () => {
               <v-text-field
                 v-model="password"
                 placeholder="Digite sua senha"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 variant="outlined"
                 density="comfortable"
                 hide-details
                 class="custom-input"
+                :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                @click:append-inner="showPassword = !showPassword"
               ></v-text-field>
             </div>
 
             <div class="form-footer mb-5 d-flex justify-space-between">
               <span v-if="showError" class="error-message"> Email ou senha incorretos </span>
-              <a href="#" class="forgot-link">Esqueceu a senha?</a>
             </div>
 
             <div class="button-group d-flex flex-column gap-4">
               <v-btn type="submit" class="login-btn" size="x-large" block> Login </v-btn>
-
-              <v-btn variant="outlined" size="x-large" block class="signup-btn" @click="closePopup"> Cadastrar </v-btn>
             </div>
           </v-form>
         </v-card-text>

@@ -9,7 +9,7 @@
         <div class="initial-guidelines__orientation">
           <v-icon size="24" class="mr-3">mdi-map-marker-radius</v-icon>
           <div>
-            <strong>Recomendação:</strong> Dirija-se ao radar <strong>{{ radarId }}</strong> localizado em
+            <strong>Recomendação:</strong> Dirija-se ao radar <strong>{{ radarId || 'N/A' }}</strong> localizado em
             <strong>{{ location }}</strong> e identifique o problema no local.
           </div>
         </div>
@@ -24,7 +24,7 @@ interface Props {
   location: string
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 </script>
 
 <style lang="scss" scoped>

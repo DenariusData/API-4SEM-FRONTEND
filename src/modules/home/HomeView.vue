@@ -825,8 +825,12 @@ function handleCriterionChange() {
       height: 50vh;
 
       .metrics-container {
-        width: 220px;
+        flex-shrink: 0;
+        width: auto;
+        min-width: 220px;
+        max-width: 320px;
         overflow-y: auto;
+        overflow-x: hidden;
 
         &::-webkit-scrollbar {
           width: 6px;

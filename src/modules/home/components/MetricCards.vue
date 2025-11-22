@@ -20,19 +20,24 @@ defineProps<Props>()
 
 <style lang="scss" scoped>
 .metric-cards-container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 8px;
   min-width: 200px;
 
   .metric-card {
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-radius: 8px;
     color: white;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
 
     &:hover {
       transform: translateY(-2px);
