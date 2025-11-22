@@ -1,19 +1,9 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { Chart, registerables } from 'chart.js'
+import type { ZoneData } from '../types/dashboardsTypes'
 
 Chart.register(...registerables)
-
-interface Corridor {
-  name: string
-  vehicles: number
-  speed: number
-}
-
-interface ZoneData {
-  zone: string
-  corridors: Corridor[]
-}
 
 const props = defineProps<{
   zonesData: ZoneData[]
@@ -68,18 +58,35 @@ const createComparisonChart = () => {
       selectedZonesForComparison.value.includes(z.zone)
     )
 
-    const datasets = selectedZones.map((zone, index) => {
-      const colors = ['#00c853', '#2196f3', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4']
-      return {
-        label: `Zona ${zone.zone}`,
-        data: zone.corridors.map(c => c.vehicles),
-        backgroundColor: colors[index % colors.length],
-        borderColor: colors[index % colors.length],
-        borderWidth: 1,
-        borderRadius: 4
-      }
-    })
+    // Verifica se alguma zona tem corredores
+    const hasData = selectedZones.some(z => z.corridors.length > 0)
+    if (!hasData) {
+      console.warn('⚠️ Nenhuma zona selecionada tem dados de corredores')
+      return
+    }
 
+    const datasets = selectedZones
+      .filter(z => z.corridors.length > 0) // Filtra zonas sem dados
+      .map((zone, index) => {
+        const colors = ['#00c853', '#2196f3', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4']
+        return {
+          label: `Zona ${zone.zone}`,
+          data: zone.corridors.map(c => c.vehicles),
+          backgroundColor: colors[index % colors.length],
+          borderColor: colors[index % colors.length],
+          borderWidth: 1,
+          borderRadius: 4
+        }
+      })
+
+    // Calcula o máximo dinâmico dos dados
+    const allValues = datasets.flatMap(d => d.data)
+    const maxValue = Math.max(...allValues, 1500)
+    const chartMax = Math.ceil(maxValue * 1.2 / 500) * 500
+
+    console.log('📊 Comparison Chart - Max value:', maxValue, 'Chart max:', chartMax)
+
+    // Usa o maior número de corredores entre as zonas selecionadas
     const maxCorridors = Math.max(...selectedZones.map(z => z.corridors.length))
     const labels = Array.from({ length: maxCorridors }, (_, i) => `Corredor ${i + 1}`)
 
@@ -96,18 +103,57 @@ const createComparisonChart = () => {
           legend: {
             display: true,
             position: 'top',
-            labels: { font: { size: 13 }, color: '#4d4d4d' }
+            labels: { 
+              font: { size: 13 }, 
+              color: '#4d4d4d',
+              padding: 15,
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleFont: { size: 14, weight: 'bold' },
+            bodyFont: { size: 13 },
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: true,
+            callbacks: {
+              label: function(context) {
+                const zoneName = context.dataset.label
+                const vehicles = context.parsed.y
+                return `${zoneName}: ${vehicles.toLocaleString('pt-BR')} veículos`
+              },
+              afterLabel: function(context) {
+                // Mostra o nome real do corredor se disponível
+                const zoneData = selectedZones.find(z => `Zona ${z.zone}` === context.dataset.label)
+                if (zoneData && zoneData.corridors[context.dataIndex]) {
+                  return `📍 ${zoneData.corridors[context.dataIndex].name}`
+                }
+                return ''
+              }
+            }
           }
         },
         scales: {
           y: {
             beginAtZero: true,
-            max: 1500,
-            ticks: { stepSize: 500, font: { size: 12 }, color: '#7a7a7a' },
+            max: chartMax,
+            ticks: { 
+              stepSize: Math.ceil(chartMax / 5 / 100) * 100,
+              font: { size: 12 }, 
+              color: '#7a7a7a',
+              callback: function(value) {
+                return value.toLocaleString('pt-BR') + ' veíc.'
+              }
+            },
             grid: { color: '#e0e0e0' }
           },
           x: {
-            ticks: { font: { size: 11 }, color: '#7a7a7a' },
+            ticks: { 
+              font: { size: 11 }, 
+              color: '#7a7a7a' 
+            },
             grid: { display: false }
           }
         }
@@ -133,7 +179,8 @@ const createComparisonChart = () => {
             'zone-select-btn', 
             { 
               selected: selectedZonesForComparison.includes(zone.zone),
-              disabled: !isZoneAvailable(zone.zone)
+              disabled: !isZoneAvailable(zone.zone),
+              'no-data': zone.corridors.length === 0
             }
           ]"
           :disabled="!isZoneAvailable(zone.zone)"
@@ -141,29 +188,41 @@ const createComparisonChart = () => {
         >
           <span class="check-icon">{{ selectedZonesForComparison.includes(zone.zone) ? '✓' : '' }}</span>
           <div v-if="!isZoneAvailable(zone.zone)" class="lock-icon">🔒</div>
+          <div v-if="zone.corridors.length === 0" class="no-data-badge">Sem dados</div>
           <div class="zone-icon">📍</div>
           <div class="zone-name">Zona {{ zone.zone }}</div>
+          <div v-if="zone.corridors.length > 0" class="zone-info">
+            {{ zone.corridors.length }} corredor{{ zone.corridors.length !== 1 ? 'es' : '' }}
+          </div>
         </button>
       </div>
 
       <div class="comparison-actions">
         <button class="select-all-btn" @click="selectAllZones">
-          Selecionar Todas
+          Selecionar Todas Disponíveis
         </button>
         <button 
           class="apply-comparison-btn" 
           :disabled="selectedZonesForComparison.length === 0"
           @click="applyComparison"
         >
-          Aplicar Comparação
+          Aplicar Comparação ({{ selectedZonesForComparison.length }})
         </button>
       </div>
 
       <div v-if="selectedZonesForComparison.length > 0" class="comparison-result">
         <h3>Comparação de Fluxo entre Zonas</h3>
+        <p class="result-description">
+          Comparando {{ selectedZonesForComparison.length }} zona{{ selectedZonesForComparison.length !== 1 ? 's' : '' }} selecionada{{ selectedZonesForComparison.length !== 1 ? 's' : '' }}
+        </p>
         <div class="chart-container">
           <canvas ref="comparisonChartRef"></canvas>
         </div>
+      </div>
+
+      <div v-else class="no-selection-message">
+        <div class="message-icon">📊</div>
+        <p>Selecione pelo menos uma zona para visualizar a comparação</p>
       </div>
     </div>
   </div>
@@ -198,9 +257,9 @@ const createComparisonChart = () => {
   background: white;
   border-radius: 20px;
   padding: 2rem;
-  max-width: 800px;
+  max-width: 900px;
   width: 90%;
-  max-height: 85vh;
+  max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.4s ease;
@@ -276,8 +335,8 @@ const createComparisonChart = () => {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1rem;
-      min-height: 140px;
+      gap: 0.5rem;
+      min-height: 160px;
 
       .check-icon {
         position: absolute;
@@ -296,9 +355,23 @@ const createComparisonChart = () => {
         opacity: 0.6;
       }
 
+      .no-data-badge {
+        position: absolute;
+        top: 0.75rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ffc107;
+        color: #856404;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
       .zone-icon {
         font-size: 2.5rem;
         transition: transform 0.3s ease;
+        margin-top: 1rem;
       }
 
       .zone-name {
@@ -307,7 +380,13 @@ const createComparisonChart = () => {
         text-align: center;
       }
 
-      &:hover:not(:disabled) {
+      .zone-info {
+        font-size: 0.85rem;
+        color: #7a7a7a;
+        font-weight: 500;
+      }
+
+      &:hover:not(:disabled):not(.no-data) {
         border-color: #00c853;
         transform: translateY(-4px);
         box-shadow: 0 6px 16px rgba(0, 200, 83, 0.2);
@@ -327,6 +406,10 @@ const createComparisonChart = () => {
           color: white;
         }
 
+        .zone-info {
+          color: rgba(255, 255, 255, 0.9);
+        }
+
         .zone-icon {
           transform: scale(1.1);
         }
@@ -337,6 +420,21 @@ const createComparisonChart = () => {
         cursor: not-allowed;
         background: #f5f5f5;
         border-color: #e0e0e0;
+
+        &:hover {
+          transform: none;
+          box-shadow: none;
+          border-color: #e0e0e0;
+
+          .zone-icon {
+            transform: none;
+          }
+        }
+      }
+
+      &.no-data {
+        opacity: 0.6;
+        cursor: default;
 
         &:hover {
           transform: none;
@@ -373,6 +471,7 @@ const createComparisonChart = () => {
 
       &:hover {
         background: #e0e0e0;
+        transform: translateY(-2px);
       }
     }
 
@@ -389,6 +488,7 @@ const createComparisonChart = () => {
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        transform: none;
       }
     }
   }
@@ -402,6 +502,12 @@ const createComparisonChart = () => {
       font-size: 1.25rem;
       font-weight: 600;
       color: #4d4d4d;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-description {
+      font-size: 0.9rem;
+      color: #7a7a7a;
       margin-bottom: 1rem;
     }
 
@@ -409,13 +515,32 @@ const createComparisonChart = () => {
       background: #ffffff;
       border: 2px solid #e0e0e0;
       border-radius: 12px;
-      padding: 15px;
-      height: 380px;
+      padding: 20px;
+      height: 400px;
       position: relative;
 
       canvas {
         max-height: 100%;
       }
+    }
+  }
+
+  .no-selection-message {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: #f9fafb;
+    border-radius: 12px;
+    margin-top: 1rem;
+
+    .message-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      color: #7a7a7a;
+      font-size: 1rem;
+      margin: 0;
     }
   }
 }
@@ -440,7 +565,7 @@ const createComparisonChart = () => {
 
       .zone-select-btn {
         padding: 1rem 0.75rem;
-        min-height: 120px;
+        min-height: 140px;
 
         .zone-icon {
           font-size: 2rem;
@@ -448,6 +573,10 @@ const createComparisonChart = () => {
 
         .zone-name {
           font-size: 0.95rem;
+        }
+
+        .zone-info {
+          font-size: 0.8rem;
         }
       }
     }
