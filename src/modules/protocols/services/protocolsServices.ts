@@ -44,6 +44,9 @@ const protocols = {
 
   getAllProtocols: (): Promise<{ data: ProtocolBackendDTO[] }> => api.get('/protocols'),
 
+  getProtocolByRootCause: (rootCauseId: number): Promise<{ data: ProtocolBackendDTO }> =>
+    api.get(`/protocols/root-cause/${rootCauseId}`),
+
   getProtocolById: (id: number): Promise<{ data: ProtocolBackendDTO }> => api.get(`/protocols/${id}`),
 
   createProtocol: (data: ProtocolRequestDTO): Promise<{ data: ProtocolBackendDTO }> => api.post('/protocols', data),
