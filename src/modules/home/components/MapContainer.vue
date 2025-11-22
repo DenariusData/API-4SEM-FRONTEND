@@ -85,17 +85,17 @@ function createLegend(): void {
 
     return div
   }
-  legend.addTo(map.value as any)
+  legend.addTo(map.value as L.Map)
 }
 
 function drawMap(features: GeoJsonFeature[]): void {
   if (!map.value) return
 
   if (geoJsonLayer.value) {
-    map.value.removeLayer(geoJsonLayer.value as any)
+    map.value.removeLayer(geoJsonLayer.value as unknown as L.Layer)
   }
 
-  geoJsonLayer.value = L.geoJSON(features, {
+  geoJsonLayer.value = L.geoJSON(features as GeoJSON.GeoJsonObject[], {
     style: (feature) => {
       const props = feature?.properties || {}
       const region = props.regiao
@@ -136,7 +136,7 @@ function drawMap(features: GeoJsonFeature[]): void {
 }
 
 function updateMap() {
-  const featuresWithState = sjcGeojson.features.map((feature: any) => ({
+  const featuresWithState = sjcGeojson.features.map((feature: GeoJsonFeature) => ({
     ...feature,
     properties: {
       ...feature.properties,

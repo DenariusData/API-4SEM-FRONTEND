@@ -27,12 +27,17 @@ defineProps<Props>()
   min-width: 200px;
 
   .metric-card {
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-radius: 8px;
     color: white;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
 
     &:hover {
       transform: translateY(-2px);
