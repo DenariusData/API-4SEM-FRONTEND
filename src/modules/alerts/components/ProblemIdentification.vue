@@ -48,21 +48,13 @@
         </div>
 
         <div v-else-if="protocol" class="problem-identification__protocol">
-          <h3 class="problem-identification__protocol-title">{{ protocol.title }}</h3>
-          <v-list class="problem-identification__protocol-steps">
-            <v-list-item
-              v-for="(step, index) in protocol.steps"
-              :key="index"
-              class="problem-identification__protocol-step"
-            >
-              <template #prepend>
-                <v-avatar color="primary" size="32" class="mr-3">
-                  <span class="text-white">{{ index + 1 }}</span>
-                </v-avatar>
-              </template>
-              <v-list-item-title>{{ step }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
+          <h3 class="problem-identification__protocol-title">{{ protocol.name }}</h3>
+          <div class="problem-identification__protocol-description">
+            <p>{{ protocol.description }}</p>
+          </div>
+          <div class="problem-identification__protocol-meta">
+            <v-chip size="small" color="primary" variant="tonal"> Criado por: {{ protocol.createdByName }} </v-chip>
+          </div>
         </div>
 
         <div v-else class="problem-identification__no-protocol-container">
@@ -151,7 +143,7 @@ const onProblemSelected = async (problemId: number) => {
   try {
     isLoadingProtocol.value = true
     const response = await protocolsServices.getProtocolByRootCause(problemId)
-    protocol.value = response.data
+    protocol.value = response.data.length > 0 ? response.data[0] : null
   } catch (err) {
     console.error('Error fetching protocol:', err)
     protocol.value = null
@@ -203,18 +195,18 @@ const onProblemSelected = async (problemId: number) => {
     margin-bottom: 16px;
   }
 
-  &__protocol-steps {
-    background: transparent;
-    padding: 0;
+  &__protocol-description {
+    margin-bottom: 16px;
+
+    p {
+      color: #6b7280;
+      line-height: 1.6;
+      margin: 0;
+    }
   }
 
-  &__protocol-step {
-    padding: 12px 0;
-    border-bottom: 1px solid #f3f4f6;
-
-    &:last-child {
-      border-bottom: none;
-    }
+  &__protocol-meta {
+    margin-top: 12px;
   }
 
   &__no-protocol-container {

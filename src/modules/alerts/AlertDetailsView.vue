@@ -162,7 +162,7 @@ const fetchAlertDetails = async () => {
 const fetchProblems = async () => {
   try {
     const response = await problemsService.getAll()
-    problems.value = response.data.items
+    problems.value = response.data
   } catch (err) {
     console.error('Erro ao buscar problemas:', err)
   }

@@ -84,9 +84,10 @@ export interface Problem {
 
 export interface Protocol {
   id: number
-  problem_id: number
-  title: string
-  steps: string[]
+  name: string
+  description: string
+  createdAt: string
+  createdByName: string
 }
 
 export interface Agent {
