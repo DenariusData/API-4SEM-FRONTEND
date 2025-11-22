@@ -63,10 +63,10 @@ const updateField = (field: keyof FormCausa, value: unknown) => {
         </div>
 
         <div class="modal-actions">
+          <button @click="emit('close')" class="btn btn-secondary">Cancelar</button>
           <button @click="emit('save')" class="btn btn-primary">
             {{ isEditing ? 'Atualizar' : 'Criar' }} Causa Raiz
           </button>
-          <button @click="emit('close')" class="btn btn-secondary">Cancelar</button>
         </div>
       </div>
     </div>
