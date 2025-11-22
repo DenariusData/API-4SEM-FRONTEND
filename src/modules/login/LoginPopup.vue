@@ -14,6 +14,7 @@ const model = ref(props.modelValue)
 const email = ref('')
 const password = ref('')
 const showError = ref(false)
+const showPassword = ref(false)
 
 watch(
   () => props.modelValue,
@@ -82,11 +83,13 @@ const handleLogin = async () => {
               <v-text-field
                 v-model="password"
                 placeholder="Digite sua senha"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 variant="outlined"
                 density="comfortable"
                 hide-details
                 class="custom-input"
+                :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                @click:append-inner="showPassword = !showPassword"
               ></v-text-field>
             </div>
 
