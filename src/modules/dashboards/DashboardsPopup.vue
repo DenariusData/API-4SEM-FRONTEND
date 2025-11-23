@@ -449,7 +449,7 @@ const filterInfo = computed(() => {
             />
           </div>
 
-          <div v-if="corridorData.length" class="chart-section">
+          <div class="chart-section">
             <h2>Comparativo de Fluxo</h2>
             <div class="chart-container"><canvas ref="barChartRef"></canvas></div>
           </div>
