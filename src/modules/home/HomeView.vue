@@ -39,6 +39,8 @@ const regionsLevelData = ref<{ region_id: number; level: number }[]>([])
 let unregisterPeriodicTask: (() => void) | null = null
 
 const isAgent = computed(() => roleStore.isAgente)
+const isManager = computed(() => roleStore.isAdmin || roleStore.isGestor)
+const canAccessFilters = computed(() => roleStore.isAdmin || roleStore.isGestor || roleStore.isAgente)
 
 const criteriaForTable = computed<Criterion[]>(() => {
   const uniqueCriteria = new Map()
@@ -337,8 +339,6 @@ function handleCriterionChange() {
 
 <template>
   <div class="home-container">
-    <h2 v-if="isAgent" class="dashboard-title">Dashboard de Monitoramento</h2>
-
     <div v-if="errorMessage" class="error-banner">
       <span class="error-icon">⚠️</span>
       <span class="error-text">{{ errorMessage }}</span>
@@ -346,6 +346,7 @@ function handleCriterionChange() {
     </div>
 
     <HomeFilter
+      v-if="canAccessFilters"
       :selected-zones="selectedZones"
       :filtered-zones="filteredZones"
       @apply-filter="applyFilter"
@@ -386,7 +387,7 @@ function handleCriterionChange() {
       </div>
     </div>
 
-    <div v-else class="normal-layout">
+    <div v-else :class="isManager ? 'manager-layout' : 'normal-layout'">
       <MapContainer
         :region-name-to-level-map="regionNameToLevelMap"
         :selected-zones="selectedZones"
@@ -403,14 +404,6 @@ function handleCriterionChange() {
   display: flex;
   flex-direction: column;
   padding: 0;
-
-  .dashboard-title {
-    margin-bottom: 16px;
-    font-size: 24px;
-    font-weight: 600;
-    text-align: center;
-    color: #1f2937;
-  }
 
   .error-banner {
     display: flex;
@@ -514,7 +507,19 @@ function handleCriterionChange() {
     flex-direction: column;
 
     :deep(.map-container) {
-      height: calc(100vh - 254px);
+      height: calc(100vh - 120px);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .manager-layout {
+    display: flex;
+    flex-direction: column;
+
+    :deep(.map-container) {
+      height: calc(100vh - 184px);
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

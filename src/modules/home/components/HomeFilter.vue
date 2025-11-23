@@ -50,7 +50,6 @@ function closeDashboard() {
 
 const startDateTime = computed(() => combineDateTime(startDate.value, startTime.value))
 const endDateTime = computed(() => combineDateTime(endDate.value, endTime.value))
-const canAccessFilters = computed(() => roleStore.isAdmin || roleStore.isGestor || roleStore.isAgente)
 const canAccessDashboard = computed(() => roleStore.isAdmin || roleStore.isGestor)
 
 function applyFilter() {
@@ -74,13 +73,13 @@ function clearSelection() {
 
 <template>
   <div>
-    <div v-if="canAccessFilters || canAccessDashboard" class="top-bar">
-      <button v-if="canAccessFilters" class="filters-button" @click="showFilters = !showFilters">Filtros</button>
+    <div class="top-bar">
+      <button class="filters-button" @click="showFilters = !showFilters">Filtros</button>
       <button v-if="canAccessDashboard" class="dashboard-button" @click="openDashboard">Dashboard's</button>
     </div>
 
     <div class="content-wrapper">
-      <div v-if="showFilters && canAccessFilters" class="filter-dropdown">
+      <div v-if="showFilters" class="filter-dropdown">
         <div class="filter-content">
           <div class="instructions">ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la</div>
 

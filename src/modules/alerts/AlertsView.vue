@@ -242,8 +242,6 @@ onMounted(loadAlerts)
   flex-direction: column;
   gap: 32px;
   margin: 0 auto;
-  max-width: 1200px;
-  padding: 20px;
 }
 
 .page-header {
@@ -632,7 +630,6 @@ onMounted(loadAlerts)
 
 @media (max-width: 768px) {
   .alerts-view {
-    padding: 12px;
     gap: 24px;
   }
 

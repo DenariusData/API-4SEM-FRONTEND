@@ -79,22 +79,24 @@ const updatePasso = (index: number, value: string) => {
             <button @click="emit('add-passo')" class="btn-link small">+ Adicionar Passo</button>
           </div>
           <div class="passos-list">
-            <div v-for="(passo, index) in formData.passos" :key="index" class="passo-item">
-              <span class="passo-number">{{ index + 1 }}.</span>
+            <div v-for="(passo, index) in formData.passos" :key="index">
+              <div class="passo-titulo">
+                <span class="passo-number">{{ index + 1 }}.</span>
+                <button
+                  v-if="formData.passos.length > 1"
+                  @click="emit('remove-passo', index)"
+                  class="btn-icon-only btn-danger small"
+                  title="Remover passo"
+                >
+                  🗑
+                </button>
+              </div>
               <textarea
                 :value="passo"
                 @input="updatePasso(index, ($event.target as HTMLTextAreaElement).value)"
                 rows="2"
                 placeholder="Descreva o passo do protocolo"
               ></textarea>
-              <button
-                v-if="formData.passos.length > 1"
-                @click="emit('remove-passo', index)"
-                class="btn-icon-only btn-danger small"
-                title="Remover passo"
-              >
-                🗑
-              </button>
             </div>
           </div>
           <small>Adicione todos os passos que o agente deve seguir para resolver esta causa raiz</small>
@@ -226,6 +228,13 @@ const updatePasso = (index: number, value: string) => {
     margin-top: 6px;
     font-size: 0.8rem;
     color: #6b7280;
+  }
+
+  .passos-list {
+    .passo-titulo {
+      display: flex;
+      justify-content: space-between;
+    }
   }
 }
 

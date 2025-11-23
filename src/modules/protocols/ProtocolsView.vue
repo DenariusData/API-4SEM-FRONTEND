@@ -328,8 +328,6 @@ const removeStep = (index: number) => {
   flex-direction: column;
   gap: 32px;
   margin: 0 auto;
-  max-width: 1200px;
-  padding: 20px;
 }
 
 .page-header {
