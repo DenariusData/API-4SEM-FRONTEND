@@ -78,6 +78,13 @@ const getLevelColor = (level: number): string => {
   return levelColors[level as keyof typeof levelColors] || 'grey'
 }
 
+const getLevelTextColor = (level: number): string => {
+  if (level === 1 || level === 2 || level === 3) {
+    return '#222'
+  }
+  return '#fff'
+}
+
 const goToAlertDetails = (alert: Alert) => {
   if (alert.finalized) return
   isOpen.value = false
@@ -177,18 +184,22 @@ defineExpose({
                   size="small"
                   :color="getLevelColor(alert.previousLevel)"
                   variant="tonal"
-                  class="notification-dropdown__level-chip"
+                  :class="['notification-dropdown__level-chip', `level-bg-${alert.previousLevel}`]"
                 >
-                  {{ getLevelLabel(alert.previousLevel) }}
+                  <span :style="{ color: getLevelTextColor(alert.previousLevel) }">
+                    {{ getLevelLabel(alert.previousLevel) }}
+                  </span>
                 </v-chip>
                 <v-icon size="16" class="notification-dropdown__arrow">mdi-arrow-right</v-icon>
                 <v-chip
                   size="small"
                   :color="getLevelColor(alert.newLevel)"
                   variant="tonal"
-                  class="notification-dropdown__level-chip"
+                  :class="['notification-dropdown__level-chip', `level-bg-${alert.newLevel}`]"
                 >
-                  {{ getLevelLabel(alert.newLevel) }}
+                  <span :style="{ color: getLevelTextColor(alert.newLevel) }">
+                    {{ getLevelLabel(alert.newLevel) }}
+                  </span>
                 </v-chip>
               </div>
             </div>
@@ -328,6 +339,26 @@ defineExpose({
   &__level-chip {
     font-size: 0.75rem !important;
     height: 24px !important;
+  }
+  &__level-chip.level-bg-1 {
+    background-color: #10b981 !important;
+    color: #fff !important;
+  }
+  &__level-chip.level-bg-2 {
+    background-color: #7af957 !important;
+    color: #222 !important;
+  }
+  &__level-chip.level-bg-3 {
+    background-color: #edef56 !important;
+    color: #222 !important;
+  }
+  &__level-chip.level-bg-4 {
+    background-color: #f59e0b !important;
+    color: #fff !important;
+  }
+  &__level-chip.level-bg-5 {
+    background-color: #ef4444 !important;
+    color: #fff !important;
   }
 
   &__arrow {

@@ -168,7 +168,7 @@ function clearSelection() {
 
 .content-wrapper {
   position: absolute;
-  top: 140px;
+  top: 80px;
   left: 1rem;
   display: flex;
   flex-direction: column;

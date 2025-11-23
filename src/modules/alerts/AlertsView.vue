@@ -588,27 +588,27 @@ onMounted(loadAlerts)
   font-weight: 500;
 
   &.level-1 {
-    background: #4caf50;
-    color: white;
+    background: #10b981;
+    color: #333;
   }
 
   &.level-2 {
-    background: #8bc34a;
-    color: white;
+    background: #7af957;
+    color: #333;
   }
 
   &.level-3 {
-    background: #ffd60a;
+    background: #edef56;
     color: #333;
   }
 
   &.level-4 {
-    background: #ff9800;
+    background: #f59e0b;
     color: white;
   }
 
   &.level-5 {
-    background: #f44336;
+    background: #ef4444;
     color: white;
   }
 }

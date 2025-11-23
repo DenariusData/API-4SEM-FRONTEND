@@ -131,11 +131,11 @@ interface Props {
 const props = defineProps<Props>()
 
 const levelColors: Record<number, string> = {
-  1: 'success',
-  2: 'success',
-  3: 'warning',
-  4: 'error',
-  5: 'error',
+  1: '#10b981',
+  2: '#7af957',
+  3: '#edef56',
+  4: '#f59e0b',
+  5: '#ef4444',
 }
 
 const getLevelLabel = (level: number): string => {
