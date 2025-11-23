@@ -30,7 +30,7 @@
             :color="getLevelColor(alertDetails.level)"
             variant="tonal"
             size="small"
-            class="alert-info__compact-chip"
+            :class="['alert-info__compact-chip', `level-bg-${alertDetails.level}`]"
           >
             {{ getLevelLabel(alertDetails.level) }}
           </v-chip>
@@ -131,11 +131,11 @@ interface Props {
 const props = defineProps<Props>()
 
 const levelColors: Record<number, string> = {
-  1: 'success',
-  2: 'success',
-  3: 'warning',
-  4: 'error',
-  5: 'error',
+  1: '#10b981',
+  2: '#7af957',
+  3: '#edef56',
+  4: '#f59e0b',
+  5: '#ef4444',
 }
 
 const getLevelLabel = (level: number): string => {
@@ -173,6 +173,30 @@ const timeElapsed = computed(() => {
   return `${diffDays}d atrás`
 })
 </script>
+
+<style lang="scss" scoped>
+// ...existing code...
+.level-bg-1 {
+  background-color: #10b981 !important;
+  color: #fff !important;
+}
+.level-bg-2 {
+  background-color: #7af957 !important;
+  color: #222 !important;
+}
+.level-bg-3 {
+  background-color: #edef56 !important;
+  color: #222 !important;
+}
+.level-bg-4 {
+  background-color: #f59e0b !important;
+  color: #fff !important;
+}
+.level-bg-5 {
+  background-color: #ef4444 !important;
+  color: #fff !important;
+}
+</style>
 
 <style lang="scss" scoped>
 .alert-info {

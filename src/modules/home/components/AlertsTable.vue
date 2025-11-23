@@ -185,7 +185,7 @@ function formatFullDate(dateString: string): string {
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 24px;
+  padding: 24px 0;
   flex: 1;
   display: flex;
   flex-direction: column;

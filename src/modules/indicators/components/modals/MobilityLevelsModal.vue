@@ -58,11 +58,11 @@ const getLevelLabel = (level: number) => {
 
 const getLevelColor = (level: number) => {
   const colors: Record<number, string> = {
-    1: '#059669',
-    2: '#16a34a',
-    3: '#d97706',
-    4: '#dc2626',
-    5: '#7f1d1d',
+    1: '#10b981',
+    2: '#7af957',
+    3: '#edef56',
+    4: '#f59e0b',
+    5: '#ef4444',
   }
   return colors[level] || 'grey'
 }
@@ -169,28 +169,28 @@ defineExpose({
       }
 
       &.level-1 {
-        background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%);
-        border-left: 4px solid #059669;
+        background: linear-gradient(135deg, #ecfdf5 0%, #10b981 100%);
+        border-left: 4px solid #10b981;
       }
 
       &.level-2 {
-        background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
-        border-left: 4px solid #16a34a;
+        background: linear-gradient(135deg, #f0fdf4 0%, #7af957 100%);
+        border-left: 4px solid #7af957;
       }
 
       &.level-3 {
-        background: linear-gradient(135deg, #fffbeb 0%, #fed7aa 100%);
-        border-left: 4px solid #d97706;
+        background: linear-gradient(135deg, #fffbeb 0%, #edef56 100%);
+        border-left: 4px solid #edef56;
       }
 
       &.level-4 {
-        background: linear-gradient(135deg, #fef2f2 0%, #fca5a5 100%);
-        border-left: 4px solid #dc2626;
+        background: linear-gradient(135deg, #fef2f2 0%, #f59e0b 100%);
+        border-left: 4px solid #f59e0b;
       }
 
       &.level-5 {
-        background: linear-gradient(135deg, #fef2f2 0%, #f87171 100%);
-        border-left: 4px solid #7f1d1d;
+        background: linear-gradient(135deg, #fef2f2 0%, #ef4444 100%);
+        border-left: 4px solid #ef4444;
       }
     }
   }

@@ -29,7 +29,7 @@ function closeComparisonModal() {
 
 function toggleZoneSelection(zone: string) {
   if (!isZoneAvailable(zone)) return
-  
+
   const index = selectedZonesForComparison.value.indexOf(zone)
   if (index > -1) {
     selectedZonesForComparison.value.splice(index, 1)
@@ -39,9 +39,7 @@ function toggleZoneSelection(zone: string) {
 }
 
 function selectAllZones() {
-  selectedZonesForComparison.value = props.zonesData
-    .filter(z => isZoneAvailable(z.zone))
-    .map(z => z.zone)
+  selectedZonesForComparison.value = props.zonesData.filter((z) => isZoneAvailable(z.zone)).map((z) => z.zone)
 }
 
 function applyComparison() {
@@ -54,47 +52,40 @@ const createComparisonChart = () => {
   if (comparisonChartRef.value && selectedZonesForComparison.value.length > 0) {
     if (comparisonChartInstance) comparisonChartInstance.destroy()
 
-    const selectedZones = props.zonesData.filter(z => 
-      selectedZonesForComparison.value.includes(z.zone)
-    )
+    const selectedZones = props.zonesData.filter((z) => selectedZonesForComparison.value.includes(z.zone))
 
-    // Verifica se alguma zona tem corredores
-    const hasData = selectedZones.some(z => z.corridors.length > 0)
+    const hasData = selectedZones.some((z) => z.corridors.length > 0)
     if (!hasData) {
       console.warn('⚠️ Nenhuma zona selecionada tem dados de corredores')
       return
     }
 
     const datasets = selectedZones
-      .filter(z => z.corridors.length > 0) // Filtra zonas sem dados
+      .filter((z) => z.corridors.length > 0)
       .map((zone, index) => {
         const colors = ['#00c853', '#2196f3', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4']
         return {
           label: `Zona ${zone.zone}`,
-          data: zone.corridors.map(c => c.vehicles),
+          data: zone.corridors.map((c) => c.vehicles),
           backgroundColor: colors[index % colors.length],
           borderColor: colors[index % colors.length],
           borderWidth: 1,
-          borderRadius: 4
+          borderRadius: 4,
         }
       })
 
-    // Calcula o máximo dinâmico dos dados
-    const allValues = datasets.flatMap(d => d.data)
+    const allValues = datasets.flatMap((d) => d.data)
     const maxValue = Math.max(...allValues, 1500)
-    const chartMax = Math.ceil(maxValue * 1.2 / 500) * 500
+    const chartMax = Math.ceil((maxValue * 1.2) / 500) * 500
 
-    console.log('📊 Comparison Chart - Max value:', maxValue, 'Chart max:', chartMax)
-
-    // Usa o maior número de corredores entre as zonas selecionadas
-    const maxCorridors = Math.max(...selectedZones.map(z => z.corridors.length))
+    const maxCorridors = Math.max(...selectedZones.map((z) => z.corridors.length))
     const labels = Array.from({ length: maxCorridors }, (_, i) => `Corredor ${i + 1}`)
 
     comparisonChartInstance = new Chart(comparisonChartRef.value, {
       type: 'bar',
       data: {
         labels,
-        datasets
+        datasets,
       },
       options: {
         responsive: true,
@@ -103,13 +94,13 @@ const createComparisonChart = () => {
           legend: {
             display: true,
             position: 'top',
-            labels: { 
-              font: { size: 13 }, 
+            labels: {
+              font: { size: 13 },
               color: '#4d4d4d',
               padding: 15,
               usePointStyle: true,
-              pointStyle: 'circle'
-            }
+              pointStyle: 'circle',
+            },
           },
           tooltip: {
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -119,45 +110,44 @@ const createComparisonChart = () => {
             cornerRadius: 8,
             displayColors: true,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const zoneName = context.dataset.label
                 const vehicles = context.parsed.y
                 return `${zoneName}: ${vehicles.toLocaleString('pt-BR')} veículos`
               },
-              afterLabel: function(context) {
-                // Mostra o nome real do corredor se disponível
-                const zoneData = selectedZones.find(z => `Zona ${z.zone}` === context.dataset.label)
+              afterLabel: function (context) {
+                const zoneData = selectedZones.find((z) => `Zona ${z.zone}` === context.dataset.label)
                 if (zoneData && zoneData.corridors[context.dataIndex]) {
                   return `📍 ${zoneData.corridors[context.dataIndex].name}`
                 }
                 return ''
-              }
-            }
-          }
+              },
+            },
+          },
         },
         scales: {
           y: {
             beginAtZero: true,
             max: chartMax,
-            ticks: { 
+            ticks: {
               stepSize: Math.ceil(chartMax / 5 / 100) * 100,
-              font: { size: 12 }, 
+              font: { size: 12 },
               color: '#7a7a7a',
-              callback: function(value) {
+              callback: function (value) {
                 return value.toLocaleString('pt-BR') + ' veíc.'
-              }
+              },
             },
-            grid: { color: '#e0e0e0' }
+            grid: { color: '#e0e0e0' },
           },
           x: {
-            ticks: { 
-              font: { size: 11 }, 
-              color: '#7a7a7a' 
+            ticks: {
+              font: { size: 11 },
+              color: '#7a7a7a',
             },
-            grid: { display: false }
-          }
-        }
-      }
+            grid: { display: false },
+          },
+        },
+      },
     })
   }
 }
@@ -167,7 +157,7 @@ const createComparisonChart = () => {
   <div class="comparison-overlay" @click="closeComparisonModal">
     <div class="comparison-modal" @click.stop>
       <button class="close-comparison" @click="closeComparisonModal">×</button>
-      
+
       <h2>🔄 Comparar Zonas</h2>
       <p class="comparison-subtitle">Selecione as zonas que deseja comparar</p>
 
@@ -176,12 +166,12 @@ const createComparisonChart = () => {
           v-for="zone in zonesData"
           :key="zone.zone"
           :class="[
-            'zone-select-btn', 
-            { 
+            'zone-select-btn',
+            {
               selected: selectedZonesForComparison.includes(zone.zone),
               disabled: !isZoneAvailable(zone.zone),
-              'no-data': zone.corridors.length === 0
-            }
+              'no-data': zone.corridors.length === 0,
+            },
           ]"
           :disabled="!isZoneAvailable(zone.zone)"
           @click="toggleZoneSelection(zone.zone)"
@@ -198,11 +188,9 @@ const createComparisonChart = () => {
       </div>
 
       <div class="comparison-actions">
-        <button class="select-all-btn" @click="selectAllZones">
-          Selecionar Todas Disponíveis
-        </button>
-        <button 
-          class="apply-comparison-btn" 
+        <button class="select-all-btn" @click="selectAllZones">Selecionar Todas Disponíveis</button>
+        <button
+          class="apply-comparison-btn"
           :disabled="selectedZonesForComparison.length === 0"
           @click="applyComparison"
         >
@@ -213,7 +201,10 @@ const createComparisonChart = () => {
       <div v-if="selectedZonesForComparison.length > 0" class="comparison-result">
         <h3>Comparação de Fluxo entre Zonas</h3>
         <p class="result-description">
-          Comparando {{ selectedZonesForComparison.length }} zona{{ selectedZonesForComparison.length !== 1 ? 's' : '' }} selecionada{{ selectedZonesForComparison.length !== 1 ? 's' : '' }}
+          Comparando {{ selectedZonesForComparison.length }} zona{{
+            selectedZonesForComparison.length !== 1 ? 's' : ''
+          }}
+          selecionada{{ selectedZonesForComparison.length !== 1 ? 's' : '' }}
         </p>
         <div class="chart-container">
           <canvas ref="comparisonChartRef"></canvas>
