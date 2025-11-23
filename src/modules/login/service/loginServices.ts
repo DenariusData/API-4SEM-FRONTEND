@@ -5,6 +5,8 @@ import type { AxiosResponse } from 'axios'
 interface LoginResponse {
   token: string
   role: UserRole
+  name: string
+  email: string
 }
 
 const login = {

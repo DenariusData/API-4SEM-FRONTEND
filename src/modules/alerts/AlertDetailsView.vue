@@ -23,7 +23,7 @@
       </div>
       <AlertInformation v-else :alert-details="alertDetails" :user-role="userRole" />
 
-      <div v-if="userRole === 'agent' && !alertDetails.finalized" class="alert-details__agent-section">
+      <div v-if="userRole === 'agent' && !alertDetails.finalized && alertDetails.isOpen" class="alert-details__agent-section">
         <InitialGuidelines :radar-id="alertDetails.radar_id" :location="alertDetails.location || ''" />
 
         <ProblemIdentification
@@ -45,7 +45,7 @@
         </div>
       </div>
 
-      <div v-if="userRole === 'manager' && !alertDetails.finalized" class="alert-details__manager-section">
+      <div v-if="userRole === 'manager' && !alertDetails.finalized && alertDetails.isOpen" class="alert-details__manager-section">
         <v-card class="alert-details__card">
           <v-card-title class="alert-details__card-title">
             <v-icon class="mr-2">mdi-account-tie</v-icon>
@@ -92,10 +92,45 @@
         </div>
       </div>
 
-      <v-alert v-if="alertDetails.finalized" type="success" variant="tonal" class="mt-4">
-        <v-icon start size="24">mdi-check-circle</v-icon>
-        <strong>Este alerta já foi finalizado</strong>
-      </v-alert>
+      <v-card v-if="!alertDetails.isOpen || alertDetails.finalized" class="alert-details__card alert-details__finalized-info mt-4">
+        <v-card-title class="alert-details__card-title alert-details__finalized-title">
+          <v-icon class="mr-2" color="success">mdi-check-circle</v-icon>
+          Alerta Finalizado
+        </v-card-title>
+        <v-card-text class="pa-4">
+          <div class="alert-details__finalized-grid">
+            <div v-if="alertDetails.closedAt" class="alert-details__finalized-item">
+              <div class="alert-details__finalized-label">
+                <v-icon size="20" class="mr-1">mdi-calendar-check</v-icon>
+                Data de Finalização
+              </div>
+              <div class="alert-details__finalized-value">
+                {{ formatDateTime(alertDetails.closedAt) }}
+              </div>
+            </div>
+
+            <div v-if="alertDetails.rootCauseName" class="alert-details__finalized-item">
+              <div class="alert-details__finalized-label">
+                <v-icon size="20" class="mr-1">mdi-alert-box</v-icon>
+                Causa Raiz
+              </div>
+              <div class="alert-details__finalized-value">
+                {{ alertDetails.rootCauseName }}
+              </div>
+            </div>
+
+            <div v-if="alertDetails.conclusion" class="alert-details__finalized-item alert-details__finalized-item--full">
+              <div class="alert-details__finalized-label">
+                <v-icon size="20" class="mr-1">mdi-text-box</v-icon>
+                Conclusão
+              </div>
+              <div class="alert-details__finalized-value alert-details__conclusion-text">
+                {{ alertDetails.conclusion }}
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
     </div>
   </div>
 </template>
@@ -210,17 +245,8 @@ const finalizeAlert = async () => {
   if (!canFinalize.value || !alertDetails.value) return
 
   try {
-    const data =
-      userRole.value === 'agent'
-        ? {
-            problem_id: selectedProblem.value ?? undefined,
-            notes: resolutionNotes.value,
-          }
-        : {
-            agent_id: selectedAgent.value ?? undefined,
-          }
-
-    await alertServices.finalizeAlert(alertDetails.value.alert_id, data)
+    const conclusion = resolutionNotes.value.trim() || undefined
+    await alertServices.finalizeAlert(alertDetails.value.alert_id, conclusion)
 
     alert('Alerta finalizado com sucesso!')
     router.push({ name: 'alerts' })
@@ -249,6 +275,19 @@ onMounted(async () => {
     fetchAlertDetails()
   }, 60000)
 })
+
+const formatDateTime = (dateTime: string | null | undefined): string => {
+  if (!dateTime) return '-'
+  
+  const date = new Date(dateTime)
+  return date.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 onUnmounted(() => {
   if (updateInterval) {
@@ -331,6 +370,57 @@ onUnmounted(() => {
   &__agent-section,
   &__manager-section {
     margin-top: 24px;
+  }
+
+  &__finalized-info {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+  }
+
+  &__finalized-title {
+    background: linear-gradient(to right, #dcfce7, #f0fdf4);
+    border-bottom: 1px solid #86efac;
+  }
+
+  &__finalized-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  &__finalized-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__finalized-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.813rem;
+    font-weight: 600;
+    color: #059669;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  &__finalized-value {
+    font-size: 0.938rem;
+    color: #1f2937;
+    font-weight: 500;
+  }
+
+  &__conclusion-text {
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #d1fae5;
+    line-height: 1.6;
+    white-space: pre-wrap;
   }
 }
 </style>

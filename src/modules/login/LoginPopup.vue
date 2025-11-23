@@ -35,6 +35,8 @@ const handleLogin = async () => {
     if (response.data.token && response.data.role) {
       roleStore.setToken(response.data.token)
       roleStore.setRole(response.data.role)
+      roleStore.setUserName(response.data.name)
+      roleStore.setUserEmail(response.data.email)
       emit('login-success')
     }
     closePopup()
