@@ -23,7 +23,10 @@
       </div>
       <AlertInformation v-else :alert-details="alertDetails" :user-role="userRole" />
 
-      <div v-if="userRole === 'agent' && !alertDetails.finalized && alertDetails.isOpen" class="alert-details__agent-section">
+      <div
+        v-if="userRole === 'agent' && !alertDetails.finalized && alertDetails.isOpen"
+        class="alert-details__agent-section"
+      >
         <InitialGuidelines :radar-id="alertDetails.radar_id" :location="alertDetails.location || ''" />
 
         <ProblemIdentification
@@ -45,7 +48,10 @@
         </div>
       </div>
 
-      <div v-if="userRole === 'manager' && !alertDetails.finalized && alertDetails.isOpen" class="alert-details__manager-section">
+      <div
+        v-if="userRole === 'manager' && !alertDetails.finalized && alertDetails.isOpen"
+        class="alert-details__manager-section"
+      >
         <v-card class="alert-details__card">
           <v-card-title class="alert-details__card-title">
             <v-icon class="mr-2">mdi-account-tie</v-icon>
@@ -92,7 +98,10 @@
         </div>
       </div>
 
-      <v-card v-if="!alertDetails.isOpen || alertDetails.finalized" class="alert-details__card alert-details__finalized-info mt-4">
+      <v-card
+        v-if="!alertDetails.isOpen || alertDetails.finalized"
+        class="alert-details__card alert-details__finalized-info mt-4"
+      >
         <v-card-title class="alert-details__card-title alert-details__finalized-title">
           <v-icon class="mr-2" color="success">mdi-check-circle</v-icon>
           Alerta Finalizado
@@ -119,7 +128,10 @@
               </div>
             </div>
 
-            <div v-if="alertDetails.conclusion" class="alert-details__finalized-item alert-details__finalized-item--full">
+            <div
+              v-if="alertDetails.conclusion"
+              class="alert-details__finalized-item alert-details__finalized-item--full"
+            >
               <div class="alert-details__finalized-label">
                 <v-icon size="20" class="mr-1">mdi-text-box</v-icon>
                 Conclusão
@@ -278,7 +290,7 @@ onMounted(async () => {
 
 const formatDateTime = (dateTime: string | null | undefined): string => {
   if (!dateTime) return '-'
-  
+
   const date = new Date(dateTime)
   return date.toLocaleString('pt-BR', {
     day: '2-digit',
@@ -299,8 +311,6 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .alert-details {
   padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
 
   &__header {
     display: flex;
