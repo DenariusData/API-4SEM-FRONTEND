@@ -1,31 +1,24 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getRegions } from '@/modules/persons/services/regionService'
 import { registerPeriodicTask } from '@/shared/periodicUpdater'
 import { useRoleStore } from '@/modules/login/store/roleStore'
 import alerts from '@/modules/alerts/services/alertServices'
-
 import MetricCards from '@/modules/home/components/MetricCards.vue'
 import AlertsTable from '@/modules/home/components/AlertsTable.vue'
 import MapContainer from '@/modules/home/components/MapContainer.vue'
 import HomeFilter from '@/modules/home/components/HomeFilter.vue'
-
 import type { Criterion, ZoneMetric, Alert } from '@/modules/home/types/homeTypes'
 
 const selectedZones = ref<string[]>([])
 const filteredZones = ref<string[]>([])
 const startDateTime = ref<string>('')
 const endDateTime = ref<string>('')
-
-const activeAnimations = new Map<string, number>()
 const regionNameToLevelMap = ref<Map<string, number>>(new Map())
 const regionIdToNameMap = ref<Map<number, string>>(new Map())
 const regionNameToIdMap = ref<Map<string, number>>(new Map())
-
 const roleStore = useRoleStore()
-
 const criterias = ref<Alert[]>([])
 const zoneMetrics = ref<ZoneMetric[]>([])
 const selectedCriterion = ref('')
@@ -35,14 +28,12 @@ const allAlerts = ref<Alert[]>([])
 const loading = ref(false)
 const errorMessage = ref('')
 const regionsLevelData = ref<{ region_id: number; level: number }[]>([])
-
 let unregisterPeriodicTask: (() => void) | null = null
 
 const isAgent = computed(() => roleStore.isAgente)
 
 const criteriaForTable = computed<Criterion[]>(() => {
   const uniqueCriteria = new Map()
-
   criterias.value.forEach((alert) => {
     if (alert.criterionId && !uniqueCriteria.has(alert.criterionId)) {
       uniqueCriteria.set(alert.criterionId, {
@@ -52,22 +43,23 @@ const criteriaForTable = computed<Criterion[]>(() => {
       })
     }
   })
-
   return Array.from(uniqueCriteria.values())
 })
 
 async function fetchRegionData(): Promise<void> {
   try {
-    const [regionsResponse, levelsResponse] = await Promise.all([getRegions(), alerts.getRegionsLevel()])
+    const [regionsResponse, levelsResponse] = await Promise.all([
+      getRegions(),
+      alerts.getRegionsLevel(),
+    ])
 
     const regionIdToNameMapLocal = new Map<number, string>()
-
     const regionsList = regionsResponse?.data || regionsResponse || []
+
     if (Array.isArray(regionsList)) {
       regionsList.forEach((region: { id: number; name: string }) => {
         regionIdToNameMapLocal.set(region.id, region.name)
         regionIdToNameMap.value.set(region.id, region.name)
-
         const cleanedName = region.name.replace(/zona\s*/gi, '').trim()
         regionNameToIdMap.value.set(cleanedName, region.id)
       })
@@ -76,7 +68,6 @@ async function fetchRegionData(): Promise<void> {
     const levelsList = levelsResponse?.data || levelsResponse || []
     if (Array.isArray(levelsList)) {
       regionsLevelData.value = levelsList
-
       levelsList.forEach((item: { region_id: number; level: number }) => {
         const regionName = regionIdToNameMapLocal.get(item.region_id)
         if (regionName) {
@@ -94,7 +85,6 @@ onMounted(async () => {
   unregisterPeriodicTask = registerPeriodicTask(async () => {
     await fetchRegionData()
   })
-
   await fetchRegionData()
 
   if (isAgent.value) {
@@ -115,53 +105,11 @@ onUnmounted(() => {
     unregisterPeriodicTask()
     unregisterPeriodicTask = null
   }
-  activeAnimations.forEach(clearInterval)
-  activeAnimations.clear()
 })
-
-function toggleZone(region: string, layer: L.Layer) {
-  const index = selectedZones.value.indexOf(region)
-  if (index >= 0) {
-    selectedZones.value.splice(index, 1)
-    stopAnimation(region)
-  } else {
-    selectedZones.value.push(region)
-    startAnimation(region, layer)
-  }
-}
-
-function startAnimation(region: string, layer: L.Layer) {
-  stopAnimation(region)
-  if (!(layer as L.Path).setStyle) return
-
-  let glow = 0
-  const interval = setInterval(() => {
-    if (!(layer as L.Path).setStyle) return
-    const intensity = 0.5 + 0.3 * Math.sin(glow)
-    ;(layer as L.Path).setStyle({
-      weight: 3 + 1.5 * intensity,
-      color: `rgba(0, 68, 255, ${0.7 + 0.3 * intensity})`,
-    })
-    glow += 0.3
-    if (glow > Math.PI * 2) glow = 0
-  }, 120)
-  activeAnimations.set(region, interval)
-}
-
-function stopAnimation(region: string) {
-  const anim = activeAnimations.get(region)
-  if (anim) {
-    clearInterval(anim)
-    activeAnimations.delete(region)
-  }
-}
 
 function applyFilter() {
   filteredZones.value = [...selectedZones.value]
   selectedZones.value = []
-
-  activeAnimations.forEach(clearInterval)
-  activeAnimations.clear()
 
   if (isAgent.value) {
     fetchRegionsCriterias()
@@ -174,8 +122,6 @@ function clearSelection() {
   filteredZones.value = []
   startDateTime.value = ''
   endDateTime.value = ''
-  activeAnimations.forEach(clearInterval)
-  activeAnimations.clear()
 
   if (isAgent.value) {
     fetchRegionsCriterias()
@@ -199,7 +145,6 @@ async function fetchRegionsCriterias() {
 
     const response = await alerts.getRegionsAlerts(regionIds)
     criterias.value = response.data || []
-
     await updateZoneMetricsWithCurrentLevels()
   } catch (error) {
     console.error('Erro ao carregar critérios:', error)
@@ -228,10 +173,13 @@ async function fetchAlerts() {
 
     try {
       const hasDateFilter = startDateTime.value || endDateTime.value
-
       let response
+
       if (selectedCriterion.value) {
-        response = await alerts.getTop5ByRegionAndCriterion(regionIds, Number(selectedCriterion.value))
+        response = await alerts.getTop5ByRegionAndCriterion(
+          regionIds,
+          Number(selectedCriterion.value)
+        )
       } else if (hasDateFilter) {
         response = await alerts.getTop5ByRegion(regionIds)
       } else {
@@ -239,7 +187,9 @@ async function fetchAlerts() {
       }
 
       const data = response?.data || response
-      criticalAlerts = Array.isArray(data) ? data : (data as { content?: Alert[] })?.content || []
+      criticalAlerts = Array.isArray(data)
+        ? data
+        : (data as { content?: Alert[] })?.content || []
 
       criticalAlerts.sort((a, b) => {
         const levelA = a.newLevel || a.level || 0
@@ -269,7 +219,6 @@ async function fetchAllRegionsAlerts() {
 async function updateZoneMetricsWithCurrentLevels() {
   try {
     const levelsList = regionsLevelData.value
-
     const regionLevels = new Map<number, number>()
 
     if (Array.isArray(levelsList)) {
@@ -300,7 +249,6 @@ function updateZoneMetricsFromAlerts(alertsList: Alert[]) {
 
   alertsList.forEach((alert: Alert) => {
     const currentLevel = alert.newLevel || alert.level
-
     if (alert.criterionId && currentLevel) {
       if (!alertsByCriterion.has(alert.criterionId)) {
         alertsByCriterion.set(alert.criterionId, [])
@@ -326,8 +274,14 @@ function toggleSort() {
   sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'
 }
 
-function handleZoneToggle(region: string, layer: L.Layer) {
-  toggleZone(region, layer)
+function handleZoneToggle(data: { region: string; selected: boolean }) {
+  const index = selectedZones.value.indexOf(data.region)
+
+  if (data.selected && index < 0) {
+    selectedZones.value.push(data.region)
+  } else if (!data.selected && index >= 0) {
+    selectedZones.value.splice(index, 1)
+  }
 }
 
 function handleCriterionChange() {
@@ -359,7 +313,6 @@ function handleCriterionChange() {
         <div class="metrics-container">
           <MetricCards :metrics="zoneMetrics" />
         </div>
-
         <MapContainer
           compact
           :region-name-to-level-map="regionNameToLevelMap"
