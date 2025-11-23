@@ -26,7 +26,8 @@ const userData = computed(() => {
   if (!roleStore.token) return null
 
   return {
-    email: 'Usuário',
+    name: roleStore.userName || 'Usuário',
+    email: roleStore.userEmail || '',
     role: roleStore.role ? roleLabels[roleStore.role] : 'Sem permissão',
   }
 })
@@ -55,7 +56,8 @@ const handleLogout = () => {
             </v-avatar>
 
             <div class="user-details">
-              <div class="user-email">{{ userData?.email }}</div>
+              <div class="user-name">{{ userData?.name }}</div>
+              <div class="user-email" v-if="userData?.email">{{ userData?.email }}</div>
               <v-chip size="small" color="black" variant="tonal" class="user-role">
                 {{ userData?.role }}
               </v-chip>
@@ -91,11 +93,20 @@ const handleLogout = () => {
   min-width: 0;
 }
 
-.user-email {
-  font-weight: 500;
-  margin-bottom: 4px;
+.user-name {
+  font-weight: 600;
+  margin-bottom: 2px;
   color: #1f2937;
   font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-email {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
