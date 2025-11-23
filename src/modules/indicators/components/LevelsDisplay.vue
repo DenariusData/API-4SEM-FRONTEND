@@ -82,35 +82,35 @@ const showLevelDescription = (level: LevelKey) => {
 
     &.level-1 {
       .levels-display__number {
-        background: linear-gradient(135deg, #10b981, #059669);
+        background: #10b981;
         box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
       }
     }
 
     &.level-2 {
       .levels-display__number {
-        background: linear-gradient(135deg, #22c55e, #16a34a);
+        background: #7af957;
         box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
       }
     }
 
     &.level-3 {
       .levels-display__number {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
+        background: #edef56;
         box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
       }
     }
 
     &.level-4 {
       .levels-display__number {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
+        background: #f59e0b;
         box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
       }
     }
 
     &.level-5 {
       .levels-display__number {
-        background: linear-gradient(135deg, #991b1b, #7f1d1d);
+        background: #ef4444;
         box-shadow: 0 6px 16px rgba(153, 27, 27, 0.3);
       }
     }

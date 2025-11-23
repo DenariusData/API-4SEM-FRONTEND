@@ -44,11 +44,11 @@ watch(isAuthorized, (newIsAuthorized) => {
 })
 
 const levelColors = {
-  1: '#4CAF50',
-  2: '#8BC34A',
-  3: '#FFC107',
-  4: '#FF9800',
-  5: '#F44336',
+  1: '#10b981',
+  2: '#7af957',
+  3: '#edef56',
+  4: '#f59e0b',
+  5: '#ef4444',
 }
 
 const fetchAlerts = async () => {
