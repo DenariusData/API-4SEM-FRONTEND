@@ -23,9 +23,19 @@ const updateField = (field: keyof FormProtocolo, value: unknown) => {
   emit('update:formData', { ...props.formData, [field]: value } as FormProtocolo)
 }
 
+const PASSOS_LIMIT = 228
+const getTotalPassosLength = () => props.formData.passos.reduce((acc, p) => acc + p.length, 0)
+
 const updatePasso = (index: number, value: string) => {
+  const totalLength = getTotalPassosLength() - props.formData.passos[index].length + value.length
+  let newValue = value
+  if (totalLength > PASSOS_LIMIT) {
+    // Limita o valor para não ultrapassar o limite no total
+    const allowed = PASSOS_LIMIT - (getTotalPassosLength() - props.formData.passos[index].length)
+    newValue = value.slice(0, allowed)
+  }
   const newPassos = [...props.formData.passos]
-  newPassos[index] = value
+  newPassos[index] = newValue
   updateField('passos', newPassos)
 }
 </script>
@@ -53,10 +63,17 @@ const updatePasso = (index: number, value: string) => {
           <label>Descrição</label>
           <textarea
             :value="formData.description"
-            @input="updateField('description', ($event.target as HTMLTextAreaElement).value)"
-            placeholder="Descreva o objetivo deste protocolo..."
+            @input="
+              (e) => {
+                const val = (e.target as HTMLTextAreaElement).value.slice(0, 255)
+                updateField('description', val)
+              }
+            "
+            :maxlength="255"
+            placeholder="Descreva o objetivo deste protocolo... (máx. 255 caracteres)"
             rows="2"
           />
+          <div class="char-counter">{{ formData.description.length }}/255 caracteres</div>
         </div>
 
         <div class="form-group">
@@ -94,12 +111,14 @@ const updatePasso = (index: number, value: string) => {
               <textarea
                 :value="passo"
                 @input="updatePasso(index, ($event.target as HTMLTextAreaElement).value)"
+                :maxlength="PASSOS_LIMIT - (getTotalPassosLength() - passo.length)"
                 rows="2"
                 placeholder="Descreva o passo do protocolo"
               ></textarea>
             </div>
           </div>
-          <small>Adicione todos os passos que o agente deve seguir para resolver esta causa raiz</small>
+          <div class="char-counter">{{ getTotalPassosLength() }}/{{ PASSOS_LIMIT }} caracteres</div>
+          <small>A soma dos caracteres de todos os passos não pode ultrapassar {{ PASSOS_LIMIT }}.</small>
         </div>
 
         <div class="modal-actions">
@@ -235,6 +254,13 @@ const updatePasso = (index: number, value: string) => {
       display: flex;
       justify-content: space-between;
     }
+  }
+
+  .char-counter {
+    text-align: right;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 2px;
   }
 }
 

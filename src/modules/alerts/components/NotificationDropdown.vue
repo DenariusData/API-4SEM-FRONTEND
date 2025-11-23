@@ -87,6 +87,7 @@ const getLevelTextColor = (level: number): string => {
 
 const goToAlertDetails = (alert: Alert) => {
   if (alert.finalized) return
+  if (roleStore.isAgente || roleStore.isGestor) return
   isOpen.value = false
   router.push({ name: 'alert-details', params: { id: alert.alertId } })
 }
@@ -170,6 +171,7 @@ defineExpose({
               <span class="notification-dropdown__indicator">{{ alert.indicator }}</span>
               <span class="notification-dropdown__time">{{ alert.timestamp }}</span>
               <v-icon
+                v-if="isFinalized(alert) || !(roleStore.isAgente || roleStore.isGestor)"
                 size="18"
                 :color="isFinalized(alert) ? 'success' : 'primary'"
                 class="notification-dropdown__status-icon"

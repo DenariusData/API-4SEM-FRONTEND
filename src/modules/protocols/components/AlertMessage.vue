@@ -1,40 +1,54 @@
 <script setup lang="ts">
-import type { Alert } from '@/modules/protocols/types/ProtocolsTypes';
+import type { Alert } from '@/modules/protocols/types/ProtocolsTypes'
 
 interface Props {
-  alert: Alert | null;
+  alert: Alert | null
 }
 
 interface Emits {
-  (e: 'close'): void;
+  (e: 'close'): void
 }
 
-defineProps<Props>();
-const emit = defineEmits<Emits>();
+defineProps<Props>()
+const emit = defineEmits<Emits>()
 </script>
 
 <template>
-  <div v-if="alert" :class="['alert', `alert-${alert.type}`]">
-    <span class="alert-icon">
-      <span v-if="alert.type === 'success'">✓</span>
-      <span v-else-if="alert.type === 'error'">✕</span>
-      <span v-else-if="alert.type === 'warning'">⚠</span>
-      <span v-else>ℹ</span>
-    </span>
-    <span class="alert-message">{{ alert.message }}</span>
-    <button @click="emit('close')" class="alert-close">×</button>
-  </div>
+  <transition name="toast-fade">
+    <div v-if="alert" :class="['alert', `alert-${alert.type}`]" class="alert-toast" role="alert">
+      <span class="alert-icon">
+        <span v-if="alert.type === 'success'">✓</span>
+        <span v-else-if="alert.type === 'error'">✕</span>
+        <span v-else-if="alert.type === 'warning'">⚠</span>
+        <span v-else>ℹ</span>
+      </span>
+      <span class="alert-message">{{ alert.message }}</span>
+      <button @click="emit('close')" class="alert-close">×</button>
+    </div>
+  </transition>
 </template>
 
 <style lang="scss" scoped>
+.alert-toast {
+  position: fixed;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  margin-bottom: 0;
+  pointer-events: auto;
+}
+
 .alert {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 16px;
+  padding: 16px 24px;
   border-radius: 8px;
-  margin-bottom: 20px;
-  animation: slideIn 0.3s ease-out;
+  animation: none;
 
   &-success {
     background-color: #f0fdf4;
@@ -90,14 +104,20 @@ const emit = defineEmits<Emits>();
   }
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition:
+    opacity 0.3s,
+    top 0.3s;
+}
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  top: 0px;
+}
+.toast-fade-enter-to,
+.toast-fade-leave-from {
+  opacity: 1;
+  top: 32px;
 }
 </style>

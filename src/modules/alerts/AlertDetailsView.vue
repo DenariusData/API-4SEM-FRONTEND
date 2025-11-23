@@ -258,7 +258,7 @@ const finalizeAlert = async () => {
 
   try {
     const conclusion = resolutionNotes.value.trim() || undefined
-    await alertServices.finalizeAlert(alertDetails.value.alert_id, conclusion)
+    await alertServices.finalizeAlert(alertDetails.value.id, conclusion)
 
     alert('Alerta finalizado com sucesso!')
     router.push({ name: 'alerts' })
