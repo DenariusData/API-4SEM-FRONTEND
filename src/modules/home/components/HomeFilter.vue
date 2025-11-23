@@ -30,16 +30,6 @@ const showEndDatePicker = ref(false)
 const showFilters = ref(false)
 const showDashboard = ref(false)
 
-function combineDateTime(date: Date | null, time: string): string {
-  if (!date) return ''
-
-  const combined = new Date(date)
-  const [hours, minutes] = time.split(':')
-  combined.setHours(parseInt(hours), parseInt(minutes), 0, 0)
-
-  return combined.toISOString()
-}
-
 function openDashboard() {
   showDashboard.value = true
 }
@@ -48,14 +38,18 @@ function closeDashboard() {
   showDashboard.value = false
 }
 
-const startDateTime = computed(() => combineDateTime(startDate.value, startTime.value))
-const endDateTime = computed(() => combineDateTime(endDate.value, endTime.value))
+const startDateTimeInput = ref('')
+const endDateTimeInput = ref('')
+
+const startDateTime = computed(() => startDateTimeInput.value)
+const endDateTime = computed(() => endDateTimeInput.value)
 const canAccessDashboard = computed(() => roleStore.isAdmin || roleStore.isGestor)
 
 function applyFilter() {
   emit('apply-filter')
-  emit('update:start-date-time', startDateTime.value)
-  emit('update:end-date-time', endDateTime.value)
+  emit('update:start-date-time', startDateTimeInput.value)
+  emit('update:end-date-time', endDateTimeInput.value)
+  showFilters.value = false
 }
 
 function clearSelection() {
@@ -65,9 +59,12 @@ function clearSelection() {
   endTime.value = '23:59'
   showStartDatePicker.value = false
   showEndDatePicker.value = false
+  startDateTimeInput.value = ''
+  endDateTimeInput.value = ''
   emit('clear-selection')
   emit('update:start-date-time', '')
   emit('update:end-date-time', '')
+  showFilters.value = false
 }
 </script>
 
@@ -84,13 +81,31 @@ function clearSelection() {
           <div class="instructions">ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la</div>
 
           <div class="filter-group">
-            <label for="start-datetime">Data/hora inicial</label>
-            <input id="start-datetime" v-model="startDateTime" type="datetime-local" class="datetime-input" />
+            <v-text-field
+              v-model="startDateTimeInput"
+              label="Data e Hora de Início"
+              type="datetime-local"
+              variant="outlined"
+              density="comfortable"
+              clearable
+              prepend-inner-icon="mdi-calendar-start"
+              hint="Formato: DD/MM/AAAA HH:mm"
+              persistent-hint
+            />
           </div>
 
           <div class="filter-group">
-            <label for="end-datetime">Data/hora final</label>
-            <input id="end-datetime" v-model="endDateTime" type="datetime-local" class="datetime-input" />
+            <v-text-field
+              v-model="endDateTimeInput"
+              label="Data e Hora de Fim"
+              type="datetime-local"
+              variant="outlined"
+              density="comfortable"
+              clearable
+              prepend-inner-icon="mdi-calendar-end"
+              hint="Formato: DD/MM/AAAA HH:mm"
+              persistent-hint
+            />
           </div>
 
           <div class="status">

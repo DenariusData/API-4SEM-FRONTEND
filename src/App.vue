@@ -25,7 +25,6 @@ onMounted(async () => {
   checkLoginStatus()
   await nextTick()
   if (notificationDropdownRef.value && notificationDropdownRef.value.fetchAlerts) {
-    console.log(notificationDropdownRef.value.fetchAlerts)
     fetchAlertsRef.value = notificationDropdownRef.value.fetchAlerts
   }
 })

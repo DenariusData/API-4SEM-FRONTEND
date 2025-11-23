@@ -247,14 +247,24 @@ const alertsRoutes = [
         const allAlerts = [
           { alertId: 1, alertRegion: 'Região Sul', criterionName: 'Congestionamento', alertClosedAt: null },
           { alertId: 2, alertRegion: 'Região Norte', criterionName: 'Densidade de Veículos', alertClosedAt: null },
-          { alertId: 3, alertRegion: 'Região Leste', criterionName: 'Infrações de Velocidade', alertClosedAt: '2024-11-15' },
+          {
+            alertId: 3,
+            alertRegion: 'Região Leste',
+            criterionName: 'Infrações de Velocidade',
+            alertClosedAt: '2024-11-15',
+          },
           { alertId: 4, alertRegion: 'Região Oeste', criterionName: 'Veículos Grandes', alertClosedAt: null },
           { alertId: 5, alertRegion: 'Região Central', criterionName: 'Congestionamento', alertClosedAt: '2024-11-18' },
           { alertId: 6, alertRegion: 'Região Sul', criterionName: 'Infrações de Velocidade', alertClosedAt: null },
           { alertId: 7, alertRegion: 'Região Norte', criterionName: 'Congestionamento', alertClosedAt: '2024-11-19' },
           { alertId: 8, alertRegion: 'Região Leste', criterionName: 'Densidade de Veículos', alertClosedAt: null },
           { alertId: 9, alertRegion: 'Região Oeste', criterionName: 'Congestionamento', alertClosedAt: null },
-          { alertId: 10, alertRegion: 'Região Central', criterionName: 'Veículos Grandes', alertClosedAt: '2024-11-10' },
+          {
+            alertId: 10,
+            alertRegion: 'Região Central',
+            criterionName: 'Veículos Grandes',
+            alertClosedAt: '2024-11-10',
+          },
           { alertId: 11, alertRegion: 'Região Sul', criterionName: 'Congestionamento', alertClosedAt: null },
           { alertId: 12, alertRegion: 'Região Norte', criterionName: 'Infrações de Velocidade', alertClosedAt: null },
           { alertId: 13, alertRegion: 'Região Leste', criterionName: 'Congestionamento', alertClosedAt: '2024-11-12' },
@@ -288,8 +298,6 @@ const alertsRoutes = [
       method: 'get',
       url: '/alert-logs/:alertId',
       result: (params: MockParams) => {
-        console.log('Fetching logs for alertId:', params)
-
         const alertId = Number(params.params.alertId)
 
         const mockLogs: Record<number, any[]> = {
