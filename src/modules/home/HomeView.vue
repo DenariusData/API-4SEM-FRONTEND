@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getRegions } from '@/modules/persons/services/regionService'
 import { registerPeriodicTask } from '@/shared/periodicUpdater'
@@ -15,6 +16,7 @@ const selectedZones = ref<string[]>([])
 const filteredZones = ref<string[]>([])
 const startDateTime = ref<string>('')
 const endDateTime = ref<string>('')
+const activeAnimations = new Map<string, number>()
 const regionNameToLevelMap = ref<Map<string, number>>(new Map())
 const regionIdToNameMap = ref<Map<number, string>>(new Map())
 const regionNameToIdMap = ref<Map<string, number>>(new Map())
@@ -50,10 +52,7 @@ const criteriaForTable = computed<Criterion[]>(() => {
 
 async function fetchRegionData(): Promise<void> {
   try {
-    const [regionsResponse, levelsResponse] = await Promise.all([
-      getRegions(),
-      alerts.getRegionsLevel(),
-    ])
+    const [regionsResponse, levelsResponse] = await Promise.all([getRegions(), alerts.getRegionsLevel()])
 
     const regionIdToNameMapLocal = new Map<number, string>()
     const regionsList = regionsResponse?.data || regionsResponse || []
@@ -109,9 +108,49 @@ onUnmounted(() => {
   }
 })
 
+function toggleZone(region: string, layer: L.Layer) {
+  const index = selectedZones.value.indexOf(region)
+  if (index >= 0) {
+    selectedZones.value.splice(index, 1)
+    stopAnimation(region)
+  } else {
+    selectedZones.value.push(region)
+    startAnimation(region, layer)
+  }
+}
+
+function startAnimation(region: string, layer: L.Layer) {
+  stopAnimation(region)
+  if (!(layer as L.Path).setStyle) return
+
+  let glow = 0
+  const interval = setInterval(() => {
+    if (!(layer as L.Path).setStyle) return
+    const intensity = 0.5 + 0.3 * Math.sin(glow)
+    ;(layer as L.Path).setStyle({
+      weight: 3 + 1.5 * intensity,
+      color: `rgba(0, 68, 255, ${0.7 + 0.3 * intensity})`,
+    })
+    glow += 0.3
+    if (glow > Math.PI * 2) glow = 0
+  }, 120)
+  activeAnimations.set(region, interval)
+}
+
+function stopAnimation(region: string) {
+  const anim = activeAnimations.get(region)
+  if (anim) {
+    clearInterval(anim)
+    activeAnimations.delete(region)
+  }
+}
+
 function applyFilter() {
   filteredZones.value = [...selectedZones.value]
   selectedZones.value = []
+
+  activeAnimations.forEach(clearInterval)
+  activeAnimations.clear()
 
   if (isAgent.value) {
     fetchRegionsCriterias()
@@ -124,6 +163,8 @@ function clearSelection() {
   filteredZones.value = []
   startDateTime.value = ''
   endDateTime.value = ''
+  activeAnimations.forEach(clearInterval)
+  activeAnimations.clear()
 
   if (isAgent.value) {
     fetchRegionsCriterias()
@@ -178,10 +219,7 @@ async function fetchAlerts() {
       let response
 
       if (selectedCriterion.value) {
-        response = await alerts.getTop5ByRegionAndCriterion(
-          regionIds,
-          Number(selectedCriterion.value)
-        )
+        response = await alerts.getTop5ByRegionAndCriterion(regionIds, Number(selectedCriterion.value))
       } else if (hasDateFilter) {
         response = await alerts.getTop5ByRegion(regionIds)
       } else {
@@ -189,9 +227,7 @@ async function fetchAlerts() {
       }
 
       const data = response?.data || response
-      criticalAlerts = Array.isArray(data)
-        ? data
-        : (data as { content?: Alert[] })?.content || []
+      criticalAlerts = Array.isArray(data) ? data : (data as { content?: Alert[] })?.content || []
 
       criticalAlerts.sort((a, b) => {
         const levelA = a.newLevel || a.level || 0
@@ -276,14 +312,8 @@ function toggleSort() {
   sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'
 }
 
-function handleZoneToggle(data: { region: string; selected: boolean }) {
-  const index = selectedZones.value.indexOf(data.region)
-
-  if (data.selected && index < 0) {
-    selectedZones.value.push(data.region)
-  } else if (!data.selected && index >= 0) {
-    selectedZones.value.splice(index, 1)
-  }
+function handleZoneToggle(region: string, layer: L.Layer) {
+  toggleZone(region, layer)
 }
 
 function handleCriterionChange() {
