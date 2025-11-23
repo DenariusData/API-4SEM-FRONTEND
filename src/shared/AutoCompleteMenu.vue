@@ -30,7 +30,6 @@ const roleAccess = useRoleAccess()
 const allMenuItems: MenuItem[] = [
   { title: 'Home', value: 'home', route: 'home' },
   { title: 'Alertas', value: 'alerts', route: 'alerts', requiresAuth: true, requiresAgente: true },
-  { title: 'Dashboards', value: 'dashboards', route: 'dashboards', requiresAuth: true, requiresGestor: true },
   { title: 'Indicadores', value: 'indicators', route: 'indicators' },
   { title: 'Protocolos', value: 'protocols', route: 'protocols', requiresAuth: true, requiresGestor: true },
   { title: 'Usuários', value: 'persons', route: 'persons', requiresAuth: true, requiresAdmin: true },

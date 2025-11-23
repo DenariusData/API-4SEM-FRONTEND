@@ -176,6 +176,11 @@ function clearSelection() {
   endDateTime.value = ''
   activeAnimations.forEach(clearInterval)
   activeAnimations.clear()
+
+  if (isAgent.value) {
+    fetchRegionsCriterias()
+    fetchAllRegionsAlerts()
+  }
 }
 
 async function fetchRegionsCriterias() {

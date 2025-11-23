@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRoleStore } from '@/modules/login/store/roleStore'
+import DashboardPopup from '@/modules/dashboards/DashboardsPopup.vue'
 
 interface Props {
   selectedZones: string[]
@@ -16,6 +18,8 @@ interface Emits {
 defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const roleStore = useRoleStore()
+
 const startDate = ref<Date | null>(null)
 const endDate = ref<Date | null>(null)
 const startTime = ref<string>('00:00')
@@ -23,11 +27,8 @@ const endTime = ref<string>('23:59')
 
 const showStartDatePicker = ref(false)
 const showEndDatePicker = ref(false)
-
-function formatDateDisplay(date: Date | null): string {
-  if (!date) return ''
-  return date.toLocaleDateString('pt-BR')
-}
+const showFilters = ref(false)
+const showDashboard = ref(false)
 
 function combineDateTime(date: Date | null, time: string): string {
   if (!date) return ''
@@ -39,8 +40,18 @@ function combineDateTime(date: Date | null, time: string): string {
   return combined.toISOString()
 }
 
+function openDashboard() {
+  showDashboard.value = true
+}
+
+function closeDashboard() {
+  showDashboard.value = false
+}
+
 const startDateTime = computed(() => combineDateTime(startDate.value, startTime.value))
 const endDateTime = computed(() => combineDateTime(endDate.value, endTime.value))
+const canAccessFilters = computed(() => roleStore.isAdmin || roleStore.isGestor || roleStore.isAgente)
+const canAccessDashboard = computed(() => roleStore.isAdmin || roleStore.isGestor)
 
 function applyFilter() {
   emit('apply-filter')
@@ -62,377 +73,213 @@ function clearSelection() {
 </script>
 
 <template>
-  <div class="filter-container">
-    <div class="panel-header">
-      <div class="header-info">
-        <h2>Filtros</h2>
-        <span class="separator">|</span>
-        <p>Configure os filtros para visualizar dados específicos</p>
-      </div>
+  <div>
+    <div v-if="canAccessFilters || canAccessDashboard" class="top-bar">
+      <button v-if="canAccessFilters" class="filters-button" @click="showFilters = !showFilters">Filtros</button>
+      <button v-if="canAccessDashboard" class="dashboard-button" @click="openDashboard">Dashboard's</button>
     </div>
 
-    <div class="filter-content">
-      <div class="datetime-row">
-        <div class="datetime-inputs">
+    <div class="content-wrapper">
+      <div v-if="showFilters && canAccessFilters" class="filter-dropdown">
+        <div class="filter-content">
+          <div class="instructions">ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la</div>
+
           <div class="filter-group">
-            <label>Data/hora inicial</label>
-            <div class="date-time-inputs">
-              <v-menu v-model="showStartDatePicker" :close-on-content-click="false">
-                <template v-slot:activator="{ props }">
-                  <input
-                    v-bind="props"
-                    :value="formatDateDisplay(startDate)"
-                    placeholder="Selecionar data"
-                    readonly
-                    class="date-input"
-                  />
-                </template>
-                <v-date-picker v-model="startDate" @update:model-value="showStartDatePicker = false" locale="pt-BR" />
-              </v-menu>
-              <input v-model="startTime" type="time" class="time-input" />
-            </div>
+            <label for="start-datetime">Data/hora inicial</label>
+            <input id="start-datetime" v-model="startDateTime" type="datetime-local" class="datetime-input" />
           </div>
 
           <div class="filter-group">
-            <label>Data/hora final</label>
-            <div class="date-time-inputs">
-              <v-menu v-model="showEndDatePicker" :close-on-content-click="false">
-                <template v-slot:activator="{ props }">
-                  <input
-                    v-bind="props"
-                    :value="formatDateDisplay(endDate)"
-                    placeholder="Selecionar data"
-                    readonly
-                    class="date-input"
-                  />
-                </template>
-                <v-date-picker v-model="endDate" @update:model-value="showEndDatePicker = false" locale="pt-BR" />
-              </v-menu>
-              <input v-model="endTime" type="time" class="time-input" />
-            </div>
+            <label for="end-datetime">Data/hora final</label>
+            <input id="end-datetime" v-model="endDateTime" type="datetime-local" class="datetime-input" />
+          </div>
+
+          <div class="status">
+            <span v-if="selectedZones.length === 0 && filteredZones.length === 0"> Nenhuma zona selecionada </span>
+            <span v-else-if="selectedZones.length > 0"> Zonas (pré-seleção): {{ selectedZones.join(', ') }} </span>
+            <span v-else> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
+          </div>
+
+          <div class="buttons">
+            <button
+              @click="clearSelection"
+              :disabled="!selectedZones.length && !filteredZones.length && !startDateTime && !endDateTime"
+              class="clear-btn"
+            >
+              Limpar
+            </button>
+            <button
+              @click="applyFilter"
+              :disabled="!selectedZones.length && !startDateTime && !endDateTime"
+              class="apply-btn"
+            >
+              Filtrar
+            </button>
           </div>
         </div>
-
-        <div class="status-info">
-          <span v-if="selectedZones.length === 0 && filteredZones.length === 0" class="status-text">
-            Nenhuma zona selecionada
-          </span>
-          <span v-else-if="selectedZones.length > 0" class="status-text">
-            Zonas (pré-seleção): {{ selectedZones.join(', ') }}
-          </span>
-          <span v-else class="status-text"> Zonas aplicadas: {{ filteredZones.join(', ') }} </span>
-        </div>
-
-        <div class="action-buttons">
-          <button
-            @click="applyFilter"
-            :disabled="!selectedZones.length && !startDateTime && !endDateTime"
-            class="btn btn-primary"
-          >
-            Filtrar
-          </button>
-          <button
-            @click="clearSelection"
-            :disabled="!selectedZones.length && !filteredZones.length && !startDateTime && !endDateTime"
-            class="btn btn-secondary"
-          >
-            Limpar
-          </button>
-        </div>
-      </div>
-
-      <div class="instructions-banner">
-        <span class="info-icon">ℹ️</span>
-        Dê <strong>dois cliques</strong> em uma zona no mapa para selecioná-la antes de aplicar o filtro.
       </div>
     </div>
+
+    <DashboardPopup
+      v-if="showDashboard && canAccessDashboard"
+      :filtered-zones="filteredZones"
+      :start-date="startDateTime"
+      :end-date="endDateTime"
+      @close="closeDashboard"
+    />
   </div>
 </template>
 
 <style lang="scss" scoped>
-.filter-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-.panel-header {
-  margin-bottom: 16px;
-
-  .header-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  h2 {
-    font-size: 1.25rem;
-    color: #1f2937;
-    margin: 0;
-    font-weight: 600;
-  }
-
-  .separator {
-    color: #d1d5db;
-    font-size: 1.2rem;
-  }
-
-  p {
-    font-size: 0.85rem;
-    color: #6b7280;
-    margin: 0;
-  }
-}
-
-.filter-content {
+.top-bar {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  gap: 0.75rem;
+  z-index: 1000;
 
-.datetime-row {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  min-height: 80px;
-}
-
-.datetime-inputs {
-  display: flex;
-  gap: 16px;
-  align-self: flex-end;
-}
-
-.filter-groups {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  label {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 2px;
-  }
-
-  .date-time-inputs {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
-
-  .date-input,
-  .time-input {
-    padding: 8px 10px;
-    border: 1px solid #d1d5db;
+  .filters-button,
+  .dashboard-button {
+    padding: 0.5rem 1.2rem;
+    border: none;
     border-radius: 6px;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    font-family: inherit;
     cursor: pointer;
-
-    &:focus {
-      outline: none;
-      border-color: #00963e;
-      box-shadow: 0 0 0 2px rgba(0, 150, 62, 0.1);
-    }
-
-    &::placeholder {
-      color: #9ca3af;
-    }
-
-    &[readonly] {
-      cursor: pointer;
-      background: white;
-    }
-  }
-
-  .date-input {
-    flex: 1;
-    min-width: 160px;
-  }
-
-  .time-input {
-    min-width: 100px;
-  }
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 8px 12px;
-  background: #f9fafb;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-}
-
-.status-info {
-  flex: 1;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 8px;
-
-  .status-text {
-    font-size: 0.85rem;
-    color: #374151;
-    font-weight: 500;
-    text-align: center;
-  }
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-  align-self: flex-end;
-}
-
-.instructions-banner {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #1e40af;
-  font-size: 0.8rem;
-  flex-shrink: 0;
-  padding: 4px 8px;
-  background: #f0f9ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 4px;
-
-  .info-icon {
-    font-size: 1rem;
-  }
-
-  strong {
-    color: #1e3a8a;
-  }
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
-  }
-
-  &-primary {
-    background: linear-gradient(135deg, #00c853 0%, #00963e 100%);
     color: white;
+    font-weight: 500;
+    transition: 0.2s;
+  }
 
-    &:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 3px 8px rgba(0, 150, 62, 0.3);
+  .filters-button {
+    background: #3b82f6;
+
+    &:hover {
+      background: #2563eb;
     }
   }
 
-  &-secondary {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #e5e7eb;
+  .dashboard-button {
+    background: #00c853;
 
-    &:hover:not(:disabled) {
-      background: #e5e7eb;
+    &:hover {
+      background: #00963e;
     }
   }
 }
 
-.instructions-banner {
+.content-wrapper {
+  position: absolute;
+  top: 140px;
+  left: 1rem;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #1e40af;
-  font-size: 0.8rem;
-  flex-shrink: 0;
-  padding: 4px 8px;
-  background: #f0f9ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 4px;
-
-  .info-icon {
-    font-size: 1rem;
-  }
-
-  strong {
-    color: #1e3a8a;
-  }
+  flex-direction: column;
+  flex: 1;
+  gap: 1rem;
+  padding: 0 1rem 1rem;
+  z-index: 1001;
 }
 
-@media (max-width: 768px) {
-  .filter-container {
-    padding: 12px;
-  }
+.filter-dropdown {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  min-width: 320px;
 
-  .datetime-row {
+  .filter-content {
+    padding: 1rem;
+    display: flex;
     flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
+    gap: 1rem;
 
-  .filter-group .date-time-inputs {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-
-    .date-input,
-    .time-input {
-      min-width: auto;
-      width: 100%;
+    .instructions {
+      background: #e0f2fe;
+      color: #0369a1;
+      text-align: center;
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
     }
-  }
 
-  .info-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    text-align: center;
-  }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
 
-  .action-buttons {
-    justify-content: stretch;
-    gap: 6px;
+      label {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #333;
+      }
 
-    .btn {
-      flex: 1;
-      justify-content: center;
+      .datetime-input {
+        width: 100%;
+        padding: 0.6rem 0.8rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        color: #333;
+        background: white;
+        transition: all 0.2s;
+
+        &:hover {
+          border-color: #3b82f6;
+        }
+
+        &:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+      }
     }
-  }
 
-  .instructions-banner {
-    justify-content: center;
-  }
+    .status {
+      font-size: 0.9rem;
+      color: #333;
+      padding: 0.5rem;
+      background: #f9fafb;
+      border-radius: 4px;
+      text-align: center;
+    }
 
-  .panel-header .header-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    .buttons {
+      display: flex;
+      gap: 0.5rem;
 
-    .separator {
-      display: none;
+      button {
+        flex: 1;
+        padding: 0.6rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        color: white;
+        transition: 0.2s;
+        font-weight: 500;
+        font-size: 0.9rem;
+
+        &:disabled {
+          background: #bbb !important;
+          cursor: not-allowed;
+        }
+      }
+
+      .apply-btn {
+        background: #16a34a;
+
+        &:hover:not(:disabled) {
+          background: #15803d;
+        }
+      }
+
+      .clear-btn {
+        background: #dc2626;
+
+        &:hover:not(:disabled) {
+          background: #b91c1c;
+        }
+      }
     }
   }
 }

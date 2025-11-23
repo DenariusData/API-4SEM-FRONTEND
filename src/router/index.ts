@@ -25,12 +25,6 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAgente: true },
     },
     {
-      path: '/dashboards',
-      name: 'dashboards',
-      component: () => import('@/modules/dashboards/DashboardsView.vue'),
-      meta: { requiresAuth: true, requiresGestor: true },
-    },
-    {
       path: '/indicators',
       name: 'indicators',
       component: () => import('@/modules/indicators/IndicatorsView.vue'),
