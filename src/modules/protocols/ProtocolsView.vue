@@ -25,6 +25,7 @@ import ProtocolsTab from '@/modules/protocols/components/ProtocolsTab.vue'
 import RootCauseModal from '@/modules/protocols/components/RootCauseModal.vue'
 import ProtocolModal from '@/modules/protocols/components/ProtocolModal.vue'
 import ProtocolDeleteModal from '@/modules/protocols/components/ProtocolDeleteModal.vue'
+import RootCauseDeleteModal from '@/modules/protocols/components/RootCauseDeleteModal.vue'
 
 const activeTab = ref<TabType>('causas')
 const showModal = ref(false)
@@ -34,6 +35,8 @@ const showAlert = ref<Alert | null>(null)
 const isLoading = ref(false)
 const protocolToDelete = ref<number | null>(null)
 const showDeleteModal = ref(false)
+const causeToDelete = ref<number | null>(null)
+const showDeleteCauseModal = ref(false)
 
 const causasRaiz = ref<CausaRaiz[]>([])
 const protocolos = ref<Protocolo[]>([])
@@ -158,9 +161,8 @@ const handleSaveCausa = async () => {
   }
 }
 
-const handleDeleteCausa = async (id: number) => {
+function openDeleteCauseModal(id: number) {
   const protocolosAssociados = protocolos.value.filter((p) => p.causaRaizId === id)
-
   if (protocolosAssociados.length > 0) {
     showAlertMessage(
       'error',
@@ -168,7 +170,11 @@ const handleDeleteCausa = async (id: number) => {
     )
     return
   }
+  causeToDelete.value = id
+  showDeleteCauseModal.value = true
+}
 
+const handleConfirmDeleteCause = async (id: number) => {
   try {
     isLoading.value = true
     await protocolsService.deleteRootCause(id)
@@ -293,7 +299,12 @@ const removeStep = (index: number) => {
           :protocols="protocolos"
           @open-modal="openModalCausa"
           @toggle="handleToggleCausa"
-          @delete="handleDeleteCausa"
+          @delete="openDeleteCauseModal"
+        />
+        <RootCauseDeleteModal
+          v-model="showDeleteCauseModal"
+          :cause-id="causeToDelete"
+          @confirm="handleConfirmDeleteCause"
         />
 
         <ProtocolsTab
