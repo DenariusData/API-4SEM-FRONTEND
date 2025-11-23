@@ -1,6 +1,3 @@
-// src/modules/home/utils/viasPrincipais.ts
-// Contém a definição das principais vias por zona para o MapContainer
-
 export interface Via {
   name: string
   coords: [number, number][]
