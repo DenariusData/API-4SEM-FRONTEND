@@ -148,7 +148,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import alertServices from '@/modules/alerts/services/alertServices'
 import problemsService from '@/modules/problems/services/problemsServices'
@@ -253,12 +253,18 @@ const contactAgent = () => {
   window.open(`https://wa.me/${agent.phone}?text=${message}`, '_blank')
 }
 
+const fetchAlerts = inject<() => Promise<void>>('fetchAlerts')
+
 const finalizeAlert = async () => {
   if (!canFinalize.value || !alertDetails.value) return
 
   try {
     const conclusion = resolutionNotes.value.trim() || undefined
     await alertServices.finalizeAlert(alertDetails.value.id, conclusion)
+
+    if (fetchAlerts) {
+      fetchAlerts()
+    }
 
     alert('Alerta finalizado com sucesso!')
     router.push({ name: 'alerts' })

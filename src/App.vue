@@ -4,7 +4,7 @@ import LoginPopup from './modules/login/LoginPopup.vue'
 import NotificationDropdown from './modules/alerts/components/NotificationDropdown.vue'
 import UserAuth from './modules/login/components/UserAuth.vue'
 import sharedServices from '@/shared/services/sharedServices.ts'
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, provide, nextTick } from 'vue'
 import { RouterView, useRouter, useRoute } from 'vue-router'
 import { useRoleStore } from '@/modules/login/store/roleStore'
 
@@ -13,7 +13,22 @@ const showLogin = ref(false)
 const roleStore = useRoleStore()
 const router = useRouter()
 const route = useRoute()
+
 const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
+
+const notificationDropdownRef = ref()
+const fetchAlertsRef = ref<null | (() => Promise<void>)>(null)
+
+provide('fetchAlerts', () => fetchAlertsRef.value && fetchAlertsRef.value())
+
+onMounted(async () => {
+  checkLoginStatus()
+  await nextTick()
+  if (notificationDropdownRef.value && notificationDropdownRef.value.fetchAlerts) {
+    console.log(notificationDropdownRef.value.fetchAlerts)
+    fetchAlertsRef.value = notificationDropdownRef.value.fetchAlerts
+  }
+})
 
 const isLoggedIn = computed(() => roleStore.isAuthenticated)
 
@@ -74,7 +89,7 @@ onMounted(() => {
 
       <div class="actions">
         <v-btn v-if="showRoutineButton" icon="mdi-refresh" variant="text" color="black" @click="updateDatabase"></v-btn>
-        <NotificationDropdown />
+        <NotificationDropdown ref="notificationDropdownRef" />
         <UserAuth :is-logged-in="isLoggedIn" @login="openLogin" @logout="handleLogout" />
       </div>
     </v-app-bar>
