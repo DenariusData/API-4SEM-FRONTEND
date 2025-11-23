@@ -171,7 +171,7 @@ defineExpose({
               <span class="notification-dropdown__indicator">{{ alert.indicator }}</span>
               <span class="notification-dropdown__time">{{ alert.timestamp }}</span>
               <v-icon
-                v-if="isFinalized(alert) || !(roleStore.isAgente || roleStore.isGestor)"
+                v-if="isFinalized(alert) || !roleStore.isGestor"
                 size="18"
                 :color="isFinalized(alert) ? 'success' : 'primary'"
                 class="notification-dropdown__status-icon"

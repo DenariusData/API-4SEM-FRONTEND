@@ -31,9 +31,7 @@ watch(isLoggedIn, (newIsLoggedIn, oldIsLoggedIn) => {
   }
 })
 
-const checkLoginStatus = () => {
-  roleStore.role
-}
+const checkLoginStatus = () => roleStore.role
 
 const handleLogout = () => {
   checkLoginStatus()
