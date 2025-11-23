@@ -79,7 +79,7 @@ async function loadZonesData() {
             id: r.roadId,
             name: r.roadName || `Via ${r.roadId}`,
             vehicles: r.totalCount || 0,
-            speed: r.hours?.length ? r.hours.reduce((s, h) => s + (h.avgSpeedKmh || 0), 0) / r.hours.length : 0,
+            speed: r.hours?.length ? r.hours.reduce((s: number, h: any) => s + (h.avgSpeedKmh || 0), 0) / r.hours.length : 0,
           }))
           .sort((a, b) => b.vehicles - a.vehicles)
           .slice(0, 3)

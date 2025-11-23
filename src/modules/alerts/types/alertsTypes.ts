@@ -74,6 +74,11 @@ export interface AlertDetails {
   criterionName: string
   regionName: string
   createdAt: string
+  closedAt?: string | null
+  conclusion?: string | null
+  rootCauseName?: string | null
+  isOpen: boolean
+  status: string
 }
 
 export interface Problem {

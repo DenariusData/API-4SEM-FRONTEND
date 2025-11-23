@@ -7,12 +7,6 @@ import type {
   Pageable,
 } from '@/modules/alerts/types/alertsTypes'
 
-interface FinalizeAlertPayload {
-  problem_id?: number
-  notes?: string
-  agent_id?: number
-}
-
 interface FinalizeAlertResponse {
   success: boolean
   message: string
@@ -40,8 +34,10 @@ const alerts = {
 
   getDetails: (id: number): Promise<{ data: AlertDetails }> => api.get(`/alerts/${id}`),
 
-  finalizeAlert: (id: number, data?: FinalizeAlertPayload): Promise<{ data: FinalizeAlertResponse }> =>
-    api.post(`/alerts/${id}/finalize`, data),
+  finalizeAlert: (id: number, conclusion?: string): Promise<{ data: FinalizeAlertResponse }> =>
+    api.post(`/alerts/${id}/finalize`, null, {
+      params: conclusion ? { conclusion } : undefined,
+    }),
 
   getRegionsLevel: (): Promise<any> => api.get('/alerts/per-region'),
 

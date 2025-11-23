@@ -50,7 +50,9 @@
         <div v-else-if="protocol" class="problem-identification__protocol">
           <h3 class="problem-identification__protocol-title">{{ protocol.name }}</h3>
           <div class="problem-identification__protocol-description">
-            <p>{{ protocol.description }}</p>
+            <ol class="problem-identification__protocol-steps">
+              <li v-for="(step, index) in protocolSteps" :key="index">{{ step }}</li>
+            </ol>
           </div>
           <div class="problem-identification__protocol-meta">
             <v-chip size="small" color="primary" variant="tonal"> Criado por: {{ protocol.createdByName }} </v-chip>
@@ -134,6 +136,11 @@ const selectedProblemDescription = computed(() => {
 const isLoadingProtocol = ref(false)
 const protocol = ref<Protocol | null>(null)
 
+const protocolSteps = computed(() => {
+  if (!protocol.value?.description) return []
+  return protocol.value.description.split('|-|').map(step => step.trim())
+})
+
 const onProblemSelected = async (problemId: number) => {
   if (!problemId) {
     protocol.value = null
@@ -201,11 +208,20 @@ const onProblemSelected = async (problemId: number) => {
 
   &__protocol-description {
     margin-bottom: 16px;
+  }
 
-    p {
-      color: #6b7280;
-      line-height: 1.6;
-      margin: 0;
+  &__protocol-steps {
+    color: #374151;
+    line-height: 1.8;
+    margin: 0;
+    padding-left: 24px;
+
+    li {
+      margin-bottom: 8px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
   }
 
