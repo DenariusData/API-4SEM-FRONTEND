@@ -24,6 +24,7 @@ import RootCausesTab from '@/modules/protocols/components/RootCausesTab.vue'
 import ProtocolsTab from '@/modules/protocols/components/ProtocolsTab.vue'
 import RootCauseModal from '@/modules/protocols/components/RootCauseModal.vue'
 import ProtocolModal from '@/modules/protocols/components/ProtocolModal.vue'
+import ProtocolDeleteModal from '@/modules/protocols/components/ProtocolDeleteModal.vue'
 
 const activeTab = ref<TabType>('causas')
 const showModal = ref(false)
@@ -31,6 +32,8 @@ const modalType = ref<ModalType>('causa')
 const editingItem = ref<CausaRaiz | Protocolo | null>(null)
 const showAlert = ref<Alert | null>(null)
 const isLoading = ref(false)
+const protocolToDelete = ref<number | null>(null)
+const showDeleteModal = ref(false)
 
 const causasRaiz = ref<CausaRaiz[]>([])
 const protocolos = ref<Protocolo[]>([])
@@ -234,7 +237,12 @@ const handleSaveProtocolo = async () => {
   }
 }
 
-const handleDeleteProtocolo = async (id: number) => {
+function openDeleteProtocolModal(id: number) {
+  protocolToDelete.value = id
+  showDeleteModal.value = true
+}
+
+const handleConfirmDeleteProtocol = async (id: number) => {
   try {
     isLoading.value = true
     await protocolsService.deleteProtocol(id)
@@ -293,7 +301,7 @@ const removeStep = (index: number) => {
           :protocols="protocolos"
           :root-causes="causasRaiz"
           @open-modal="openModalProtocolo"
-          @delete="handleDeleteProtocolo"
+          @delete="openDeleteProtocolModal"
           @change-tab="activeTab = 'causas'"
         />
       </div>
@@ -318,6 +326,11 @@ const removeStep = (index: number) => {
       @update:formData="formProtocolo = $event"
       @add-passo="addStep"
       @remove-passo="removeStep"
+    />
+    <ProtocolDeleteModal
+      v-model="showDeleteModal"
+      :protocol-id="protocolToDelete"
+      @confirm="handleConfirmDeleteProtocol"
     />
   </div>
 </template>
