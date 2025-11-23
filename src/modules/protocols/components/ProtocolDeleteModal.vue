@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { watch, ref } from 'vue'
 
 const props = defineProps<{
   modelValue: boolean
-  userId: number | null
+  protocolId: number | null
 }>()
 
 const emit = defineEmits(['update:modelValue', 'confirm'])
@@ -21,8 +21,8 @@ function close() {
 }
 
 function confirmDelete() {
-  if (props.userId !== null) {
-    emit('confirm', props.userId)
+  if (props.protocolId !== null) {
+    emit('confirm', props.protocolId)
   }
   close()
 }
@@ -39,7 +39,7 @@ function confirmDelete() {
         <div class="delete-icon-wrapper">
           <span class="delete-icon">🗑️</span>
         </div>
-        <p class="delete-title">Tem certeza que deseja excluir este usuário?</p>
+        <p class="delete-title">Tem certeza que deseja excluir este protocolo?</p>
         <p class="delete-warning">Esta ação não pode ser desfeita.</p>
         <div class="modal-actions">
           <button @click="close" class="btn btn-secondary">Cancelar</button>

@@ -44,17 +44,17 @@ watch(
 const levelColor = computed(() => {
   switch (props.selectedLevel.value) {
     case 1:
-      return 'linear-gradient(135deg, #10b981, #059669)'
+      return '#10b981'
     case 2:
-      return 'linear-gradient(135deg, #22c55e, #16a34a)'
+      return '#7af957'
     case 3:
-      return 'linear-gradient(135deg, #f59e0b, #d97706)'
+      return '#edef56'
     case 4:
-      return 'linear-gradient(135deg, #ef4444, #dc2626)'
+      return '#f59e0b'
     case 5:
-      return 'linear-gradient(135deg, #991b1b, #7f1d1d)'
+      return '#ef4444'
     default:
-      return 'linear-gradient(135deg, #00c853 0%, #00963e 100%)'
+      return '#00c853'
   }
 })
 

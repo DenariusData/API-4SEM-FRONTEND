@@ -30,16 +30,6 @@ const showEndDatePicker = ref(false)
 const showFilters = ref(false)
 const showDashboard = ref(false)
 
-function combineDateTime(date: Date | null, time: string): string {
-  if (!date) return ''
-
-  const combined = new Date(date)
-  const [hours, minutes] = time.split(':')
-  combined.setHours(parseInt(hours), parseInt(minutes), 0, 0)
-
-  return combined.toISOString()
-}
-
 function openDashboard() {
   showDashboard.value = true
 }
@@ -48,15 +38,18 @@ function closeDashboard() {
   showDashboard.value = false
 }
 
-const startDateTime = computed(() => combineDateTime(startDate.value, startTime.value))
-const endDateTime = computed(() => combineDateTime(endDate.value, endTime.value))
-const canAccessFilters = computed(() => roleStore.isAdmin || roleStore.isGestor || roleStore.isAgente)
+const startDateTimeInput = ref('')
+const endDateTimeInput = ref('')
+
+const startDateTime = computed(() => startDateTimeInput.value)
+const endDateTime = computed(() => endDateTimeInput.value)
 const canAccessDashboard = computed(() => roleStore.isAdmin || roleStore.isGestor)
 
 function applyFilter() {
   emit('apply-filter')
-  emit('update:start-date-time', startDateTime.value)
-  emit('update:end-date-time', endDateTime.value)
+  emit('update:start-date-time', startDateTimeInput.value)
+  emit('update:end-date-time', endDateTimeInput.value)
+  showFilters.value = false
 }
 
 function clearSelection() {
@@ -66,32 +59,53 @@ function clearSelection() {
   endTime.value = '23:59'
   showStartDatePicker.value = false
   showEndDatePicker.value = false
+  startDateTimeInput.value = ''
+  endDateTimeInput.value = ''
   emit('clear-selection')
   emit('update:start-date-time', '')
   emit('update:end-date-time', '')
+  showFilters.value = false
 }
 </script>
 
 <template>
   <div>
-    <div v-if="canAccessFilters || canAccessDashboard" class="top-bar">
-      <button v-if="canAccessFilters" class="filters-button" @click="showFilters = !showFilters">Filtros</button>
+    <div class="top-bar">
+      <button class="filters-button" @click="showFilters = !showFilters">Filtros</button>
       <button v-if="canAccessDashboard" class="dashboard-button" @click="openDashboard">Dashboard's</button>
     </div>
 
     <div class="content-wrapper">
-      <div v-if="showFilters && canAccessFilters" class="filter-dropdown">
+      <div v-if="showFilters" class="filter-dropdown">
         <div class="filter-content">
           <div class="instructions">ℹ️ Dê <b>dois cliques</b> em uma zona para selecioná-la</div>
 
           <div class="filter-group">
-            <label for="start-datetime">Data/hora inicial</label>
-            <input id="start-datetime" v-model="startDateTime" type="datetime-local" class="datetime-input" />
+            <v-text-field
+              v-model="startDateTimeInput"
+              label="Data e Hora de Início"
+              type="datetime-local"
+              variant="outlined"
+              density="comfortable"
+              clearable
+              prepend-inner-icon="mdi-calendar-start"
+              hint="Formato: DD/MM/AAAA HH:mm"
+              persistent-hint
+            />
           </div>
 
           <div class="filter-group">
-            <label for="end-datetime">Data/hora final</label>
-            <input id="end-datetime" v-model="endDateTime" type="datetime-local" class="datetime-input" />
+            <v-text-field
+              v-model="endDateTimeInput"
+              label="Data e Hora de Fim"
+              type="datetime-local"
+              variant="outlined"
+              density="comfortable"
+              clearable
+              prepend-inner-icon="mdi-calendar-end"
+              hint="Formato: DD/MM/AAAA HH:mm"
+              persistent-hint
+            />
           </div>
 
           <div class="status">
@@ -169,7 +183,7 @@ function clearSelection() {
 
 .content-wrapper {
   position: absolute;
-  top: 140px;
+  top: 80px;
   left: 1rem;
   display: flex;
   flex-direction: column;

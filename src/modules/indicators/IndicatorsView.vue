@@ -22,8 +22,6 @@ import IndicatorsList from '@/modules/indicators/components/IndicatorsList.vue'
   flex-direction: column;
   gap: 32px;
   margin: 0 auto;
-  max-width: 1200px;
-  padding: 20px;
 }
 
 .page-header {
