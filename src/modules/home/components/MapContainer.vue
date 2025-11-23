@@ -8,8 +8,10 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+
 import sjcGeojson from '@/utils/sjcGeojson.json'
 import type { GeoJsonFeature } from '@/modules/home/types/homeTypes'
+import { viasPrincipais } from '../utils/viasPrincipais'
 
 interface Props {
   compact?: boolean
@@ -29,6 +31,7 @@ const emit = defineEmits<Emits>()
 const mapContainer = ref<HTMLDivElement | null>(null)
 const map = ref<L.Map | null>(null)
 const geoJsonLayer = ref<L.GeoJSON | null>(null)
+const viasLayer = ref<L.LayerGroup | null>(null)
 const activeAnimations = new Map<string, number>()
 
 const levelColorMap: Record<number, string> = {
@@ -55,6 +58,8 @@ function initializeMap(): void {
     maxZoom: 18,
     attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors',
   }).addTo(map.value as L.Map)
+
+  viasLayer.value = L.layerGroup().addTo(map.value as L.Map)
 }
 
 function createLegend(): void {
@@ -73,7 +78,8 @@ function createLegend(): void {
       { level: 5, color: levelColorMap[5], label: 'Nível 5' },
     ]
 
-    div.innerHTML = '<h4 style="margin: 0 0 10px 0; font-weight: bold; font-size: 14px;">Níveis de Alerta</h4>'
+    div.innerHTML = '<h4 style="margin: 0 0 10px 0; font-weight: bold; font-size: 14px;">Legenda do Mapa</h4>'
+    div.innerHTML += '<div style="font-weight: 500; font-size: 13px; margin-bottom: 4px;">Níveis de Alerta</div>'
     levels.forEach((item) => {
       div.innerHTML += `
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
@@ -83,9 +89,56 @@ function createLegend(): void {
       `
     })
 
+    div.innerHTML += '<div style="height: 1px; background: #eee; margin: 10px 0 10px 0;"></div>'
+
+    div.innerHTML += `
+      <div style="font-weight: 500; font-size: 13px; margin-bottom: 4px;">Outros</div>
+      <div style="display: flex; align-items: center;">
+        <div style="width: 32px; height: 0; border-top: 5px solid #FF6B6B; margin-right: 10px;"></div>
+        <span style="font-size: 12px;">Via principal</span>
+      </div>
+    `
+
     return div
   }
   legend.addTo(map.value as L.Map)
+}
+
+function drawVias(): void {
+  if (!viasLayer.value || !map.value) return
+
+  viasLayer.value.clearLayers()
+
+  const viasToShow =
+    props.filteredZones.length > 0
+      ? Object.entries(viasPrincipais).filter(([zona]) => {
+          return props.filteredZones.includes(zona)
+        })
+      : Object.entries(viasPrincipais)
+
+  viasToShow.forEach(([zona, data]) => {
+    data.vias.forEach((via) => {
+      const polyline = L.polyline(via.coords as L.LatLngExpression[], {
+        color: data.color,
+        weight: 5,
+        opacity: 0.8,
+        smoothFactor: 1,
+      })
+
+      polyline.bindTooltip(via.name, {
+        permanent: false,
+        direction: 'center',
+        className: 'via-tooltip',
+      })
+
+      polyline.bindPopup(`
+        <b>${via.name}</b><br>
+        <span style="color: ${data.color};">● Zona ${zona}</span>
+      `)
+
+      polyline.addTo(viasLayer.value as L.LayerGroup)
+    })
+  })
 }
 
 function drawMap(features: GeoJsonFeature[]): void {
@@ -130,9 +183,13 @@ function drawMap(features: GeoJsonFeature[]): void {
           L.DomEvent.stopPropagation(e)
           emit('zoneToggle', propsData.regiao, layer)
         })
+      } else if (propsData.layer === 'municipio') {
+        layer.bindPopup(`<b>${propsData.name}</b><br>${propsData.description || ''}`)
       }
     },
   }).addTo(map.value as L.Map)
+
+  drawVias()
 }
 
 function updateMap() {
@@ -165,6 +222,11 @@ onMounted(() => {
 onUnmounted(() => {
   activeAnimations.forEach(clearInterval)
   activeAnimations.clear()
+
+  if (map.value) {
+    map.value.remove()
+    map.value = null
+  }
 })
 
 defineExpose({
@@ -174,6 +236,10 @@ defineExpose({
 
 <style lang="scss" scoped>
 .map-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
   &.map-compact {
     flex: 1;
     border-radius: 8px;
@@ -182,6 +248,7 @@ defineExpose({
   }
 
   .map {
+    flex: 1;
     width: 100%;
     height: 100%;
   }
@@ -190,6 +257,16 @@ defineExpose({
 :deep(.leaflet-interactive) {
   outline: none !important;
   cursor: pointer;
+}
+
+:deep(.via-tooltip) {
+  background: rgba(0, 0, 0, 0.8);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.6rem;
+  font-weight: 500;
 }
 
 :deep(.legend) {
