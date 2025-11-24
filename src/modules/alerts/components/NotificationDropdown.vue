@@ -87,7 +87,7 @@ const getLevelTextColor = (level: number): string => {
 
 const goToAlertDetails = (alert: Alert) => {
   if (alert.finalized) return
-  if (roleStore.isAgente || roleStore.isGestor) return
+  if (roleStore.isGestor) return
   isOpen.value = false
   router.push({ name: 'alert-details', params: { id: alert.alertId } })
 }
@@ -214,7 +214,7 @@ defineExpose({
         </div>
       </v-card-text>
 
-      <v-card-actions v-if="alerts.length > 0" class="notification-dropdown__actions">
+      <v-card-actions v-if="alerts.length > 0 && !roleStore.isGestor" class="notification-dropdown__actions">
         <v-spacer></v-spacer>
         <v-btn variant="text" size="small" color="primary" @click="goToAlertsPage"> Ver todas </v-btn>
       </v-card-actions>
