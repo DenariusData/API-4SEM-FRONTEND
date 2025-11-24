@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import type { CausaRaiz, Protocolo } from '@/modules/protocols/types/ProtocolsTypes';
+import { ref } from 'vue'
+import type { CausaRaiz, Protocolo } from '@/modules/protocols/types/ProtocolsTypes'
 
 interface Props {
-  protocols: Protocolo[];
-  rootCauses: CausaRaiz[];
+  protocols: Protocolo[]
+  rootCauses: CausaRaiz[]
 }
 
 interface Emits {
-  (e: 'open-modal', protocolo: Protocolo | null): void;
-  (e: 'delete', id: number): void;
-  (e: 'change-tab'): void;
+  (e: 'open-modal', protocolo: Protocolo | null): void
+  (e: 'delete', id: number): void
+  (e: 'change-tab'): void
 }
 
-defineProps<Props>();
-const emit = defineEmits<Emits>();
+defineProps<Props>()
+const emit = defineEmits<Emits>()
 
-const expandedProtocol = ref<number | null>(null);
+const expandedProtocol = ref<number | null>(null)
 </script>
 
 <template>
@@ -28,29 +28,25 @@ const expandedProtocol = ref<number | null>(null);
       </div>
       <button
         @click="emit('open-modal', null)"
-        :disabled="rootCauses.filter(c => c.ativo).length === 0"
-        :class="['btn btn-primary', { disabled: rootCauses.filter(c => c.ativo).length === 0 }]"
+        :disabled="rootCauses.filter((c) => c.ativo).length === 0"
+        :class="['btn btn-primary', { disabled: rootCauses.filter((c) => c.ativo).length === 0 }]"
       >
         <span class="btn-icon">+</span>
         Novo Protocolo
       </button>
     </div>
 
-    <div v-if="rootCauses.filter(c => c.ativo).length === 0" class="empty-state warning">
+    <div v-if="rootCauses.filter((c) => c.ativo).length === 0" class="empty-state warning">
       <span class="empty-icon">⚠</span>
       <p class="empty-title">Nenhuma causa raiz ativa</p>
       <p>Crie ou ative uma causa raiz antes de criar protocolos</p>
-      <button @click="emit('change-tab')" class="btn-link">
-        Ir para Causas Raiz
-      </button>
+      <button @click="emit('change-tab')" class="btn-link">Ir para Causas Raiz</button>
     </div>
 
     <div v-else-if="protocols.length === 0" class="empty-state">
       <span class="empty-icon">📄</span>
       <p>Nenhum protocolo cadastrado</p>
-      <button @click="emit('open-modal', null)" class="btn-link">
-        Criar primeiro protocolo
-      </button>
+      <button @click="emit('open-modal', null)" class="btn-link">Criar primeiro protocolo</button>
     </div>
 
     <div v-else class="items-list">
@@ -60,8 +56,8 @@ const expandedProtocol = ref<number | null>(null);
             <h3>{{ protocolo.titulo }}</h3>
             <p class="item-info">
               <strong>Causa Raiz:</strong>
-              {{ rootCauses.find(c => c.id === protocolo.causaRaizId)?.nome }}
-              <span v-if="!rootCauses.find(c => c.id === protocolo.causaRaizId)?.ativo" class="badge badge-warning">
+              {{ rootCauses.find((c) => c.id === protocolo.causaRaizId)?.name }}
+              <span v-if="!rootCauses.find((c) => c.id === protocolo.causaRaizId)?.ativo" class="badge badge-warning">
                 Causa Inativa
               </span>
             </p>
@@ -75,12 +71,8 @@ const expandedProtocol = ref<number | null>(null);
             >
               {{ expandedProtocol === protocolo.id ? '▲' : '▼' }}
             </button>
-            <button @click="emit('open-modal', protocolo)" class="btn-icon-only" title="Editar">
-              ✎
-            </button>
-            <button @click="emit('delete', protocolo.id)" class="btn-icon-only btn-danger" title="Excluir">
-              🗑
-            </button>
+            <button @click="emit('open-modal', protocolo)" class="btn-icon-only" title="Editar">✎</button>
+            <button @click="emit('delete', protocolo.id)" class="btn-icon-only btn-danger" title="Excluir">🗑</button>
           </div>
         </div>
 

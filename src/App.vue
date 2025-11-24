@@ -2,37 +2,94 @@
 import AutoCompleteMenu from './shared/AutoCompleteMenu.vue'
 import LoginPopup from './modules/login/LoginPopup.vue'
 import NotificationDropdown from './modules/alerts/components/NotificationDropdown.vue'
+import UserAuth from './modules/login/components/UserAuth.vue'
 import sharedServices from '@/shared/services/sharedServices.ts'
-import { ref } from 'vue'
-import { RouterView } from 'vue-router'
+import { ref, onMounted, computed, watch, provide, nextTick } from 'vue'
+import { RouterView, useRouter, useRoute } from 'vue-router'
+import { useRoleStore } from '@/modules/login/store/roleStore'
 
 const menu = ref(false)
 const showLogin = ref(false)
+const roleStore = useRoleStore()
+const router = useRouter()
+const route = useRoute()
+
 const showRoutineButton = import.meta.env.VITE_SHOW_ROUTINE_BUTTON === 'true'
 
-const openLogin = () => {
-  showLogin.value = true
+const notificationDropdownRef = ref()
+const fetchAlertsRef = ref<null | (() => Promise<void>)>(null)
+
+provide('fetchAlerts', () => fetchAlertsRef.value && fetchAlertsRef.value())
+
+onMounted(async () => {
+  checkLoginStatus()
+  await nextTick()
+  if (notificationDropdownRef.value && notificationDropdownRef.value.fetchAlerts) {
+    fetchAlertsRef.value = notificationDropdownRef.value.fetchAlerts
+  }
+})
+
+const isLoggedIn = computed(() => roleStore.isAuthenticated)
+
+watch(isLoggedIn, (newIsLoggedIn, oldIsLoggedIn) => {
+  if (oldIsLoggedIn && !newIsLoggedIn) {
+    const currentRoute = route.meta
+    if (
+      currentRoute?.requiresAuth ||
+      currentRoute?.requiresAdmin ||
+      currentRoute?.requiresGestor ||
+      currentRoute?.requiresAgente
+    ) {
+      router.push({ name: 'home' })
+    }
+  }
+})
+
+const checkLoginStatus = () => roleStore.role
+
+const handleLogout = () => {
+  checkLoginStatus()
+  const currentRoute = route.meta
+  if (
+    currentRoute?.requiresAuth ||
+    currentRoute?.requiresAdmin ||
+    currentRoute?.requiresGestor ||
+    currentRoute?.requiresAgente
+  ) {
+    router.push({ name: 'home' })
+  }
 }
+
+const openLogin = () => {
+  if (!isLoggedIn.value) {
+    showLogin.value = true
+  }
+}
+
 const updateDatabase = async () => {
   await sharedServices.updateDatabase()
 }
+
+onMounted(() => {
+  checkLoginStatus()
+})
 </script>
 
 <template>
   <v-app>
     <v-app-bar :elevation="0" class="top-bar" color="white">
       <div class="logo-container">
-        <img src="../radariustxt.svg" alt="Logo" class="logo" />
+        <img src="../public/radariustxt.svg" alt="Logo" class="logo" />
       </div>
 
-      <AutoCompleteMenu v-model="menu" />
+      <AutoCompleteMenu v-model="menu" :key="`menu-${roleStore.role}-${roleStore.token ? 'logged' : 'guest'}`" />
 
       <v-spacer></v-spacer>
 
       <div class="actions">
         <v-btn v-if="showRoutineButton" icon="mdi-refresh" variant="text" color="black" @click="updateDatabase"></v-btn>
-        <NotificationDropdown />
-        <v-btn icon="mdi-login" variant="text" color="black" @click="openLogin"></v-btn>
+        <NotificationDropdown ref="notificationDropdownRef" />
+        <UserAuth :is-logged-in="isLoggedIn" @login="openLogin" @logout="handleLogout" />
       </div>
     </v-app-bar>
 
@@ -40,7 +97,7 @@ const updateDatabase = async () => {
       <RouterView :key="$route.fullPath" />
     </div>
 
-    <LoginPopup v-model="showLogin" />
+    <LoginPopup v-model="showLogin" @login-success="checkLoginStatus" />
   </v-app>
 </template>
 
@@ -77,10 +134,10 @@ const updateDatabase = async () => {
 
 .app {
   position: relative;
-  height: calc(100vh - 65px);
   max-width: 1472px;
   width: 100%;
   margin: 64px auto 0 auto;
-  padding: 24px 16px;
+  padding: 24px 16px 32px 16px;
+  overflow-y: auto;
 }
 </style>

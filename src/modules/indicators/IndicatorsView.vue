@@ -32,7 +32,7 @@ import IndicatorsList from '@/modules/indicators/components/IndicatorsList.vue'
     font-size: 2.5rem;
     color: #4d4d4d;
     margin-bottom: 8px;
-    background: linear-gradient(135deg, #00c853 0%, #00963e 100%);
+    background: linear-gradient(135deg, #222121 0%, #5a5b5a 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -48,17 +48,12 @@ import IndicatorsList from '@/modules/indicators/components/IndicatorsList.vue'
 
 @media (max-width: 768px) {
   .indicators-view {
+    padding: 12px;
     gap: 24px;
   }
 
   .page-header h1 {
     font-size: 2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .indicators-view {
-    gap: 20px;
   }
 }
 </style>

@@ -1,16 +1,23 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import alertServices from '@/modules/alerts/services/alertServices'
 import type { Alert } from '@/modules/alerts/types/alertsTypes'
 import { LEVELS_ENUM } from '@/shared/enums'
 import { useRouter } from 'vue-router'
+import { registerPeriodicTask } from '@/shared/periodicUpdater'
+import { useRoleStore } from '@/modules/login/store/roleStore'
 
 const router = useRouter()
+const roleStore = useRoleStore()
 
 const isOpen = ref(false)
 const alerts = ref<Alert[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
+
+const isAuthorized = computed(
+  () => roleStore.isAuthenticated && (roleStore.isAgente || roleStore.isGestor || roleStore.isAdmin),
+)
 
 const alertsCount = computed(() =>
   alerts.value.reduce((count, alert) => {
@@ -18,15 +25,38 @@ const alertsCount = computed(() =>
   }, 0),
 )
 
+watch(isAuthorized, (newIsAuthorized) => {
+  if (!newIsAuthorized) {
+    alerts.value = []
+    error.value = null
+    isOpen.value = false
+
+    if (unregisterNotificationTask) {
+      unregisterNotificationTask()
+      unregisterNotificationTask = null
+    }
+  } else {
+    fetchAlerts()
+    if (!unregisterNotificationTask) {
+      unregisterNotificationTask = registerPeriodicTask(fetchAlerts)
+    }
+  }
+})
+
 const levelColors = {
-  1: '#4CAF50',
-  2: '#8BC34A',
-  3: '#FFC107',
-  4: '#FF9800',
-  5: '#F44336',
+  1: '#10b981',
+  2: '#7af957',
+  3: '#edef56',
+  4: '#f59e0b',
+  5: '#ef4444',
 }
 
 const fetchAlerts = async () => {
+  if (!isAuthorized.value) {
+    alerts.value = []
+    return
+  }
+
   try {
     isLoading.value = true
     error.value = null
@@ -48,8 +78,16 @@ const getLevelColor = (level: number): string => {
   return levelColors[level as keyof typeof levelColors] || 'grey'
 }
 
+const getLevelTextColor = (level: number): string => {
+  if (level === 1 || level === 2 || level === 3) {
+    return '#222'
+  }
+  return '#fff'
+}
+
 const goToAlertDetails = (alert: Alert) => {
   if (alert.finalized) return
+  if (roleStore.isGestor) return
   isOpen.value = false
   router.push({ name: 'alert-details', params: { id: alert.alertId } })
 }
@@ -63,19 +101,19 @@ const goToAlertsPage = () => {
   router.push({ name: 'alerts' })
 }
 
-let intervalId: number | null = null
+let unregisterNotificationTask: (() => void) | null = null
 
-onMounted(() => {
-  fetchAlerts()
-
-  intervalId = window.setInterval(() => {
-    fetchAlerts()
-  }, 180000)
+onMounted(async () => {
+  if (isAuthorized.value) {
+    await fetchAlerts()
+    unregisterNotificationTask = registerPeriodicTask(fetchAlerts)
+  }
 })
 
 onUnmounted(() => {
-  if (intervalId) {
-    clearInterval(intervalId)
+  if (unregisterNotificationTask) {
+    unregisterNotificationTask()
+    unregisterNotificationTask = null
   }
 })
 
@@ -133,6 +171,7 @@ defineExpose({
               <span class="notification-dropdown__indicator">{{ alert.indicator }}</span>
               <span class="notification-dropdown__time">{{ alert.timestamp }}</span>
               <v-icon
+                v-if="isFinalized(alert) || !roleStore.isGestor"
                 size="18"
                 :color="isFinalized(alert) ? 'success' : 'primary'"
                 class="notification-dropdown__status-icon"
@@ -147,18 +186,22 @@ defineExpose({
                   size="small"
                   :color="getLevelColor(alert.previousLevel)"
                   variant="tonal"
-                  class="notification-dropdown__level-chip"
+                  :class="['notification-dropdown__level-chip', `level-bg-${alert.previousLevel}`]"
                 >
-                  {{ getLevelLabel(alert.previousLevel) }}
+                  <span :style="{ color: getLevelTextColor(alert.previousLevel) }">
+                    {{ getLevelLabel(alert.previousLevel) }}
+                  </span>
                 </v-chip>
                 <v-icon size="16" class="notification-dropdown__arrow">mdi-arrow-right</v-icon>
                 <v-chip
                   size="small"
                   :color="getLevelColor(alert.newLevel)"
                   variant="tonal"
-                  class="notification-dropdown__level-chip"
+                  :class="['notification-dropdown__level-chip', `level-bg-${alert.newLevel}`]"
                 >
-                  {{ getLevelLabel(alert.newLevel) }}
+                  <span :style="{ color: getLevelTextColor(alert.newLevel) }">
+                    {{ getLevelLabel(alert.newLevel) }}
+                  </span>
                 </v-chip>
               </div>
             </div>
@@ -171,7 +214,7 @@ defineExpose({
         </div>
       </v-card-text>
 
-      <v-card-actions v-if="alerts.length > 0" class="notification-dropdown__actions">
+      <v-card-actions v-if="alerts.length > 0 && !roleStore.isGestor" class="notification-dropdown__actions">
         <v-spacer></v-spacer>
         <v-btn variant="text" size="small" color="primary" @click="goToAlertsPage"> Ver todas </v-btn>
       </v-card-actions>
@@ -298,6 +341,26 @@ defineExpose({
   &__level-chip {
     font-size: 0.75rem !important;
     height: 24px !important;
+  }
+  &__level-chip.level-bg-1 {
+    background-color: #10b981 !important;
+    color: #fff !important;
+  }
+  &__level-chip.level-bg-2 {
+    background-color: #7af957 !important;
+    color: #222 !important;
+  }
+  &__level-chip.level-bg-3 {
+    background-color: #edef56 !important;
+    color: #222 !important;
+  }
+  &__level-chip.level-bg-4 {
+    background-color: #f59e0b !important;
+    color: #fff !important;
+  }
+  &__level-chip.level-bg-5 {
+    background-color: #ef4444 !important;
+    color: #fff !important;
   }
 
   &__arrow {

@@ -1,3 +1,59 @@
+<script lang="ts" setup>
+import loginService from '@/modules/login/service/loginServices'
+import { useRoleStore } from '@/modules/login/store/roleStore'
+import { ref, watch } from 'vue'
+
+const props = defineProps<{ modelValue: boolean }>()
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'login-success'): void
+}>()
+
+const roleStore = useRoleStore()
+const model = ref(props.modelValue)
+const email = ref('')
+const password = ref('')
+const showError = ref(false)
+const showPassword = ref(false)
+
+watch(
+  () => props.modelValue,
+  (val) => (model.value = val),
+)
+watch(model, (val) => emit('update:modelValue', val))
+
+const closePopup = () => {
+  showError.value = false
+  email.value = ''
+  password.value = ''
+  model.value = false
+}
+
+const handleLogin = async () => {
+  try {
+    const response = await loginService.login(email.value, password.value)
+    if (response.data.token && response.data.role) {
+      roleStore.setToken(response.data.token)
+      roleStore.setRole(response.data.role)
+      roleStore.setUserName(response.data.name)
+      roleStore.setUserEmail(response.data.email)
+      emit('login-success')
+    }
+    closePopup()
+  } catch (error: unknown) {
+    const hasStatus = (err: unknown): err is { status: number } => {
+      return typeof err === 'object' && err !== null && 'status' in err
+    }
+
+    if (hasStatus(error) && error.status === 401) {
+      alert('Email ou senha incorretos')
+    } else {
+      alert('Erro no login do usuário')
+    }
+  }
+}
+</script>
+
 <template>
   <v-dialog transition="dialog-top-transition" width="420" v-model="model" class="login-dialog">
     <template v-slot:default>
@@ -19,7 +75,6 @@
                 type="email"
                 variant="outlined"
                 density="comfortable"
-                @keyup.enter="handleLogin"
                 hide-details
                 class="custom-input"
               ></v-text-field>
@@ -30,24 +85,22 @@
               <v-text-field
                 v-model="password"
                 placeholder="Digite sua senha"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 variant="outlined"
                 density="comfortable"
-                @keyup.enter="handleLogin"
                 hide-details
                 class="custom-input"
+                :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                @click:append-inner="showPassword = !showPassword"
               ></v-text-field>
             </div>
 
             <div class="form-footer mb-5 d-flex justify-space-between">
               <span v-if="showError" class="error-message"> Email ou senha incorretos </span>
-              <a href="#" class="forgot-link">Esqueceu a senha?</a>
             </div>
 
             <div class="button-group d-flex flex-column gap-4">
               <v-btn type="submit" class="login-btn" size="x-large" block> Login </v-btn>
-
-              <v-btn variant="outlined" size="x-large" block class="signup-btn" @click="closePopup"> Cadastrar </v-btn>
             </div>
           </v-form>
         </v-card-text>
@@ -55,42 +108,6 @@
     </template>
   </v-dialog>
 </template>
-
-<script lang="ts" setup>
-import { ref, watch } from 'vue'
-
-const props = defineProps<{ modelValue: boolean }>()
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-}>()
-
-const model = ref(props.modelValue)
-const email = ref('')
-const password = ref('')
-const showError = ref(false)
-
-watch(
-  () => props.modelValue,
-  (val) => (model.value = val),
-)
-watch(model, (val) => emit('update:modelValue', val))
-
-const closePopup = () => {
-  showError.value = false
-  email.value = ''
-  password.value = ''
-  model.value = false
-}
-
-const handleLogin = () => {
-  if (password.value === 'Denarius') {
-    showError.value = false
-    closePopup()
-  } else {
-    showError.value = true
-  }
-}
-</script>
 
 <style lang="scss" scoped>
 .login-dialog {

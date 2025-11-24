@@ -17,10 +17,17 @@
     </div>
 
     <div v-else-if="alertDetails" class="alert-details__content">
-      <AlertInformation :alert-details="alertDetails" :user-role="userRole" />
+      <div v-if="isLoadingAlertDetails" class="alert-details__loading">
+        <v-progress-circular indeterminate size="48" color="primary"></v-progress-circular>
+        <p>Carregando detalhes do alerta...</p>
+      </div>
+      <AlertInformation v-else :alert-details="alertDetails" :user-role="userRole" />
 
-      <div v-if="userRole === 'agent' && !alertDetails.finalized" class="alert-details__agent-section">
-        <InitialGuidelines :radar-id="alertDetails.radar_id" :location="alertDetails.location" />
+      <div
+        v-if="userRole === 'agent' && !alertDetails.finalized && alertDetails.isOpen"
+        class="alert-details__agent-section"
+      >
+        <InitialGuidelines :radar-id="alertDetails.radar_id" :location="alertDetails.location || ''" />
 
         <ProblemIdentification
           v-model="selectedProblem"
@@ -41,7 +48,10 @@
         </div>
       </div>
 
-      <div v-if="userRole === 'manager' && !alertDetails.finalized" class="alert-details__manager-section">
+      <div
+        v-if="userRole === 'manager' && !alertDetails.finalized && alertDetails.isOpen"
+        class="alert-details__manager-section"
+      >
         <v-card class="alert-details__card">
           <v-card-title class="alert-details__card-title">
             <v-icon class="mr-2">mdi-account-tie</v-icon>
@@ -88,16 +98,57 @@
         </div>
       </div>
 
-      <v-alert v-if="alertDetails.finalized" type="success" variant="tonal" class="mt-4">
-        <v-icon start size="24">mdi-check-circle</v-icon>
-        <strong>Este alerta já foi finalizado</strong>
-      </v-alert>
+      <v-card
+        v-if="!alertDetails.isOpen || alertDetails.finalized"
+        class="alert-details__card alert-details__finalized-info mt-4"
+      >
+        <v-card-title class="alert-details__card-title alert-details__finalized-title">
+          <v-icon class="mr-2" color="success">mdi-check-circle</v-icon>
+          Alerta Finalizado
+        </v-card-title>
+        <v-card-text class="pa-4">
+          <div class="alert-details__finalized-grid">
+            <div v-if="alertDetails.closedAt" class="alert-details__finalized-item">
+              <div class="alert-details__finalized-label">
+                <v-icon size="20" class="mr-1">mdi-calendar-check</v-icon>
+                Data de Finalização
+              </div>
+              <div class="alert-details__finalized-value">
+                {{ formatDateTime(alertDetails.closedAt) }}
+              </div>
+            </div>
+
+            <div v-if="alertDetails.rootCauseName" class="alert-details__finalized-item">
+              <div class="alert-details__finalized-label">
+                <v-icon size="20" class="mr-1">mdi-alert-box</v-icon>
+                Causa Raiz
+              </div>
+              <div class="alert-details__finalized-value">
+                {{ alertDetails.rootCauseName }}
+              </div>
+            </div>
+
+            <div
+              v-if="alertDetails.conclusion"
+              class="alert-details__finalized-item alert-details__finalized-item--full"
+            >
+              <div class="alert-details__finalized-label">
+                <v-icon size="20" class="mr-1">mdi-text-box</v-icon>
+                Conclusão
+              </div>
+              <div class="alert-details__finalized-value alert-details__conclusion-text">
+                {{ alertDetails.conclusion }}
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import alertServices from '@/modules/alerts/services/alertServices'
 import problemsService from '@/modules/problems/services/problemsServices'
@@ -124,6 +175,7 @@ const selectedAgent = ref<number | null>(null)
 const resolutionNotes = ref('')
 
 const isLoading = ref(true)
+const isLoadingAlertDetails = ref(false)
 const error = ref<string | null>(null)
 
 let updateInterval: number | null = null
@@ -145,7 +197,7 @@ const managerContactPhone = '5512999999999'
 
 const fetchAlertDetails = async () => {
   try {
-    isLoading.value = true
+    isLoadingAlertDetails.value = true
     error.value = null
 
     const alertId = Number(props.id)
@@ -155,14 +207,14 @@ const fetchAlertDetails = async () => {
     error.value = 'Erro ao carregar detalhes do alerta'
     console.error('Erro ao buscar detalhes do alerta:', err)
   } finally {
-    isLoading.value = false
+    isLoadingAlertDetails.value = false
   }
 }
 
 const fetchProblems = async () => {
   try {
     const response = await problemsService.getAll()
-    problems.value = response.data.items
+    problems.value = response.data
   } catch (err) {
     console.error('Erro ao buscar problemas:', err)
   }
@@ -201,21 +253,18 @@ const contactAgent = () => {
   window.open(`https://wa.me/${agent.phone}?text=${message}`, '_blank')
 }
 
+const fetchAlerts = inject<() => Promise<void>>('fetchAlerts')
+
 const finalizeAlert = async () => {
   if (!canFinalize.value || !alertDetails.value) return
 
   try {
-    const data =
-      userRole.value === 'agent'
-        ? {
-            problem_id: selectedProblem.value ?? undefined,
-            notes: resolutionNotes.value,
-          }
-        : {
-            agent_id: selectedAgent.value ?? undefined,
-          }
+    const conclusion = resolutionNotes.value.trim() || undefined
+    await alertServices.finalizeAlert(alertDetails.value.id, conclusion)
 
-    await alertServices.finalizeAlert(alertDetails.value.alert_id, data)
+    if (fetchAlerts) {
+      fetchAlerts()
+    }
 
     alert('Alerta finalizado com sucesso!')
     router.push({ name: 'alerts' })
@@ -230,6 +279,7 @@ const goBack = () => {
 }
 
 onMounted(async () => {
+  isLoading.value = true
   await fetchAlertDetails()
 
   if (userRole.value === 'agent') {
@@ -237,11 +287,25 @@ onMounted(async () => {
   } else {
     await fetchAgents()
   }
+  isLoading.value = false
 
   updateInterval = window.setInterval(() => {
     fetchAlertDetails()
   }, 60000)
 })
+
+const formatDateTime = (dateTime: string | null | undefined): string => {
+  if (!dateTime) return '-'
+
+  const date = new Date(dateTime)
+  return date.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 onUnmounted(() => {
   if (updateInterval) {
@@ -253,8 +317,6 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .alert-details {
   padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
 
   &__header {
     display: flex;
@@ -324,6 +386,57 @@ onUnmounted(() => {
   &__agent-section,
   &__manager-section {
     margin-top: 24px;
+  }
+
+  &__finalized-info {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+  }
+
+  &__finalized-title {
+    background: linear-gradient(to right, #dcfce7, #f0fdf4);
+    border-bottom: 1px solid #86efac;
+  }
+
+  &__finalized-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  &__finalized-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__finalized-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.813rem;
+    font-weight: 600;
+    color: #059669;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  &__finalized-value {
+    font-size: 0.938rem;
+    color: #1f2937;
+    font-weight: 500;
+  }
+
+  &__conclusion-text {
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #d1fae5;
+    line-height: 1.6;
+    white-space: pre-wrap;
   }
 }
 </style>
